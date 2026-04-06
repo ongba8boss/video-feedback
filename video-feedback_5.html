@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Video Feedback</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Be Vietnam Pro',sans-serif;background:#F0F2F5;color:#111827;min-height:100vh}
+.wrap{max-width:980px;margin:0 auto;padding:1.75rem 1.25rem 3rem}
+.hdr h1{font-size:22px;font-weight:600;margin-bottom:4px}
+.hdr p{font-size:13px;color:#6B7280;margin-bottom:1.5rem}
+
+.url-bar{display:flex;gap:8px;margin-bottom:1.5rem}
+.url-bar input{flex:1;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;background:#fff;font-size:14px;font-family:inherit;color:#111827;outline:none}
+.url-bar input:focus{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.url-bar input::placeholder{color:#9CA3AF}
+.btn-blue{padding:10px 20px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn-blue:hover{background:#1D4ED8}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+@media(max-width:650px){.grid{grid-template-columns:1fr}}
+
+/* Video panel */
+.vpanel{background:#fff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden}
+.embed-box{height:240px;background:#111827;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.embed-box p{font-size:13px;color:#6B7280;text-align:center;line-height:1.6}
+#yt-frame{width:100%;height:240px;border:none;display:none}
+video#dv{width:100%;height:240px;object-fit:contain;background:#000;display:none}
+iframe#drive-frame{width:100%;height:240px;border:none;display:none}
+
+.ctrl-bar{display:none;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid #F3F4F6}
+.timecode{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;color:#111827;background:#F3F4F6;padding:4px 10px;border-radius:6px;min-width:76px;text-align:center;letter-spacing:.5px}
+.sp{flex:1}
+.btn-cap{padding:7px 14px;background:#EFF6FF;color:#1D4ED8;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn-cap:hover{background:#DBEAFE}
+.vinfo{font-size:11px;color:#9CA3AF;padding:5px 12px 8px;text-align:center;border-top:1px solid #F3F4F6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Manual TC hint */
+.manual-hint{display:none;padding:8px 12px 10px;background:#FFFBEB;border-top:1px solid #FDE68A}
+.manual-hint p{font-size:12px;color:#92400E;line-height:1.5}
+.manual-hint a{color:#1D4ED8;text-decoration:underline}
+
+/* Feedback panel */
+.fbpanel{display:flex;flex-direction:column}
+.fp-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#fff;border-radius:12px 12px 0 0;border:1px solid #E5E7EB;border-bottom:none}
+.fp-head h2{font-size:14px;font-weight:600}
+.fc-badge{font-size:12px;padding:2px 10px;border-radius:20px;background:#EFF6FF;color:#1D4ED8;font-weight:500}
+.fp-input{background:#fff;border:1px solid #E5E7EB;border-top:none;padding:12px 14px}
+.tc-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tc-lbl{font-size:12px;color:#9CA3AF}
+.tc-pill{font-size:12px;font-weight:600;background:#1a1a2e;color:#E5E7EB;padding:3px 10px;border-radius:6px;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+.tc-hint{font-size:11px;color:#9CA3AF}
+
+/* Manual TC input */
+.manual-tc-input{display:none;margin-bottom:8px}
+.manual-tc-input label{font-size:12px;color:#6B7280;display:block;margin-bottom:4px}
+.manual-tc-input input{padding:7px 10px;border:1px solid #D1D5DB;border-radius:7px;font-size:14px;font-family:inherit;width:140px;outline:none;color:#111827;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+.manual-tc-input input:focus{border-color:#2563EB}
+
+textarea.nt{width:100%;resize:vertical;min-height:90px;padding:9px 11px;border:1px solid #D1D5DB;border-radius:8px;background:#fff;color:#111827;font-size:13px;font-family:inherit;outline:none;line-height:1.5}
+textarea.nt:focus{border-color:#2563EB;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+textarea.nt::placeholder{color:#9CA3AF}
+.add-row{display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap}
+.btn-add{padding:8px 16px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-add:hover{background:#1D4ED8}
+.shortcut{font-size:11px;color:#9CA3AF}
+kbd{background:#F3F4F6;border:1px solid #D1D5DB;border-radius:4px;padding:1px 5px;font-size:11px}
+
+.fp-list{background:#fff;border:1px solid #E5E7EB;border-top:none;border-radius:0 0 12px 12px;max-height:310px;overflow-y:auto}
+.fb-empty{padding:2rem;text-align:center;font-size:13px;color:#9CA3AF}
+.fb-item{display:flex;gap:10px;padding:10px 14px;border-top:1px solid #F3F4F6;align-items:flex-start}
+.fb-item:hover{background:#FAFAFA}
+.fb-tc{font-size:12px;font-weight:600;background:#EFF6FF;color:#1D4ED8;padding:3px 9px;border-radius:5px;white-space:nowrap;font-variant-numeric:tabular-nums;flex-shrink:0;cursor:pointer;border:none;font-family:inherit;line-height:1.7}
+.fb-tc:hover{background:#DBEAFE}
+.fb-body{flex:1;min-width:0}
+.fb-note{font-size:13px;color:#374151;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.fb-meta{font-size:11px;color:#9CA3AF;margin-top:3px}
+.fb-del{font-size:18px;color:#D1D5DB;background:none;border:none;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0}
+.fb-del:hover{color:#EF4444}
+
+.export-bar{display:flex;gap:8px;margin-top:1.25rem;flex-wrap:wrap;align-items:center}
+.exp-lbl{font-size:13px;color:#6B7280;font-weight:500}
+.btn-exp{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;border:1px solid}
+.btn-xl{background:#E8F5E9;color:#1B5E20;border-color:#A5D6A7}.btn-xl:hover{background:#C8E6C9}
+.btn-cv{background:#FFF8E1;color:#E65100;border-color:#FFCC80}.btn-cv:hover{background:#FFE0B2}
+.btn-pf{background:#FCE4EC;color:#880E4F;border-color:#F48FB1}.btn-pf:hover{background:#F8BBD0}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1F2937;color:#fff;padding:10px 22px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:999;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <h1>🎬 Video Feedback</h1>
+    <p>Dán link YouTube hoặc Google Drive → nhấn ⏱ để chụp timecode → ghi nhận xét</p>
+  </div>
+
+  <div class="url-bar">
+    <input type="text" id="urlInput" placeholder="https://youtube.com/watch?v=...  hoặc  https://drive.google.com/file/d/.../view"/>
+    <button class="btn-blue" onclick="loadVideo()">Tải video</button>
+  </div>
+
+  <div class="grid">
+    <!-- VIDEO PANEL -->
+    <div class="vpanel">
+      <div class="embed-box" id="placeholder">
+        <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+          <rect x="4" y="10" width="44" height="32" rx="5" stroke="#9CA3AF" stroke-width="2"/>
+          <polygon points="22,18 22,34 37,26" fill="#9CA3AF"/>
+        </svg>
+        <p>Dán link video<br>rồi nhấn "Tải video"</p>
+      </div>
+
+      <!--
+        YouTube: dùng iframe thường với enablejsapi=1 + origin=https://www.youtube.com
+        Lấy timecode qua postMessage polling
+      -->
+      <iframe id="yt-frame"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+
+      <!-- Drive native -->
+      <video id="dv" controls preload="metadata"></video>
+
+      <!-- Drive iframe fallback -->
+      <iframe id="drive-frame" allowfullscreen></iframe>
+
+      <!-- Manual hint khi bị chặn hoàn toàn -->
+      <div class="manual-hint" id="manualHint">
+        <p>⚠️ Video này bị chặn embed. Hãy <a id="ytOpenLink" href="#" target="_blank">mở YouTube</a> trong tab mới, xem đến đoạn cần feedback rồi nhập timecode thủ công bên phải.</p>
+      </div>
+
+      <div class="ctrl-bar" id="ctrlBar">
+        <span class="timecode" id="tcDisp">00:00:00</span>
+        <span class="sp"></span>
+        <button class="btn-cap" onclick="captureTC()">⏱ Chụp timecode</button>
+      </div>
+      <div class="vinfo" id="vinfo" style="display:none"></div>
+    </div>
+
+    <!-- FEEDBACK PANEL -->
+    <div class="fbpanel">
+      <div class="fp-head">
+        <h2>Nhận xét theo timecode</h2>
+        <span class="fc-badge" id="fbCount">0 feedback</span>
+      </div>
+      <div class="fp-input">
+        <div class="tc-row">
+          <span class="tc-lbl">Timecode:</span>
+          <span class="tc-pill" id="tcPill">--:--:--</span>
+          <span class="tc-hint" id="tcHint">← Nhấn ⏱ để chụp</span>
+        </div>
+
+        <!-- Hiện khi cần nhập tay -->
+        <div class="manual-tc-input" id="manualTcWrap">
+          <label>Nhập timecode thủ công</label>
+          <input type="text" id="manualTcInput" placeholder="00:01:30" maxlength="8" oninput="onManualTC(this)"/>
+        </div>
+
+        <textarea class="nt" id="noteText" placeholder="Ghi nhận xét tại đoạn này..."></textarea>
+        <div class="add-row">
+          <button class="btn-add" onclick="addFeedback()">+ Thêm</button>
+          <span class="shortcut">Phím tắt: <kbd>Space</kbd> = chụp timecode</span>
+        </div>
+      </div>
+      <div class="fp-list" id="fbList">
+        <div class="fb-empty">Chưa có feedback nào</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="export-bar">
+    <span class="exp-lbl">Xuất file:</span>
+    <button class="btn-exp btn-xl" onclick="exportXLSX()">📊 Excel (.xlsx)</button>
+    <button class="btn-exp btn-cv" onclick="exportCSV()">📄 CSV</button>
+    <button class="btn-exp btn-pf" onclick="exportPDF()">📑 PDF (in)</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+var feedbacks = [];
+var currentTC = '--:--:--';
+var videoUrl = '';
+var videoType = '';
+var nativeVid = null;
+var tcTimer = null;
+var ytCurrentSec = 0;   // updated via postMessage from YT iframe
+var ytIframe = null;
+var useManual = false;
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function fmt(sec) {
+  sec = Math.floor(sec || 0);
+  return [Math.floor(sec/3600), Math.floor((sec%3600)/60), sec%60]
+    .map(function(v){ return String(v).padStart(2,'0'); }).join(':');
+}
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+function parseUrl(url) {
+  try {
+    var u = new URL(url);
+    if (u.hostname.includes('youtube.com')) return { type:'youtube', id: u.searchParams.get('v') };
+    if (u.hostname.includes('youtu.be')) return { type:'youtube', id: u.pathname.slice(1).split('?')[0] };
+    if (u.hostname.includes('drive.google.com')) {
+      var m = url.match(/\/d\/([^\/\?]+)/);
+      return m ? { type:'drive', id: m[1] } : null;
+    }
+  } catch(e) {}
+  return null;
+}
+
+// ── postMessage: lắng nghe timecode từ YouTube iframe ──────────────────────────
+// YouTube gửi sự kiện qua postMessage khi dùng enablejsapi=1
+// Ta poll getCurrentTime bằng cách gửi command mỗi 500ms
+var ytPollTimer = null;
+
+window.addEventListener('message', function(e) {
+  // YouTube postMessage data format
+  if (!e.data) return;
+  var data;
+  try {
+    data = (typeof e.data === 'string') ? JSON.parse(e.data) : e.data;
+  } catch(ex) { return; }
+
+  if (data.event === 'infoDelivery' && data.info && typeof data.info.currentTime === 'number') {
+    ytCurrentSec = data.info.currentTime;
+  }
+  if (data.event === 'onReady') {
+    // Start polling currentTime
+    startYTPoll();
+  }
+  // Detect errors
+  if (data.event === 'onError') {
+    console.warn('YT error:', data.info);
+    // codes 100,101,150 = blocked/not found
+    if ([100,101,150,2,5].indexOf(data.info) !== -1) {
+      showManualFallback();
+    }
+  }
+});
+
+function ytPostCmd(cmd, args) {
+  if (!ytIframe || !ytIframe.contentWindow) return;
+  try {
+    ytIframe.contentWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: cmd,
+      args: args || []
+    }), '*');
+  } catch(e) {}
+}
+
+function startYTPoll() {
+  if (ytPollTimer) clearInterval(ytPollTimer);
+  ytPollTimer = setInterval(function() {
+    ytPostCmd('getCurrentTime');
+    // Also request info delivery
+    if (ytIframe && ytIframe.contentWindow) {
+      try {
+        ytIframe.contentWindow.postMessage(JSON.stringify({
+          event: 'listening',
+          id: 1
+        }), '*');
+      } catch(e) {}
+    }
+  }, 500);
+}
+
+// ── Load video ─────────────────────────────────────────────────────────────────
+function loadVideo() {
+  var url = document.getElementById('urlInput').value.trim();
+  if (!url) { showToast('Vui lòng dán link video!'); return; }
+  var info = parseUrl(url);
+  if (!info || !info.id) { showToast('Link không hỗ trợ. Dùng YouTube hoặc Drive.'); return; }
+
+  videoUrl = url; videoType = info.type; useManual = false;
+  ytCurrentSec = 0; nativeVid = null;
+
+  // Reset
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('yt-frame').style.display = 'none';
+  document.getElementById('dv').style.display = 'none';
+  document.getElementById('drive-frame').style.display = 'none';
+  document.getElementById('manualHint').style.display = 'none';
+  document.getElementById('manualTcWrap').style.display = 'none';
+  document.getElementById('ctrlBar').style.display = 'flex';
+  document.getElementById('vinfo').style.display = 'block';
+
+  if (info.type === 'youtube') {
+    document.getElementById('vinfo').textContent = '▶ YouTube · ' + (url.length>65?url.slice(0,62)+'...':url);
+    document.getElementById('ytOpenLink').href = url;
+    loadYT(info.id);
+  } else {
+    document.getElementById('vinfo').textContent = '📁 Drive · ' + (url.length>65?url.slice(0,62)+'...':url);
+    loadDrive(info.id);
+  }
+  startTCTimer();
+}
+
+// ── YouTube: iframe thường + enablejsapi=1 ─────────────────────────────────────
+function loadYT(id) {
+  if (ytPollTimer) clearInterval(ytPollTimer);
+  ytIframe = document.getElementById('yt-frame');
+
+  // enablejsapi=1 + origin='' works for file:// too via postMessage
+  // autoplay=0, rel=0, modestbranding=1
+  ytIframe.src = 'https://www.youtube.com/embed/' + id
+    + '?enablejsapi=1&rel=0&modestbranding=1&autoplay=0';
+  ytIframe.style.display = 'block';
+
+  // Detect block: nếu sau 6 giây ytCurrentSec vẫn = 0 VÀ video chưa ready
+  // ta không tự động fallback vì có thể user chưa play
+  // Chỉ fallback khi có onError event
+}
+
+function showManualFallback() {
+  useManual = true;
+  document.getElementById('manualHint').style.display = 'block';
+  document.getElementById('manualTcWrap').style.display = 'block';
+  showToast('Video bị chặn embed, dùng timecode thủ công');
+}
+
+// ── Google Drive ───────────────────────────────────────────────────────────────
+function loadDrive(id) {
+  var dv = document.getElementById('dv');
+  dv.style.display = 'block';
+  nativeVid = dv;
+  dv.src = 'https://drive.google.com/uc?export=download&id=' + id;
+  dv.onerror = function() {
+    dv.style.display = 'none'; nativeVid = null;
+    var fr = document.getElementById('drive-frame');
+    fr.src = 'https://drive.google.com/file/d/' + id + '/preview';
+    fr.style.display = 'block';
+    useManual = true;
+    document.getElementById('manualTcWrap').style.display = 'block';
+  };
+}
+
+// ── Timecode display timer ─────────────────────────────────────────────────────
+function startTCTimer() {
+  if (tcTimer) clearInterval(tcTimer);
+  tcTimer = setInterval(function() {
+    var sec = 0;
+    if (nativeVid && !isNaN(nativeVid.currentTime)) {
+      sec = nativeVid.currentTime;
+    } else if (videoType === 'youtube') {
+      sec = ytCurrentSec;
+    }
+    document.getElementById('tcDisp').textContent = fmt(sec);
+  }, 300);
+}
+
+// ── Capture ────────────────────────────────────────────────────────────────────
+function captureTC() {
+  if (useManual) {
+    showToast('Nhập timecode thủ công ở bên phải');
+    document.getElementById('manualTcInput').focus();
+    return;
+  }
+  var sec = 0;
+  if (nativeVid && !isNaN(nativeVid.currentTime)) {
+    sec = nativeVid.currentTime;
+    nativeVid.pause();
+  } else if (videoType === 'youtube') {
+    sec = ytCurrentSec;
+    ytPostCmd('pauseVideo');
+  }
+  setTC(fmt(sec));
+  document.getElementById('noteText').focus();
+  showToast('⏱ Đã chụp ' + currentTC);
+}
+
+function setTC(tc) {
+  currentTC = tc;
+  var pill = document.getElementById('tcPill');
+  pill.textContent = tc;
+  pill.style.background = (tc === '--:--:--') ? '#1a1a2e' : '#1D4ED8';
+  document.getElementById('tcHint').textContent = (tc === '--:--:--') ? '← Nhấn ⏱ để chụp' : '✓ Đã chụp';
+}
+
+// Manual TC input: tự format khi gõ
+function onManualTC(input) {
+  var raw = input.value.replace(/[^0-9]/g, '').slice(0, 6);
+  var formatted = raw;
+  if (raw.length > 4) formatted = raw.slice(0,2)+':'+raw.slice(2,4)+':'+raw.slice(4);
+  else if (raw.length > 2) formatted = raw.slice(0,2)+':'+raw.slice(2);
+  input.value = formatted;
+  if (/^\d{2}:\d{2}:\d{2}$/.test(formatted)) setTC(formatted);
+}
+
+// ── Jump to TC ─────────────────────────────────────────────────────────────────
+function jumpTo(tc) {
+  var p = tc.split(':').map(Number);
+  var sec = p[0]*3600 + p[1]*60 + p[2];
+  if (nativeVid) { nativeVid.currentTime = sec; nativeVid.play(); }
+  else if (videoType === 'youtube') {
+    ytPostCmd('seekTo', [sec, true]);
+    ytPostCmd('playVideo');
+  }
+}
+
+// ── Add feedback ───────────────────────────────────────────────────────────────
+function addFeedback() {
+  if (!videoUrl) { showToast('Chưa tải video nào!'); return; }
+  var note = document.getElementById('noteText').value.trim();
+  if (!note) { showToast('Vui lòng nhập nội dung nhận xét!'); return; }
+  if (currentTC === '--:--:--') {
+    showToast(useManual ? 'Nhập timecode thủ công trước!' : 'Hãy nhấn ⏱ để chụp timecode trước!');
+    return;
+  }
+  feedbacks.push({ id: Date.now(), tc: currentTC, note: note, time: new Date(), url: videoUrl, type: videoType });
+  feedbacks.sort(function(a,b){
+    var s = function(t){ return t.split(':').reduce(function(acc,v){return acc*60+parseInt(v);},0); };
+    return s(a.tc)-s(b.tc);
+  });
+  renderList();
+  document.getElementById('noteText').value = '';
+  document.getElementById('manualTcInput').value = '';
+  setTC('--:--:--');
+  showToast('✅ Đã thêm feedback!');
+}
+
+function delFb(id) { feedbacks = feedbacks.filter(function(f){return f.id!==id;}); renderList(); }
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderList() {
+  var list = document.getElementById('fbList');
+  document.getElementById('fbCount').textContent = feedbacks.length + ' feedback';
+  list.innerHTML = '';
+  if (!feedbacks.length) { list.innerHTML = '<div class="fb-empty">Chưa có feedback nào</div>'; return; }
+  feedbacks.forEach(function(fb) {
+    var d = fb.time;
+    var ds = d.toLocaleDateString('vi-VN')+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+    var div = document.createElement('div');
+    div.className = 'fb-item';
+    div.innerHTML =
+      '<button class="fb-tc" onclick="jumpTo(\''+fb.tc+'\')" title="Tua đến '+fb.tc+'">▶ '+fb.tc+'</button>'+
+      '<div class="fb-body">'+
+        '<div class="fb-note">'+esc(fb.note)+'</div>'+
+        '<div class="fb-meta">'+ds+'</div>'+
+      '</div>'+
+      '<button class="fb-del" onclick="delFb('+fb.id+')" title="Xoá">×</button>';
+    list.appendChild(div);
+  });
+}
+
+// ── Export XLSX ────────────────────────────────────────────────────────────────
+function exportXLSX() {
+  if (!feedbacks.length) { showToast('Chưa có feedback!'); return; }
+  var rows = [['#','Timecode','Nội dung nhận xét','Thời điểm ghi','Link video']];
+  feedbacks.forEach(function(fb,i){
+    var d = fb.time;
+    rows.push([i+1, fb.tc, fb.note,
+      d.toLocaleDateString('vi-VN')+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),
+      fb.url]);
+  });
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:4},{wch:11},{wch:60},{wch:18},{wch:55}];
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Feedback');
+  XLSX.writeFile(wb, 'video-feedback-'+new Date().toISOString().slice(0,10)+'.xlsx');
+  showToast('✅ Đã xuất Excel!');
+}
+
+// ── Export CSV ─────────────────────────────────────────────────────────────────
+function exportCSV() {
+  if (!feedbacks.length) { showToast('Chưa có feedback!'); return; }
+  var rows = [['#','Timecode','Nội dung nhận xét','Thời điểm ghi','Link video']];
+  feedbacks.forEach(function(fb,i){
+    var d = fb.time;
+    rows.push([i+1, fb.tc, fb.note,
+      d.toLocaleDateString('vi-VN')+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),
+      fb.url]);
+  });
+  var csv = rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download = 'video-feedback-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  showToast('✅ Đã xuất CSV!');
+}
+
+// ── Export PDF ─────────────────────────────────────────────────────────────────
+function exportPDF() {
+  if (!feedbacks.length) { showToast('Chưa có feedback!'); return; }
+  var now = new Date().toLocaleDateString('vi-VN');
+  var su = videoUrl.length > 90 ? videoUrl.slice(0,87)+'...' : videoUrl;
+  var rows = feedbacks.map(function(fb,i){
+    return '<tr>'+
+      '<td style="text-align:center">'+(i+1)+'</td>'+
+      '<td style="font-weight:700;color:#1D4ED8;text-align:center;white-space:nowrap">'+fb.tc+'</td>'+
+      '<td style="white-space:pre-wrap">'+fb.note+'</td>'+
+      '<td style="font-size:11px;color:#6B7280;white-space:nowrap">'+
+        fb.time.toLocaleDateString('vi-VN')+' '+fb.time.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})+
+      '</td></tr>';
+  }).join('');
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'+
+    'body{font-family:Arial,sans-serif;margin:2cm;color:#111;font-size:12px}'+
+    'h1{font-size:17px;font-weight:700;margin-bottom:4px}'+
+    '.meta{color:#6B7280;font-size:11px;margin-bottom:1.2rem;line-height:1.7}'+
+    'table{width:100%;border-collapse:collapse}'+
+    'th{background:#2563EB;color:#fff;padding:7px 9px;text-align:left;font-size:11px}'+
+    'td{padding:7px 9px;border-bottom:1px solid #E5E7EB;vertical-align:top}'+
+    'tr:nth-child(even) td{background:#F9FAFB}'+
+    '@media print{@page{margin:1.5cm}}'+
+    '</style></head><body>'+
+    '<h1>🎬 Video Feedback Report</h1>'+
+    '<div class="meta"><b>Link:</b> '+su+'<br><b>Ngày xuất:</b> '+now+' · <b>Tổng:</b> '+feedbacks.length+' feedback</div>'+
+    '<table><tr>'+
+    '<th style="width:28px">#</th><th style="width:80px">Timecode</th>'+
+    '<th>Nội dung nhận xét</th><th style="width:95px">Thời điểm ghi</th>'+
+    '</tr>'+rows+'</table></body></html>';
+  var w = window.open('','_blank');
+  w.document.write(html); w.document.close();
+  setTimeout(function(){ w.print(); }, 600);
+  showToast('📑 Đang mở để in PDF...');
+}
+
+// ── Keyboard shortcut ──────────────────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
+    e.preventDefault(); captureTC();
+  }
+});
+</script>
+</body>
+</html>
