@@ -12,18 +12,15 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#F0F2F5;color:#111827;mi
 .wrap{max-width:980px;margin:0 auto;padding:1.75rem 1.25rem 3rem}
 .hdr h1{font-size:22px;font-weight:600;margin-bottom:4px}
 .hdr p{font-size:13px;color:#6B7280;margin-bottom:1.5rem}
-
 .url-bar{display:flex;gap:8px;margin-bottom:1.5rem}
 .url-bar input{flex:1;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;background:#fff;font-size:14px;font-family:inherit;color:#111827;outline:none}
 .url-bar input:focus{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .url-bar input::placeholder{color:#9CA3AF}
 .btn-blue{padding:10px 20px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
 .btn-blue:hover{background:#1D4ED8}
-
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
 @media(max-width:650px){.grid{grid-template-columns:1fr}}
 
-/* Video panel */
 .vpanel{background:#fff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden}
 .embed-box{height:240px;background:#111827;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
 .embed-box p{font-size:13px;color:#6B7280;text-align:center;line-height:1.6}
@@ -36,14 +33,13 @@ iframe#drive-frame{width:100%;height:240px;border:none;display:none}
 .sp{flex:1}
 .btn-cap{padding:7px 14px;background:#EFF6FF;color:#1D4ED8;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
 .btn-cap:hover{background:#DBEAFE}
-.vinfo{font-size:11px;color:#9CA3AF;padding:5px 12px 8px;text-align:center;border-top:1px solid #F3F4F6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pause-hint{font-size:11px;color:#9CA3AF;padding:4px 12px 8px;text-align:center;border-top:1px solid #F3F4F6}
+.vinfo{font-size:11px;color:#9CA3AF;padding:5px 12px 8px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-top:1px solid #F3F4F6}
 
-/* Manual TC hint */
 .manual-hint{display:none;padding:8px 12px 10px;background:#FFFBEB;border-top:1px solid #FDE68A}
 .manual-hint p{font-size:12px;color:#92400E;line-height:1.5}
 .manual-hint a{color:#1D4ED8;text-decoration:underline}
 
-/* Feedback panel */
 .fbpanel{display:flex;flex-direction:column}
 .fp-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#fff;border-radius:12px 12px 0 0;border:1px solid #E5E7EB;border-bottom:none}
 .fp-head h2{font-size:14px;font-weight:600}
@@ -53,13 +49,10 @@ iframe#drive-frame{width:100%;height:240px;border:none;display:none}
 .tc-lbl{font-size:12px;color:#9CA3AF}
 .tc-pill{font-size:12px;font-weight:600;background:#1a1a2e;color:#E5E7EB;padding:3px 10px;border-radius:6px;font-variant-numeric:tabular-nums;letter-spacing:.5px}
 .tc-hint{font-size:11px;color:#9CA3AF}
-
-/* Manual TC input */
 .manual-tc-input{display:none;margin-bottom:8px}
 .manual-tc-input label{font-size:12px;color:#6B7280;display:block;margin-bottom:4px}
-.manual-tc-input input{padding:7px 10px;border:1px solid #D1D5DB;border-radius:7px;font-size:14px;font-family:inherit;width:140px;outline:none;color:#111827;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+.manual-tc-input input{padding:7px 10px;border:1px solid #D1D5DB;border-radius:7px;font-size:14px;font-family:inherit;width:140px;outline:none;color:#111827;font-variant-numeric:tabular-nums}
 .manual-tc-input input:focus{border-color:#2563EB}
-
 textarea.nt{width:100%;resize:vertical;min-height:90px;padding:9px 11px;border:1px solid #D1D5DB;border-radius:8px;background:#fff;color:#111827;font-size:13px;font-family:inherit;outline:none;line-height:1.5}
 textarea.nt:focus{border-color:#2563EB;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
 textarea.nt::placeholder{color:#9CA3AF}
@@ -96,7 +89,7 @@ kbd{background:#F3F4F6;border:1px solid #D1D5DB;border-radius:4px;padding:1px 5p
 <div class="wrap">
   <div class="hdr">
     <h1>🎬 Video Feedback</h1>
-    <p>Dán link YouTube hoặc Google Drive → nhấn ⏱ để chụp timecode → ghi nhận xét</p>
+    <p>Dán link YouTube hoặc Google Drive → pause video → timecode tự động cập nhật → ghi nhận xét</p>
   </div>
 
   <div class="url-bar">
@@ -105,7 +98,6 @@ kbd{background:#F3F4F6;border:1px solid #D1D5DB;border-radius:4px;padding:1px 5p
   </div>
 
   <div class="grid">
-    <!-- VIDEO PANEL -->
     <div class="vpanel">
       <div class="embed-box" id="placeholder">
         <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
@@ -114,35 +106,23 @@ kbd{background:#F3F4F6;border:1px solid #D1D5DB;border-radius:4px;padding:1px 5p
         </svg>
         <p>Dán link video<br>rồi nhấn "Tải video"</p>
       </div>
-
-      <!--
-        YouTube: dùng iframe thường với enablejsapi=1 + origin=https://www.youtube.com
-        Lấy timecode qua postMessage polling
-      -->
       <iframe id="yt-frame"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen></iframe>
-
-      <!-- Drive native -->
       <video id="dv" controls preload="metadata"></video>
-
-      <!-- Drive iframe fallback -->
       <iframe id="drive-frame" allowfullscreen></iframe>
-
-      <!-- Manual hint khi bị chặn hoàn toàn -->
       <div class="manual-hint" id="manualHint">
         <p>⚠️ Video này bị chặn embed. Hãy <a id="ytOpenLink" href="#" target="_blank">mở YouTube</a> trong tab mới, xem đến đoạn cần feedback rồi nhập timecode thủ công bên phải.</p>
       </div>
-
       <div class="ctrl-bar" id="ctrlBar">
         <span class="timecode" id="tcDisp">00:00:00</span>
         <span class="sp"></span>
         <button class="btn-cap" onclick="captureTC()">⏱ Chụp timecode</button>
       </div>
+      <div class="pause-hint" id="pauseHint" style="display:none">⏸ Pause video để tự động chụp timecode</div>
       <div class="vinfo" id="vinfo" style="display:none"></div>
     </div>
 
-    <!-- FEEDBACK PANEL -->
     <div class="fbpanel">
       <div class="fp-head">
         <h2>Nhận xét theo timecode</h2>
@@ -152,15 +132,12 @@ kbd{background:#F3F4F6;border:1px solid #D1D5DB;border-radius:4px;padding:1px 5p
         <div class="tc-row">
           <span class="tc-lbl">Timecode:</span>
           <span class="tc-pill" id="tcPill">--:--:--</span>
-          <span class="tc-hint" id="tcHint">← Nhấn ⏱ để chụp</span>
+          <span class="tc-hint" id="tcHint">← Pause video để chụp</span>
         </div>
-
-        <!-- Hiện khi cần nhập tay -->
         <div class="manual-tc-input" id="manualTcWrap">
           <label>Nhập timecode thủ công</label>
           <input type="text" id="manualTcInput" placeholder="00:01:30" maxlength="8" oninput="onManualTC(this)"/>
         </div>
-
         <textarea class="nt" id="noteText" placeholder="Ghi nhận xét tại đoạn này..."></textarea>
         <div class="add-row">
           <button class="btn-add" onclick="addFeedback()">+ Thêm</button>
@@ -183,16 +160,94 @@ kbd{background:#F3F4F6;border:1px solid #D1D5DB;border-radius:4px;padding:1px 5p
 <div class="toast" id="toast"></div>
 
 <script>
-// ── State ──────────────────────────────────────────────────────────────────────
 var feedbacks = [];
 var currentTC = '--:--:--';
 var videoUrl = '';
 var videoType = '';
 var nativeVid = null;
 var tcTimer = null;
-var ytCurrentSec = 0;   // updated via postMessage from YT iframe
-var ytIframe = null;
 var useManual = false;
+
+// YouTube state tracked via postMessage
+var ytSec = 0;
+var ytState = -1; // -1=unstarted, 0=ended, 1=playing, 2=paused, 3=buffering, 5=cued
+var ytFrame = null;
+var ytListening = false;
+
+// ── postMessage handler ────────────────────────────────────────────────────────
+window.addEventListener('message', function(e) {
+  if (!e.data) return;
+  var data;
+  try { data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; }
+  catch(ex) { return; }
+
+  // YouTube sends infoDelivery with currentTime & playerState
+  if (data.event === 'infoDelivery' && data.info) {
+    if (typeof data.info.currentTime === 'number') {
+      ytSec = data.info.currentTime;
+    }
+    if (typeof data.info.playerState === 'number') {
+      var prevState = ytState;
+      ytState = data.info.playerState;
+      // state 2 = paused → auto-capture
+      if (ytState === 2 && prevState === 1) {
+        autoCaptureTC(ytSec);
+      }
+    }
+  }
+
+  if (data.event === 'onStateChange') {
+    var prevState = ytState;
+    ytState = data.info;
+    if (ytState === 2 && prevState === 1) {
+      autoCaptureTC(ytSec);
+    }
+  }
+
+  if (data.event === 'onReady') {
+    ytListening = true;
+    startYTInfoPolling();
+  }
+
+  if (data.event === 'onError') {
+    if ([100, 101, 150, 2, 5].indexOf(data.info) !== -1) {
+      showManualFallback();
+    }
+  }
+});
+
+// Poll YouTube for currentTime + playerState every 500ms
+var ytPollTimer = null;
+function startYTInfoPolling() {
+  if (ytPollTimer) clearInterval(ytPollTimer);
+  ytPollTimer = setInterval(function() {
+    if (!ytFrame) return;
+    // Request info delivery from YouTube
+    ytCmd('getPlayerState');
+    ytCmd('getCurrentTime');
+    // Also send listening event to subscribe to infoDelivery
+    try {
+      ytFrame.contentWindow.postMessage(JSON.stringify({
+        event: 'listening',
+        id: 1,
+        channel: 'widget'
+      }), '*');
+    } catch(e) {}
+  }, 500);
+}
+
+function ytCmd(fn, args) {
+  if (!ytFrame || !ytFrame.contentWindow) return;
+  try {
+    ytFrame.contentWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: fn,
+      args: args || [],
+      id: 1,
+      channel: 'widget'
+    }), '*');
+  } catch(e) {}
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function fmt(sec) {
@@ -218,63 +273,6 @@ function parseUrl(url) {
   return null;
 }
 
-// ── postMessage: lắng nghe timecode từ YouTube iframe ──────────────────────────
-// YouTube gửi sự kiện qua postMessage khi dùng enablejsapi=1
-// Ta poll getCurrentTime bằng cách gửi command mỗi 500ms
-var ytPollTimer = null;
-
-window.addEventListener('message', function(e) {
-  // YouTube postMessage data format
-  if (!e.data) return;
-  var data;
-  try {
-    data = (typeof e.data === 'string') ? JSON.parse(e.data) : e.data;
-  } catch(ex) { return; }
-
-  if (data.event === 'infoDelivery' && data.info && typeof data.info.currentTime === 'number') {
-    ytCurrentSec = data.info.currentTime;
-  }
-  if (data.event === 'onReady') {
-    // Start polling currentTime
-    startYTPoll();
-  }
-  // Detect errors
-  if (data.event === 'onError') {
-    console.warn('YT error:', data.info);
-    // codes 100,101,150 = blocked/not found
-    if ([100,101,150,2,5].indexOf(data.info) !== -1) {
-      showManualFallback();
-    }
-  }
-});
-
-function ytPostCmd(cmd, args) {
-  if (!ytIframe || !ytIframe.contentWindow) return;
-  try {
-    ytIframe.contentWindow.postMessage(JSON.stringify({
-      event: 'command',
-      func: cmd,
-      args: args || []
-    }), '*');
-  } catch(e) {}
-}
-
-function startYTPoll() {
-  if (ytPollTimer) clearInterval(ytPollTimer);
-  ytPollTimer = setInterval(function() {
-    ytPostCmd('getCurrentTime');
-    // Also request info delivery
-    if (ytIframe && ytIframe.contentWindow) {
-      try {
-        ytIframe.contentWindow.postMessage(JSON.stringify({
-          event: 'listening',
-          id: 1
-        }), '*');
-      } catch(e) {}
-    }
-  }, 500);
-}
-
 // ── Load video ─────────────────────────────────────────────────────────────────
 function loadVideo() {
   var url = document.getElementById('urlInput').value.trim();
@@ -282,16 +280,17 @@ function loadVideo() {
   var info = parseUrl(url);
   if (!info || !info.id) { showToast('Link không hỗ trợ. Dùng YouTube hoặc Drive.'); return; }
 
-  videoUrl = url; videoType = info.type; useManual = false;
-  ytCurrentSec = 0; nativeVid = null;
+  videoUrl = url; videoType = info.type;
+  useManual = false; ytSec = 0; ytState = -1; ytListening = false; nativeVid = null;
+  if (ytPollTimer) clearInterval(ytPollTimer);
 
-  // Reset
   document.getElementById('placeholder').style.display = 'none';
   document.getElementById('yt-frame').style.display = 'none';
   document.getElementById('dv').style.display = 'none';
   document.getElementById('drive-frame').style.display = 'none';
   document.getElementById('manualHint').style.display = 'none';
   document.getElementById('manualTcWrap').style.display = 'none';
+  document.getElementById('pauseHint').style.display = 'none';
   document.getElementById('ctrlBar').style.display = 'flex';
   document.getElementById('vinfo').style.display = 'block';
 
@@ -303,38 +302,24 @@ function loadVideo() {
     document.getElementById('vinfo').textContent = '📁 Drive · ' + (url.length>65?url.slice(0,62)+'...':url);
     loadDrive(info.id);
   }
-  startTCTimer();
+  startDispTimer();
 }
 
-// ── YouTube: iframe thường + enablejsapi=1 ─────────────────────────────────────
 function loadYT(id) {
-  if (ytPollTimer) clearInterval(ytPollTimer);
-  ytIframe = document.getElementById('yt-frame');
-
-  // enablejsapi=1 + origin='' works for file:// too via postMessage
-  // autoplay=0, rel=0, modestbranding=1
-  ytIframe.src = 'https://www.youtube.com/embed/' + id
-    + '?enablejsapi=1&rel=0&modestbranding=1&autoplay=0';
-  ytIframe.style.display = 'block';
-
-  // Detect block: nếu sau 6 giây ytCurrentSec vẫn = 0 VÀ video chưa ready
-  // ta không tự động fallback vì có thể user chưa play
-  // Chỉ fallback khi có onError event
+  ytFrame = document.getElementById('yt-frame');
+  // enablejsapi=1 lets us use postMessage API
+  // origin must match — on https pages.dev this works perfectly
+  ytFrame.src = 'https://www.youtube.com/embed/' + id
+    + '?enablejsapi=1&rel=0&modestbranding=1&autoplay=0&origin=' + encodeURIComponent(window.location.origin);
+  ytFrame.style.display = 'block';
+  document.getElementById('pauseHint').style.display = 'block';
 }
 
-function showManualFallback() {
-  useManual = true;
-  document.getElementById('manualHint').style.display = 'block';
-  document.getElementById('manualTcWrap').style.display = 'block';
-  showToast('Video bị chặn embed, dùng timecode thủ công');
-}
-
-// ── Google Drive ───────────────────────────────────────────────────────────────
 function loadDrive(id) {
   var dv = document.getElementById('dv');
-  dv.style.display = 'block';
-  nativeVid = dv;
+  dv.style.display = 'block'; nativeVid = dv;
   dv.src = 'https://drive.google.com/uc?export=download&id=' + id;
+  dv.addEventListener('pause', function() { autoCaptureTC(dv.currentTime); });
   dv.onerror = function() {
     dv.style.display = 'none'; nativeVid = null;
     var fr = document.getElementById('drive-frame');
@@ -345,38 +330,46 @@ function loadDrive(id) {
   };
 }
 
-// ── Timecode display timer ─────────────────────────────────────────────────────
-function startTCTimer() {
+function showManualFallback() {
+  useManual = true;
+  document.getElementById('manualHint').style.display = 'block';
+  document.getElementById('manualTcWrap').style.display = 'block';
+  document.getElementById('pauseHint').style.display = 'none';
+  showToast('Video bị chặn embed, dùng timecode thủ công');
+}
+
+// ── Display timer (updates the bottom-left clock) ─────────────────────────────
+function startDispTimer() {
   if (tcTimer) clearInterval(tcTimer);
   tcTimer = setInterval(function() {
     var sec = 0;
-    if (nativeVid && !isNaN(nativeVid.currentTime)) {
-      sec = nativeVid.currentTime;
-    } else if (videoType === 'youtube') {
-      sec = ytCurrentSec;
-    }
+    if (nativeVid && !isNaN(nativeVid.currentTime)) sec = nativeVid.currentTime;
+    else if (videoType === 'youtube') sec = ytSec;
     document.getElementById('tcDisp').textContent = fmt(sec);
   }, 300);
 }
 
-// ── Capture ────────────────────────────────────────────────────────────────────
+// ── Auto-capture when paused ───────────────────────────────────────────────────
+function autoCaptureTC(sec) {
+  setTC(fmt(sec));
+  document.getElementById('noteText').focus();
+  showToast('⏸ Timecode đã chụp: ' + currentTC);
+}
+
+// ── Manual capture button / Space ─────────────────────────────────────────────
 function captureTC() {
   if (useManual) {
-    showToast('Nhập timecode thủ công ở bên phải');
     document.getElementById('manualTcInput').focus();
+    showToast('Nhập timecode thủ công bên phải');
     return;
   }
   var sec = 0;
   if (nativeVid && !isNaN(nativeVid.currentTime)) {
-    sec = nativeVid.currentTime;
-    nativeVid.pause();
+    sec = nativeVid.currentTime; nativeVid.pause();
   } else if (videoType === 'youtube') {
-    sec = ytCurrentSec;
-    ytPostCmd('pauseVideo');
+    sec = ytSec; ytCmd('pauseVideo');
   }
-  setTC(fmt(sec));
-  document.getElementById('noteText').focus();
-  showToast('⏱ Đã chụp ' + currentTC);
+  autoCaptureTC(sec);
 }
 
 function setTC(tc) {
@@ -384,28 +377,24 @@ function setTC(tc) {
   var pill = document.getElementById('tcPill');
   pill.textContent = tc;
   pill.style.background = (tc === '--:--:--') ? '#1a1a2e' : '#1D4ED8';
-  document.getElementById('tcHint').textContent = (tc === '--:--:--') ? '← Nhấn ⏱ để chụp' : '✓ Đã chụp';
+  document.getElementById('tcHint').textContent = (tc === '--:--:--') ? '← Pause video để chụp' : '✓ Đã chụp';
 }
 
-// Manual TC input: tự format khi gõ
 function onManualTC(input) {
   var raw = input.value.replace(/[^0-9]/g, '').slice(0, 6);
-  var formatted = raw;
-  if (raw.length > 4) formatted = raw.slice(0,2)+':'+raw.slice(2,4)+':'+raw.slice(4);
-  else if (raw.length > 2) formatted = raw.slice(0,2)+':'+raw.slice(2);
-  input.value = formatted;
-  if (/^\d{2}:\d{2}:\d{2}$/.test(formatted)) setTC(formatted);
+  var f = raw;
+  if (raw.length > 4) f = raw.slice(0,2)+':'+raw.slice(2,4)+':'+raw.slice(4);
+  else if (raw.length > 2) f = raw.slice(0,2)+':'+raw.slice(2);
+  input.value = f;
+  if (/^\d{2}:\d{2}:\d{2}$/.test(f)) setTC(f);
 }
 
-// ── Jump to TC ─────────────────────────────────────────────────────────────────
+// ── Jump to timecode ───────────────────────────────────────────────────────────
 function jumpTo(tc) {
   var p = tc.split(':').map(Number);
   var sec = p[0]*3600 + p[1]*60 + p[2];
   if (nativeVid) { nativeVid.currentTime = sec; nativeVid.play(); }
-  else if (videoType === 'youtube') {
-    ytPostCmd('seekTo', [sec, true]);
-    ytPostCmd('playVideo');
-  }
+  else if (videoType === 'youtube') { ytCmd('seekTo', [sec, true]); ytCmd('playVideo'); }
 }
 
 // ── Add feedback ───────────────────────────────────────────────────────────────
@@ -413,10 +402,7 @@ function addFeedback() {
   if (!videoUrl) { showToast('Chưa tải video nào!'); return; }
   var note = document.getElementById('noteText').value.trim();
   if (!note) { showToast('Vui lòng nhập nội dung nhận xét!'); return; }
-  if (currentTC === '--:--:--') {
-    showToast(useManual ? 'Nhập timecode thủ công trước!' : 'Hãy nhấn ⏱ để chụp timecode trước!');
-    return;
-  }
+  if (currentTC === '--:--:--') { showToast('Hãy pause video để chụp timecode trước!'); return; }
   feedbacks.push({ id: Date.now(), tc: currentTC, note: note, time: new Date(), url: videoUrl, type: videoType });
   feedbacks.sort(function(a,b){
     var s = function(t){ return t.split(':').reduce(function(acc,v){return acc*60+parseInt(v);},0); };
@@ -444,16 +430,13 @@ function renderList() {
     div.className = 'fb-item';
     div.innerHTML =
       '<button class="fb-tc" onclick="jumpTo(\''+fb.tc+'\')" title="Tua đến '+fb.tc+'">▶ '+fb.tc+'</button>'+
-      '<div class="fb-body">'+
-        '<div class="fb-note">'+esc(fb.note)+'</div>'+
-        '<div class="fb-meta">'+ds+'</div>'+
-      '</div>'+
+      '<div class="fb-body"><div class="fb-note">'+esc(fb.note)+'</div><div class="fb-meta">'+ds+'</div></div>'+
       '<button class="fb-del" onclick="delFb('+fb.id+')" title="Xoá">×</button>';
     list.appendChild(div);
   });
 }
 
-// ── Export XLSX ────────────────────────────────────────────────────────────────
+// ── Exports ────────────────────────────────────────────────────────────────────
 function exportXLSX() {
   if (!feedbacks.length) { showToast('Chưa có feedback!'); return; }
   var rows = [['#','Timecode','Nội dung nhận xét','Thời điểm ghi','Link video']];
@@ -470,8 +453,6 @@ function exportXLSX() {
   XLSX.writeFile(wb, 'video-feedback-'+new Date().toISOString().slice(0,10)+'.xlsx');
   showToast('✅ Đã xuất Excel!');
 }
-
-// ── Export CSV ─────────────────────────────────────────────────────────────────
 function exportCSV() {
   if (!feedbacks.length) { showToast('Chưa có feedback!'); return; }
   var rows = [['#','Timecode','Nội dung nhận xét','Thời điểm ghi','Link video']];
@@ -488,15 +469,12 @@ function exportCSV() {
   a.click();
   showToast('✅ Đã xuất CSV!');
 }
-
-// ── Export PDF ─────────────────────────────────────────────────────────────────
 function exportPDF() {
   if (!feedbacks.length) { showToast('Chưa có feedback!'); return; }
   var now = new Date().toLocaleDateString('vi-VN');
   var su = videoUrl.length > 90 ? videoUrl.slice(0,87)+'...' : videoUrl;
   var rows = feedbacks.map(function(fb,i){
-    return '<tr>'+
-      '<td style="text-align:center">'+(i+1)+'</td>'+
+    return '<tr><td style="text-align:center">'+(i+1)+'</td>'+
       '<td style="font-weight:700;color:#1D4ED8;text-align:center;white-space:nowrap">'+fb.tc+'</td>'+
       '<td style="white-space:pre-wrap">'+fb.note+'</td>'+
       '<td style="font-size:11px;color:#6B7280;white-space:nowrap">'+
@@ -511,14 +489,11 @@ function exportPDF() {
     'th{background:#2563EB;color:#fff;padding:7px 9px;text-align:left;font-size:11px}'+
     'td{padding:7px 9px;border-bottom:1px solid #E5E7EB;vertical-align:top}'+
     'tr:nth-child(even) td{background:#F9FAFB}'+
-    '@media print{@page{margin:1.5cm}}'+
-    '</style></head><body>'+
+    '@media print{@page{margin:1.5cm}}</style></head><body>'+
     '<h1>🎬 Video Feedback Report</h1>'+
     '<div class="meta"><b>Link:</b> '+su+'<br><b>Ngày xuất:</b> '+now+' · <b>Tổng:</b> '+feedbacks.length+' feedback</div>'+
-    '<table><tr>'+
-    '<th style="width:28px">#</th><th style="width:80px">Timecode</th>'+
-    '<th>Nội dung nhận xét</th><th style="width:95px">Thời điểm ghi</th>'+
-    '</tr>'+rows+'</table></body></html>';
+    '<table><tr><th style="width:28px">#</th><th style="width:80px">Timecode</th>'+
+    '<th>Nội dung nhận xét</th><th style="width:95px">Thời điểm ghi</th></tr>'+rows+'</table></body></html>';
   var w = window.open('','_blank');
   w.document.write(html); w.document.close();
   setTimeout(function(){ w.print(); }, 600);
