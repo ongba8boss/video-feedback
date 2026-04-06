@@ -88,7 +88,7 @@ textarea.note{width:100%;resize:vertical;min-height:90px;padding:12px 14px;borde
       <div class="tc-bar" id="tcBar">
         <div>
           <div class="tc-clock" id="tcClock">00:00:00</div>
-          <div class="tc-status" id="tcStatus">▶ Đang phát — Nhấn SPACE để chụp timecode</div>
+          <div class="tc-status" id="tcStatus">▶ Đang phát — Pause video để tự động lấy timecode</div>
         </div>
       </div>
     </div>
@@ -104,7 +104,7 @@ textarea.note{width:100%;resize:vertical;min-height:90px;padding:12px 14px;borde
         <div class="fp-input">
           <div class="cap-tc-info" id="capTcBlock">
             <span class="cap-tc-val" id="capTcVal">--:--:--</span>
-            <span class="cap-tc-lbl" id="capTcLbl">Chưa chụp (Bấm Space)</span>
+            <span class="cap-tc-lbl" id="capTcLbl">Chưa có (Pause video để lấy)</span>
             <button class="cap-tc-clear" onclick="clearTC()" style="background:none;border:none;color:#64748B;cursor:pointer;font-size:18px;">×</button>
           </div>
 
@@ -133,7 +133,6 @@ var tag = document.createElement('script'); tag.src = "https://www.youtube.com/i
 var firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 function onYouTubeIframeAPIReady() {}
 
-// Đổi timecode dạng 01:23:45 thành tổng số giây (để tạo link YouTube)
 function toSeconds(tc) {
   var p = tc.split(':').map(Number);
   return p[0]*3600 + p[1]*60 + p[2];
@@ -147,6 +146,7 @@ function parseUrl(url){
     var u=new URL(url);
     if(u.hostname.includes('youtube.com')) return{type:'youtube',id:u.searchParams.get('v')};
     if(u.hostname.includes('youtu.be')) return{type:'youtube',id:u.pathname.slice(1).split('?')[0]};
+    if(u.hostname.includes('drive.google.com')){var m=url.match(/\/d\/([^\/\?]+)/);return m?{type:'drive',id:m[1]}:null;}
   }catch(e){} return null;
 }
 
@@ -174,8 +174,29 @@ function loadVideo(){
   if(info.type==='youtube'){
     document.getElementById('yt-frame').style.display='block';
     if(ytPlayer) ytPlayer.loadVideoById(info.id);
-    else ytPlayer = new YT.Player('yt-frame', { videoId: info.id, playerVars: { 'rel': 0, 'modestbranding': 1, 'autoplay': 0 }, events: { 'onStateChange': function(e) { ytPlaying = (e.data === YT.PlayerState.PLAYING); } } });
-  } 
+    else ytPlayer = new YT.Player('yt-frame', { 
+      videoId: info.id, 
+      playerVars: { 'rel': 0, 'modestbranding': 1, 'autoplay': 0 }, 
+      events: { 
+        'onStateChange': function(e) { 
+          var wasPlaying = ytPlaying;
+          ytPlaying = (e.data === YT.PlayerState.PLAYING);
+          // TỰ ĐỘNG LẤY TIMECODE KHI PAUSE YOUTUBE
+          if (e.data === YT.PlayerState.PAUSED && wasPlaying) {
+             autoCap(ytPlayer.getCurrentTime());
+          }
+        } 
+      } 
+    });
+  } else {
+    nativeVid=document.getElementById('dv');
+    nativeVid.style.display='block';
+    nativeVid.src='https://drive.google.com/uc?export=download&id='+info.id;
+    // TỰ ĐỘNG LẤY TIMECODE KHI PAUSE DRIVE VIDEO
+    nativeVid.onpause = function() {
+        autoCap(nativeVid.currentTime);
+    };
+  }
   loadLocal(videoUrl); startClock();
 }
 
@@ -189,28 +210,27 @@ function startClock(){
   }, 200);
 }
 
-function snapTC(){
+// HÀM TỰ ĐỘNG XỬ LÝ GIAO DIỆN KHI CÓ SỰ KIỆN PAUSE
+function autoCap(sec){
   if(!videoUrl) return;
-  var sec=0;
-  if(nativeVid && !isNaN(nativeVid.currentTime)){ sec=nativeVid.currentTime; nativeVid.pause(); } 
-  else if(videoType === 'youtube' && ytPlayer){ sec = ytPlayer.getCurrentTime(); ytPlayer.pauseVideo(); }
-  
   currentTC = fmt(sec);
   document.getElementById('capTcVal').textContent=currentTC;
-  document.getElementById('capTcLbl').textContent='✓ Đã chụp (Sẵn sàng ghi chú)';
+  document.getElementById('capTcLbl').textContent='✓ Đã lấy (Sẵn sàng ghi chú)';
   document.getElementById('capTcBlock').classList.add('active');
   document.getElementById('btnAdd').classList.add('ready');
-  document.getElementById('tcStatus').innerHTML='⏸ Timecode: <span style="color:var(--accent2);font-weight:bold">'+currentTC+'</span>';
+  document.getElementById('tcStatus').innerHTML='⏸ Timecode đã lấy: <span style="color:var(--accent2);font-weight:bold">'+currentTC+'</span>';
+  
+  // Tự động nháy chuột vào ô nhập liệu cho anh gõ luôn
   setTimeout(function(){ document.getElementById('noteText').focus(); }, 100);
 }
 
 function clearTC(){
   currentTC='--:--:--';
   document.getElementById('capTcVal').textContent=currentTC;
-  document.getElementById('capTcLbl').textContent='Chưa chụp (Bấm Space)';
+  document.getElementById('capTcLbl').textContent='Chưa có (Pause video để lấy)';
   document.getElementById('capTcBlock').classList.remove('active');
   document.getElementById('btnAdd').classList.remove('ready');
-  document.getElementById('tcStatus').innerHTML='▶ Đang phát — Nhấn SPACE để chụp timecode';
+  document.getElementById('tcStatus').innerHTML='▶ Đang phát — Pause video để tự động lấy timecode';
 }
 
 function jumpTo(tc){
@@ -223,9 +243,8 @@ function addFeedback(){
   if(!videoUrl){toast('Chưa tải video!');return;}
   var note=document.getElementById('noteText').value.trim();
   if(!note){toast('Vui lòng nhập nội dung!');return;}
-  if(currentTC==='--:--:--'){toast('Chưa chụp timecode!');return;}
+  if(currentTC==='--:--:--'){toast('Chưa có timecode!');return;}
   
-  // Tạo Deep-Link dựa trên nền tảng
   var deepLink = videoUrl;
   if(videoType === 'youtube') deepLink = 'https://youtu.be/' + ytVideoId + '?t=' + toSeconds(currentTC);
   
@@ -258,10 +277,23 @@ function renderList(){
   });
 }
 
+// Bắt phím Space để Play/Pause (sẽ kích hoạt autoCap gián tiếp)
 document.addEventListener('keydown', function(e){
   var noteInput = document.getElementById('noteText');
   var urlInput = document.getElementById('urlInput');
-  if(e.code === 'Space' && e.target !== noteInput && e.target !== urlInput){ e.preventDefault(); snapTC(); }
+  
+  if(e.code === 'Space' && e.target !== noteInput && e.target !== urlInput){ 
+      e.preventDefault(); 
+      if(nativeVid) {
+          if(!nativeVid.paused) nativeVid.pause(); 
+          else nativeVid.play();
+      } else if(videoType === 'youtube' && ytPlayer) {
+          var state = ytPlayer.getPlayerState();
+          if(state === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
+          else ytPlayer.playVideo();
+      }
+  }
+  
   if(e.key === 'Enter' && !e.shiftKey && e.target === noteInput){ e.preventDefault(); addFeedback(); }
 });
 
@@ -278,16 +310,13 @@ function exportXLSX(){
 function exportPDF(){
   if(!feedbacks.length){toast('Chưa có dữ liệu!');return;}
   
-  // Tự động lấy ảnh bìa YouTube để report đẹp hơn
   var coverImgHtml = '';
   if(videoType === 'youtube' && ytVideoId) {
     coverImgHtml = '<div style="margin-bottom:20px"><img src="https://img.youtube.com/vi/'+ytVideoId+'/maxresdefault.jpg" onerror="this.src=\'https://img.youtube.com/vi/'+ytVideoId+'/mqdefault.jpg\'" style="width:100%;max-width:400px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1)"/></div>';
   }
 
   var rows=feedbacks.map(function(fb,i){
-    // Tạo link click trực tiếp vào YouTube
     var linkBtn = '<a href="'+fb.url+'" target="_blank" style="display:inline-block; margin-top:8px; font-size:11px; background:#EEF2FF; color:#4F46E5; padding:4px 10px; border-radius:4px; text-decoration:none; font-weight:bold;">▶ Xem tại '+fb.tc+'</a>';
-    
     return '<tr><td style="text-align:center">'+(i+1)+'</td><td style="font-weight:bold;color:#111;text-align:center">'+fb.tc+'</td><td style="white-space:pre-wrap; line-height:1.6">'+fb.note+'<br>'+linkBtn+'</td></tr>';
   }).join('');
   
