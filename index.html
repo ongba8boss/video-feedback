@@ -203,7 +203,6 @@ textarea.note::placeholder{color:var(--muted)}
 </head>
 <body>
 <div class="app">
-  <!-- TOP BAR -->
   <div class="topbar">
     <div class="logo">🎬 <span>Video</span>Feedback</div>
     <div class="sp"></div>
@@ -213,9 +212,7 @@ textarea.note::placeholder{color:var(--muted)}
     </div>
   </div>
 
-  <!-- MAIN -->
   <div class="main">
-    <!-- VIDEO COLUMN -->
     <div class="video-col">
       <div class="video-box" id="videoBox">
         <div class="video-placeholder" id="placeholder">
@@ -225,14 +222,11 @@ textarea.note::placeholder{color:var(--muted)}
           </svg>
           <p>Dán link YouTube hoặc Google Drive<br>rồi nhấn "Tải video"</p>
         </div>
-        <iframe id="yt-frame"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen></iframe>
+        <div id="yt-frame"></div>
         <video id="dv" controls preload="metadata"></video>
         <iframe id="drive-frame" allowfullscreen></iframe>
       </div>
 
-      <!-- TC bar -->
       <div class="tc-bar" id="tcBar">
         <div>
           <div class="tc-clock" id="tcClock">00:00:00</div>
@@ -253,14 +247,12 @@ textarea.note::placeholder{color:var(--muted)}
       </div>
     </div>
 
-    <!-- FEEDBACK PANEL -->
     <div class="fb-panel">
       <div class="fp-head">
         <h2>Nhận xét</h2>
         <span class="fb-count" id="fbCount">0</span>
       </div>
       <div class="fp-input">
-        <!-- Captured TC display -->
         <div class="cap-tc" id="capTc">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#6366F1;flex-shrink:0">
             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
@@ -270,7 +262,6 @@ textarea.note::placeholder{color:var(--muted)}
           <button class="cap-tc-clear" onclick="clearTC()" title="Xoá timecode">×</button>
         </div>
 
-        <!-- Manual TC input (shown when embed blocked) -->
         <div class="manual-tc-row" id="manualTcRow">
           <label>Timecode thủ công</label>
           <input type="text" id="manualTcInput" placeholder="00:01:30" maxlength="8" oninput="onManualTC(this)"/>
@@ -286,7 +277,6 @@ textarea.note::placeholder{color:var(--muted)}
     </div>
   </div>
 
-  <!-- BOTTOM BAR -->
   <div class="bottombar">
     <span class="exp-lbl">Xuất:</span>
     <button class="btn-exp btn-xl" onclick="exportXLSX()">📊 Excel</button>
@@ -300,59 +290,16 @@ textarea.note::placeholder{color:var(--muted)}
 // ─── State ────────────────────────────────────────────────────────────────────
 var feedbacks=[], currentTC='--:--:--', videoUrl='', videoType='';
 var nativeVid=null, useManual=false;
-var ytSec=0, ytPlaying=false, ytLoaded=false;
-var ytFrame=null, pollTimer=null, clockTimer=null;
+var ytPlayer=null, ytPlaying=false, clockTimer=null;
 
-// ─── YouTube postMessage ──────────────────────────────────────────────────────
-window.addEventListener('message', function(e){
-  if(!e.data) return;
-  var d;
-  try{ d=typeof e.data==='string'?JSON.parse(e.data):e.data; }catch(x){return;}
+// ─── Load YouTube API ─────────────────────────────────────────────────────────
+var tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-  // infoDelivery: currentTime + playerState
-  if(d.event==='infoDelivery' && d.info){
-    if(typeof d.info.currentTime==='number') ytSec=d.info.currentTime;
-    if(typeof d.info.playerState==='number'){
-      var wasPlaying=ytPlaying;
-      ytPlaying=(d.info.playerState===1);
-      // Paused (2) after playing (1) → auto snap
-      if(d.info.playerState===2 && wasPlaying) autoCap(ytSec);
-    }
-  }
-  // onStateChange
-  if(d.event==='onStateChange'){
-    var wasPlaying=ytPlaying;
-    ytPlaying=(d.info===1);
-    if(d.info===2 && wasPlaying) autoCap(ytSec);
-  }
-  // onReady → start polling
-  if(d.event==='onReady'){ ytLoaded=true; startPoll(); }
-  // onError
-  if(d.event==='onError' && [100,101,150].indexOf(d.info)!==-1) showManual();
-});
-
-function ytPost(fn,args){
-  if(!ytFrame||!ytFrame.contentWindow) return;
-  try{
-    ytFrame.contentWindow.postMessage(JSON.stringify({
-      event:'command',func:fn,args:args||[],id:1,channel:'widget'
-    }),'*');
-  }catch(e){}
-}
-
-function startPoll(){
-  if(pollTimer) clearInterval(pollTimer);
-  pollTimer=setInterval(function(){
-    if(!ytFrame||!ytFrame.contentWindow) return;
-    // Subscribe to info delivery
-    try{
-      ytFrame.contentWindow.postMessage(JSON.stringify({
-        event:'listening',id:1,channel:'widget'
-      }),'*');
-    }catch(e){}
-    // Also request current time via command (belt + suspenders)
-    ytPost('getCurrentTime');
-  }, 250);
+function onYouTubeIframeAPIReady() {
+  // Sẵn sàng
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -382,11 +329,10 @@ function loadVideo(){
   var info=parseUrl(url);
   if(!info||!info.id){toast('Link không hỗ trợ. Dùng YouTube hoặc Drive.');return;}
   videoUrl=url; videoType=info.type;
-  useManual=false; ytSec=0; ytPlaying=false; ytLoaded=false; nativeVid=null;
-  if(pollTimer) clearInterval(pollTimer);
+  useManual=false; ytPlaying=false; nativeVid=null;
 
-  // Reset
-  hide('placeholder'); hide('yt-frame'); hide('dv'); hide('drive-frame');
+  hide('placeholder'); hide('dv'); hide('drive-frame');
+  if(document.getElementById('yt-frame')) hide('yt-frame'); 
   document.getElementById('manualBanner').style.display='none';
   document.getElementById('manualTcRow').style.display='none';
   document.getElementById('tcTip').classList.add('visible');
@@ -403,11 +349,24 @@ function loadVideo(){
 }
 
 function loadYT(id){
-  ytFrame=document.getElementById('yt-frame');
-  ytFrame.src='https://www.youtube.com/embed/'+id
-    +'?enablejsapi=1&rel=0&modestbranding=1&autoplay=0'
-    +'&origin='+encodeURIComponent(location.origin);
   show('yt-frame');
+  if(ytPlayer){
+    ytPlayer.loadVideoById(id);
+  } else {
+    ytPlayer = new YT.Player('yt-frame', {
+      videoId: id,
+      playerVars: { 'rel': 0, 'modestbranding': 1, 'autoplay': 0 },
+      events: {
+        'onStateChange': function(event) {
+          var wasPlaying = ytPlaying;
+          ytPlaying = (event.data === YT.PlayerState.PLAYING);
+          if(event.data === YT.PlayerState.PAUSED && wasPlaying) {
+            autoCap(ytPlayer.getCurrentTime());
+          }
+        }
+      }
+    });
+  }
 }
 
 function loadDrive(id){
@@ -438,14 +397,20 @@ function show(id){document.getElementById(id).style.display='block';}
 function startClock(){
   if(clockTimer) clearInterval(clockTimer);
   clockTimer=setInterval(function(){
-    var s=nativeVid&&!isNaN(nativeVid.currentTime)?nativeVid.currentTime:ytSec;
+    var s = 0;
+    if (nativeVid && !isNaN(nativeVid.currentTime)) {
+        s = nativeVid.currentTime;
+    } else if (videoType === 'youtube' && ytPlayer && ytPlayer.getCurrentTime) {
+        s = ytPlayer.getCurrentTime();
+    }
     document.getElementById('tcClock').textContent=fmt(s);
+
     var st=document.getElementById('tcStatus');
-    if(ytPlaying||(nativeVid&&!nativeVid.paused)){
+    if(ytPlaying || (nativeVid && !nativeVid.paused)){
       st.textContent='▶ Đang phát — pause để chụp timecode';
       st.className='tc-status';
     }
-  },200);
+  }, 200);
 }
 
 // ─── Capture ──────────────────────────────────────────────────────────────────
@@ -460,8 +425,13 @@ function autoCap(sec){
 function snapTC(){
   if(useManual){document.getElementById('manualTcInput').focus();return;}
   var sec=0;
-  if(nativeVid&&!isNaN(nativeVid.currentTime)){sec=nativeVid.currentTime;nativeVid.pause();}
-  else{sec=ytSec;ytPost('pauseVideo');}
+  if(nativeVid && !isNaN(nativeVid.currentTime)){
+      sec=nativeVid.currentTime;
+      nativeVid.pause();
+  } else if(videoType === 'youtube' && ytPlayer){
+      sec = ytPlayer.getCurrentTime();
+      ytPlayer.pauseVideo();
+  }
   autoCap(sec);
 }
 
@@ -486,8 +456,13 @@ function onManualTC(inp){
 // ─── Jump ─────────────────────────────────────────────────────────────────────
 function jumpTo(tc){
   var p=tc.split(':').map(Number),sec=p[0]*3600+p[1]*60+p[2];
-  if(nativeVid){nativeVid.currentTime=sec;nativeVid.play();}
-  else{ytPost('seekTo',[sec,true]);ytPost('playVideo');}
+  if(nativeVid){
+      nativeVid.currentTime=sec;
+      nativeVid.play();
+  } else if(videoType === 'youtube' && ytPlayer) {
+      ytPlayer.seekTo(sec, true);
+      ytPlayer.playVideo();
+  }
 }
 
 // ─── Add ──────────────────────────────────────────────────────────────────────
@@ -505,6 +480,12 @@ function addFeedback(){
   document.getElementById('noteText').value='';
   document.getElementById('manualTcInput').value='';
   setTC('--:--:--');
+  
+  // Reset trạng thái thanh bar
+  var st=document.getElementById('tcStatus');
+  st.textContent='▶ Đang phát — pause để chụp timecode';
+  st.className='tc-status';
+  
   toast('✅ Đã thêm!');
 }
 
