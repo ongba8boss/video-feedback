@@ -3,588 +3,301 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Video Feedback</title>
+<title>Video Feedback Tool</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
-  --bg:#0F1117;
-  --surface:#1A1D27;
-  --surface2:#22263A;
-  --border:#2E3248;
-  --accent:#6366F1;
-  --accent2:#818CF8;
-  --green:#10B981;
-  --red:#EF4444;
-  --text:#F1F5F9;
-  --muted:#64748B;
-  --muted2:#94A3B8;
-  --radius:12px;
+  --bg:#0F1117; --surface:#1A1D27; --surface2:#22263A; --border:#2E3248;
+  --accent:#6366F1; --accent2:#818CF8; --green:#10B981; --red:#EF4444;
+  --text:#F1F5F9; --muted:#64748B; --muted2:#94A3B8; --radius:16px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
 
-/* Layout */
-.app{display:grid;grid-template-rows:auto 1fr auto;min-height:100vh;max-width:1400px;margin:0 auto;padding:0 1.5rem}
-
-/* Top bar */
-.topbar{display:flex;align-items:center;gap:12px;padding:1rem 0;border-bottom:1px solid var(--border)}
-.logo{font-size:18px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.app{display:grid;grid-template-rows:auto 1fr;min-height:100vh;max-width:1600px;margin:0 auto;padding:0 2rem}
+.topbar{display:flex;align-items:center;gap:12px;padding:1.5rem 0;border-bottom:1px solid var(--border)}
+.logo{font-size:20px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px}
 .logo span{color:var(--accent2)}
-.topbar .sp{flex:1}
-.url-wrap{display:flex;gap:8px;flex:1;max-width:600px}
-.url-wrap input{
-  flex:1;padding:9px 14px;border:1px solid var(--border);border-radius:8px;
-  background:var(--surface);font-size:13px;font-family:inherit;color:var(--text);outline:none;
-  transition:border-color .15s
-}
-.url-wrap input:focus{border-color:var(--accent)}
-.url-wrap input::placeholder{color:var(--muted)}
-.btn-load{
-  padding:9px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;
-  font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;
-  transition:background .15s,transform .1s
-}
-.btn-load:hover{background:#4F46E5}
-.btn-load:active{transform:scale(.97)}
+.main{display:grid;grid-template-columns:1.5fr 380px;gap:2rem;padding:1.5rem 0;align-items:start}
+@media(max-width:1100px){.main{grid-template-columns:1fr}}
 
-/* Main content */
-.main{display:grid;grid-template-columns:1fr 380px;gap:1.25rem;padding:1.25rem 0;align-items:start}
-@media(max-width:900px){.main{grid-template-columns:1fr}}
+.video-container{background:#000;border-radius:var(--radius);overflow:hidden;position:relative;width:100%;aspect-ratio:16/9;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.video-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0a0a0f}
+.video-placeholder p{font-size:14px;color:var(--muted);text-align:center}
+#yt-frame, video#dv{width:100%;height:100%;position:absolute;inset:0;display:none}
+video#dv{object-fit:contain}
 
-/* Video column */
-.video-col{}
-.video-box{
-  background:#000;border-radius:var(--radius);overflow:hidden;
-  position:relative;width:100%;aspect-ratio:16/9;
-}
-.video-placeholder{
-  position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:12px;background:#0a0a0f
-}
-.video-placeholder svg{opacity:.2}
-.video-placeholder p{font-size:14px;color:var(--muted);text-align:center;line-height:1.6}
-#yt-frame{width:100%;height:100%;border:none;position:absolute;inset:0;display:none}
-video#dv{width:100%;height:100%;object-fit:contain;position:absolute;inset:0;display:none}
-iframe#drive-frame{width:100%;height:100%;border:none;position:absolute;inset:0;display:none}
-
-/* TC bar below video */
-.tc-bar{
-  display:none;margin-top:10px;background:var(--surface);border-radius:10px;
-  border:1px solid var(--border);padding:10px 14px;
-  display:none;align-items:center;gap:10px;flex-wrap:wrap
-}
+.tc-bar{display:none;margin-top:14px;background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:12px 18px;align-items:center;gap:14px;flex-wrap:wrap}
 .tc-bar.visible{display:flex}
-.tc-clock{
-  font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;
-  color:var(--text);letter-spacing:1px;min-width:100px
-}
-.tc-status{font-size:12px;color:var(--muted);flex:1}
-.tc-status.captured{color:var(--green)}
-.btn-snap{
-  display:flex;align-items:center;gap:6px;
-  padding:8px 16px;background:var(--surface2);color:var(--accent2);
-  border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:500;
-  cursor:pointer;font-family:inherit;transition:all .15s
-}
-.btn-snap:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
-.tc-tip{font-size:11px;color:var(--muted);margin-top:6px;display:none}
-.tc-tip.visible{display:block}
+.tc-clock{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);letter-spacing:1px;min-width:110px}
+.tc-status{font-size:13px;color:var(--muted2);flex:1}
 
-/* Manual hint */
-.manual-banner{
-  display:none;margin-top:8px;padding:10px 14px;background:rgba(251,191,36,.08);
-  border:1px solid rgba(251,191,36,.3);border-radius:8px
-}
-.manual-banner p{font-size:12px;color:#FCD34D;line-height:1.5}
-.manual-banner a{color:var(--accent2);text-decoration:underline}
+.panel-col{display:flex;flex-direction:column;gap:1.5rem}
+.url-panel{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:1rem;display:flex;gap:10px}
+.url-panel input{flex:1;padding:11px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font-size:13px;color:var(--text);outline:none;}
+.btn-load{padding:11px 22px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;}
 
-/* Feedback panel */
-.fb-panel{
-  background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);
-  display:flex;flex-direction:column;overflow:hidden;
-  position:sticky;top:1rem
-}
-.fp-head{
-  padding:14px 16px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between
-}
-.fp-head h2{font-size:14px;font-weight:600;color:var(--text)}
-.fb-count{font-size:11px;padding:2px 9px;border-radius:20px;background:rgba(99,102,241,.2);color:var(--accent2);font-weight:600}
+.fb-panel{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.fp-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.fp-head h2{font-size:16px;font-weight:600}
+.fb-count{font-size:12px;padding:2px 10px;border-radius:20px;background:rgba(99,102,241,.2);color:var(--accent2);font-weight:600}
 
-.fp-input{padding:14px 16px;border-bottom:1px solid var(--border)}
+.fp-input{padding:16px 20px;border-bottom:1px solid var(--border)}
+.cap-tc-info{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid transparent;}
+.cap-tc-info.active{border-color:var(--accent);background:rgba(99,102,241,.05)}
+.cap-tc-val{font-size:14px;font-weight:700;color:var(--accent2)}
+.cap-tc-lbl{font-size:12px;color:var(--muted);flex:1}
 
-/* Captured TC display */
-.cap-tc{
-  display:flex;align-items:center;gap:8px;margin-bottom:10px;
-  padding:8px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)
-}
-.cap-tc-val{
-  font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;
-  color:var(--accent2);letter-spacing:.5px
-}
-.cap-tc-lbl{font-size:11px;color:var(--muted);flex:1}
-.cap-tc-clear{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0;line-height:1}
-.cap-tc-clear:hover{color:var(--red)}
+textarea.note{width:100%;resize:vertical;min-height:90px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;outline:none;}
+.btn-add{margin-top:12px;width:100%;padding:12px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;font-weight:600;cursor:pointer;}
+.btn-add.ready{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-/* Manual TC */
-.manual-tc-row{display:none;margin-bottom:10px}
-.manual-tc-row label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
-.manual-tc-row input{
-  width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;
-  background:var(--surface2);color:var(--text);font-size:15px;font-family:inherit;
-  outline:none;font-variant-numeric:tabular-nums;letter-spacing:1px
-}
-.manual-tc-row input:focus{border-color:var(--accent)}
-
-textarea.note{
-  width:100%;resize:vertical;min-height:100px;padding:10px 12px;
-  border:1px solid var(--border);border-radius:8px;background:var(--surface2);
-  color:var(--text);font-size:13px;font-family:inherit;outline:none;line-height:1.6
-}
-textarea.note:focus{border-color:var(--accent)}
-textarea.note::placeholder{color:var(--muted)}
-
-.btn-add{
-  margin-top:10px;width:100%;padding:10px;background:var(--accent);color:#fff;
-  border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
-  font-family:inherit;transition:background .15s,transform .1s
-}
-.btn-add:hover{background:#4F46E5}
-.btn-add:active{transform:scale(.98)}
-
-/* List */
-.fp-list{flex:1;overflow-y:auto;max-height:420px}
+.fp-list{flex:1;overflow-y:auto;max-height:450px}
 .fb-empty{padding:2.5rem 1rem;text-align:center;font-size:13px;color:var(--muted)}
-.fb-item{
-  padding:12px 16px;border-top:1px solid var(--border);
-  display:flex;gap:10px;align-items:flex-start;cursor:default;
-  transition:background .1s
-}
+.fb-item{padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:12px;transition:background 0.2s;}
 .fb-item:hover{background:var(--surface2)}
-.fb-tc-btn{
-  flex-shrink:0;padding:3px 10px;background:rgba(99,102,241,.15);
-  color:var(--accent2);border:1px solid rgba(99,102,241,.3);border-radius:6px;
-  font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer;
-  font-family:inherit;transition:all .12s;letter-spacing:.3px
-}
-.fb-tc-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.fb-tc-btn{flex-shrink:0;padding:4px 11px;background:rgba(99,102,241,.15);color:var(--accent2);border:1px solid rgba(99,102,241,.3);border-radius:6px;font-weight:700;cursor:pointer;height:fit-content;display:flex;align-items:center;gap:4px}
 .fb-body{flex:1;min-width:0}
-.fb-note-text{font-size:13px;color:var(--muted2);line-height:1.5;white-space:pre-wrap;word-break:break-word}
-.fb-time{font-size:11px;color:var(--muted);margin-top:4px}
-.fb-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0;line-height:1;flex-shrink:0;opacity:.5}
-.fb-del:hover{color:var(--red);opacity:1}
+.fb-note-text{font-size:13px;line-height:1.5;white-space:pre-wrap;}
+.fb-time{font-size:11px;color:var(--muted);margin-top:6px}
+.fb-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;height:fit-content;opacity:0.5;transition:0.2s}
+.fb-del:hover{opacity:1;color:var(--red)}
 
-/* Bottom export bar */
-.bottombar{
-  border-top:1px solid var(--border);padding:.75rem 0;
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap
-}
-.exp-lbl{font-size:12px;color:var(--muted);font-weight:500;margin-right:4px}
-.btn-exp{
-  padding:7px 14px;border-radius:7px;font-size:12px;font-weight:500;
-  cursor:pointer;font-family:inherit;border:1px solid;transition:all .12s
-}
-.btn-xl{background:rgba(16,185,129,.1);color:#6EE7B7;border-color:rgba(16,185,129,.3)}.btn-xl:hover{background:rgba(16,185,129,.2)}
-.btn-cv{background:rgba(251,191,36,.1);color:#FCD34D;border-color:rgba(251,191,36,.3)}.btn-cv:hover{background:rgba(251,191,36,.2)}
-.btn-pf{background:rgba(239,68,68,.1);color:#FCA5A5;border-color:rgba(239,68,68,.3)}.btn-pf:hover{background:rgba(239,68,68,.2)}
-
-/* Toast */
-.toast{
-  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
-  background:#1E293B;color:var(--text);padding:10px 22px;border-radius:8px;
-  font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;
-  z-index:999;white-space:nowrap;border:1px solid var(--border);
-  box-shadow:0 8px 30px rgba(0,0,0,.4)
-}
+.exp-panel{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:1.2rem;display:flex;flex-direction:column;gap:10px;}
+.exp-btns{display:flex;gap:10px}
+.btn-exp{flex:1;padding:12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;}
+.btn-xl{background:rgba(16,185,129,.15);color:#10B981;border:1px solid rgba(16,185,129,.3)}
+.btn-pf{background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1E293B;color:var(--text);padding:10px 22px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;z-index:999;}
 .toast.show{opacity:1}
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="topbar">
-    <div class="logo">🎬 <span>Video</span>Feedback</div>
-    <div class="sp"></div>
-    <div class="url-wrap">
-      <input type="text" id="urlInput" placeholder="Dán link YouTube hoặc Google Drive..."/>
-      <button class="btn-load" onclick="loadVideo()">Tải video</button>
-    </div>
-  </div>
+  <div class="topbar"><div class="logo">🎬 <span>Video</span> Feedback</div></div>
 
   <div class="main">
     <div class="video-col">
-      <div class="video-box" id="videoBox">
-        <div class="video-placeholder" id="placeholder">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-            <rect x="4" y="12" width="56" height="40" rx="6" stroke="#94A3B8" stroke-width="2"/>
-            <polygon points="26,22 26,42 46,32" fill="#94A3B8"/>
-          </svg>
-          <p>Dán link YouTube hoặc Google Drive<br>rồi nhấn "Tải video"</p>
-        </div>
+      <div class="video-container" id="videoBox">
+        <div class="video-placeholder" id="placeholder"><p>Dán link YouTube / Google Drive<br>rồi nhấn "Tải video"</p></div>
         <div id="yt-frame"></div>
         <video id="dv" controls preload="metadata"></video>
-        <iframe id="drive-frame" allowfullscreen></iframe>
       </div>
-
       <div class="tc-bar" id="tcBar">
         <div>
           <div class="tc-clock" id="tcClock">00:00:00</div>
-          <div class="tc-status" id="tcStatus">Đang phát — pause để chụp timecode</div>
+          <div class="tc-status" id="tcStatus">▶ Đang phát — Nhấn SPACE để chụp timecode</div>
         </div>
-        <div style="flex:1"></div>
-        <button class="btn-snap" onclick="snapTC()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-          </svg>
-          Chụp timecode
-        </button>
-      </div>
-      <div class="tc-tip" id="tcTip">⏸ Pause video → timecode tự động chụp. Hoặc nhấn <kbd style="background:#1E293B;border:1px solid #334155;border-radius:4px;padding:1px 6px;font-size:11px">Space</kbd></div>
-
-      <div class="manual-banner" id="manualBanner">
-        <p>⚠️ Video này không cho phép nhúng. Hãy <a id="ytLink" href="#" target="_blank">mở YouTube</a> → xem đến đoạn cần → nhập timecode thủ công bên phải.</p>
       </div>
     </div>
 
-    <div class="fb-panel">
-      <div class="fp-head">
-        <h2>Nhận xét</h2>
-        <span class="fb-count" id="fbCount">0</span>
-      </div>
-      <div class="fp-input">
-        <div class="cap-tc" id="capTc">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#6366F1;flex-shrink:0">
-            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-          </svg>
-          <span class="cap-tc-val" id="capTcVal">--:--:--</span>
-          <span class="cap-tc-lbl" id="capTcLbl">Chưa chụp timecode</span>
-          <button class="cap-tc-clear" onclick="clearTC()" title="Xoá timecode">×</button>
-        </div>
-
-        <div class="manual-tc-row" id="manualTcRow">
-          <label>Timecode thủ công</label>
-          <input type="text" id="manualTcInput" placeholder="00:01:30" maxlength="8" oninput="onManualTC(this)"/>
-        </div>
-
-        <textarea class="note" id="noteText" placeholder="Ghi nhận xét cho đoạn này..."></textarea>
-        <button class="btn-add" onclick="addFeedback()">+ Thêm feedback</button>
+    <div class="panel-col">
+      <div class="url-panel">
+        <input type="text" id="urlInput" placeholder="Dán link YouTube..."/>
+        <button class="btn-load" onclick="loadVideo()">Tải video</button>
       </div>
 
-      <div class="fp-list" id="fbList">
-        <div class="fb-empty">Chưa có feedback nào.<br>Pause video để bắt đầu.</div>
+      <div class="fb-panel">
+        <div class="fp-head"><h2>Nhận xét</h2><span class="fb-count" id="fbCount">0</span></div>
+        <div class="fp-input">
+          <div class="cap-tc-info" id="capTcBlock">
+            <span class="cap-tc-val" id="capTcVal">--:--:--</span>
+            <span class="cap-tc-lbl" id="capTcLbl">Chưa chụp (Bấm Space)</span>
+            <button class="cap-tc-clear" onclick="clearTC()" style="background:none;border:none;color:#64748B;cursor:pointer;font-size:18px;">×</button>
+          </div>
+
+          <textarea class="note" id="noteText" placeholder="Ghi nhận xét... (Nhấn Enter để lưu)"></textarea>
+          <button class="btn-add" id="btnAdd" onclick="addFeedback()">Lưu feedback (Enter)</button>
+        </div>
+        <div class="fp-list" id="fbList"><div class="fb-empty">Chưa có feedback nào.</div></div>
+      </div>
+
+      <div class="exp-panel">
+        <div class="exp-btns">
+          <button class="btn-exp btn-xl" onclick="exportXLSX()">📊 Xuất file Excel</button>
+          <button class="btn-exp btn-pf" onclick="exportPDF()">📑 Xuất file PDF</button>
+        </div>
       </div>
     </div>
-  </div>
-
-  <div class="bottombar">
-    <span class="exp-lbl">Xuất:</span>
-    <button class="btn-exp btn-xl" onclick="exportXLSX()">📊 Excel</button>
-    <button class="btn-exp btn-cv" onclick="exportCSV()">📄 CSV</button>
-    <button class="btn-exp btn-pf" onclick="exportPDF()">📑 PDF</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── State ────────────────────────────────────────────────────────────────────
-var feedbacks=[], currentTC='--:--:--', videoUrl='', videoType='';
-var nativeVid=null, useManual=false;
-var ytPlayer=null, ytPlaying=false, clockTimer=null;
+var feedbacks=[], currentTC='--:--:--', videoUrl='', videoType='', ytVideoId='';
+var ytPlayer=null, ytPlaying=false, clockTimer=null, nativeVid=null;
 
-// ─── Load YouTube API ─────────────────────────────────────────────────────────
-var tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+function onYouTubeIframeAPIReady() {}
 
-function onYouTubeIframeAPIReady() {
-  // Sẵn sàng
+// Đổi timecode dạng 01:23:45 thành tổng số giây (để tạo link YouTube)
+function toSeconds(tc) {
+  var p = tc.split(':').map(Number);
+  return p[0]*3600 + p[1]*60 + p[2];
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function fmt(s){
-  s=Math.floor(s||0);
-  return [Math.floor(s/3600),Math.floor((s%3600)/60),s%60].map(function(v){return String(v).padStart(2,'0');}).join(':');
-}
-function toast(msg,dur){
-  var t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(function(){t.classList.remove('show');},dur||2500);
-}
+function fmt(s){s=Math.floor(s||0);return [Math.floor(s/3600),Math.floor((s%3600)/60),s%60].map(function(v){return String(v).padStart(2,'0');}).join(':');}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
+
 function parseUrl(url){
   try{
     var u=new URL(url);
     if(u.hostname.includes('youtube.com')) return{type:'youtube',id:u.searchParams.get('v')};
     if(u.hostname.includes('youtu.be')) return{type:'youtube',id:u.pathname.slice(1).split('?')[0]};
-    if(u.hostname.includes('drive.google.com')){var m=url.match(/\/d\/([^\/\?]+)/);return m?{type:'drive',id:m[1]}:null;}
-  }catch(e){}
-  return null;
+  }catch(e){} return null;
 }
 
-// ─── Load ─────────────────────────────────────────────────────────────────────
+function saveLocal(){if(videoUrl) localStorage.setItem('vfb_' + videoUrl, JSON.stringify(feedbacks));}
+function loadLocal(url){
+  var saved = localStorage.getItem('vfb_' + url);
+  if(saved){
+    try{ feedbacks = JSON.parse(saved); feedbacks.forEach(function(f){ f.time = new Date(f.time); }); renderList(); } catch(e){ feedbacks = []; }
+  } else { feedbacks = []; renderList(); }
+}
+
 function loadVideo(){
   var url=document.getElementById('urlInput').value.trim();
   if(!url){toast('Vui lòng dán link video!');return;}
   var info=parseUrl(url);
-  if(!info||!info.id){toast('Link không hỗ trợ. Dùng YouTube hoặc Drive.');return;}
-  videoUrl=url; videoType=info.type;
-  useManual=false; ytPlaying=false; nativeVid=null;
+  if(!info||!info.id){toast('Link không hỗ trợ!');return;}
+  
+  videoUrl=url; videoType=info.type; ytPlaying=false; nativeVid=null;
+  ytVideoId = info.type === 'youtube' ? info.id : '';
 
-  hide('placeholder'); hide('dv'); hide('drive-frame');
-  if(document.getElementById('yt-frame')) hide('yt-frame'); 
-  document.getElementById('manualBanner').style.display='none';
-  document.getElementById('manualTcRow').style.display='none';
-  document.getElementById('tcTip').classList.add('visible');
-
-  show('tcBar'); document.getElementById('tcBar').classList.add('visible');
+  document.getElementById('placeholder').style.display='none'; document.getElementById('dv').style.display='none';
+  if(document.getElementById('yt-frame')) document.getElementById('yt-frame').style.display='none';
+  document.getElementById('tcBar').classList.add('visible');
 
   if(info.type==='youtube'){
-    document.getElementById('ytLink').href=url;
-    loadYT(info.id);
-  } else {
-    loadDrive(info.id);
-  }
-  startClock();
+    document.getElementById('yt-frame').style.display='block';
+    if(ytPlayer) ytPlayer.loadVideoById(info.id);
+    else ytPlayer = new YT.Player('yt-frame', { videoId: info.id, playerVars: { 'rel': 0, 'modestbranding': 1, 'autoplay': 0 }, events: { 'onStateChange': function(e) { ytPlaying = (e.data === YT.PlayerState.PLAYING); } } });
+  } 
+  loadLocal(videoUrl); startClock();
 }
 
-function loadYT(id){
-  show('yt-frame');
-  if(ytPlayer){
-    ytPlayer.loadVideoById(id);
-  } else {
-    ytPlayer = new YT.Player('yt-frame', {
-      videoId: id,
-      playerVars: { 'rel': 0, 'modestbranding': 1, 'autoplay': 0 },
-      events: {
-        'onStateChange': function(event) {
-          var wasPlaying = ytPlaying;
-          ytPlaying = (event.data === YT.PlayerState.PLAYING);
-          if(event.data === YT.PlayerState.PAUSED && wasPlaying) {
-            autoCap(ytPlayer.getCurrentTime());
-          }
-        }
-      }
-    });
-  }
-}
-
-function loadDrive(id){
-  var dv=document.getElementById('dv');
-  dv.style.display='block'; nativeVid=dv;
-  dv.src='https://drive.google.com/uc?export=download&id='+id;
-  dv.onpause=function(){ autoCap(dv.currentTime); };
-  dv.onerror=function(){
-    dv.style.display='none'; nativeVid=null;
-    var fr=document.getElementById('drive-frame');
-    fr.src='https://drive.google.com/file/d/'+id+'/preview';
-    fr.style.display='block';
-    showManual();
-  };
-}
-
-function showManual(){
-  useManual=true;
-  document.getElementById('manualBanner').style.display='block';
-  document.getElementById('manualTcRow').style.display='block';
-  document.getElementById('tcTip').classList.remove('visible');
-}
-
-function hide(id){document.getElementById(id).style.display='none';}
-function show(id){document.getElementById(id).style.display='block';}
-
-// ─── Clock ────────────────────────────────────────────────────────────────────
 function startClock(){
   if(clockTimer) clearInterval(clockTimer);
   clockTimer=setInterval(function(){
     var s = 0;
-    if (nativeVid && !isNaN(nativeVid.currentTime)) {
-        s = nativeVid.currentTime;
-    } else if (videoType === 'youtube' && ytPlayer && ytPlayer.getCurrentTime) {
-        s = ytPlayer.getCurrentTime();
-    }
+    if (nativeVid && !isNaN(nativeVid.currentTime)) s = nativeVid.currentTime;
+    else if (videoType === 'youtube' && ytPlayer && ytPlayer.getCurrentTime) s = ytPlayer.getCurrentTime();
     document.getElementById('tcClock').textContent=fmt(s);
-
-    var st=document.getElementById('tcStatus');
-    if(ytPlaying || (nativeVid && !nativeVid.paused)){
-      st.textContent='▶ Đang phát — pause để chụp timecode';
-      st.className='tc-status';
-    }
   }, 200);
 }
 
-// ─── Capture ──────────────────────────────────────────────────────────────────
-function autoCap(sec){
-  setTC(fmt(sec));
-  document.getElementById('tcStatus').textContent='⏸ Timecode đã chụp: '+currentTC;
-  document.getElementById('tcStatus').className='tc-status captured';
-  document.getElementById('noteText').focus();
-  toast('⏸ Đã chụp '+currentTC);
-}
-
 function snapTC(){
-  if(useManual){document.getElementById('manualTcInput').focus();return;}
+  if(!videoUrl) return;
   var sec=0;
-  if(nativeVid && !isNaN(nativeVid.currentTime)){
-      sec=nativeVid.currentTime;
-      nativeVid.pause();
-  } else if(videoType === 'youtube' && ytPlayer){
-      sec = ytPlayer.getCurrentTime();
-      ytPlayer.pauseVideo();
-  }
-  autoCap(sec);
+  if(nativeVid && !isNaN(nativeVid.currentTime)){ sec=nativeVid.currentTime; nativeVid.pause(); } 
+  else if(videoType === 'youtube' && ytPlayer){ sec = ytPlayer.getCurrentTime(); ytPlayer.pauseVideo(); }
+  
+  currentTC = fmt(sec);
+  document.getElementById('capTcVal').textContent=currentTC;
+  document.getElementById('capTcLbl').textContent='✓ Đã chụp (Sẵn sàng ghi chú)';
+  document.getElementById('capTcBlock').classList.add('active');
+  document.getElementById('btnAdd').classList.add('ready');
+  document.getElementById('tcStatus').innerHTML='⏸ Timecode: <span style="color:var(--accent2);font-weight:bold">'+currentTC+'</span>';
+  setTimeout(function(){ document.getElementById('noteText').focus(); }, 100);
 }
 
-function setTC(tc){
-  currentTC=tc;
-  document.getElementById('capTcVal').textContent=tc;
-  document.getElementById('capTcLbl').textContent= tc==='--:--:--'?'Chưa chụp timecode':'✓ Sẵn sàng thêm nhận xét';
-  document.getElementById('capTcVal').style.color= tc==='--:--:--'?'var(--muted)':'var(--accent2)';
+function clearTC(){
+  currentTC='--:--:--';
+  document.getElementById('capTcVal').textContent=currentTC;
+  document.getElementById('capTcLbl').textContent='Chưa chụp (Bấm Space)';
+  document.getElementById('capTcBlock').classList.remove('active');
+  document.getElementById('btnAdd').classList.remove('ready');
+  document.getElementById('tcStatus').innerHTML='▶ Đang phát — Nhấn SPACE để chụp timecode';
 }
 
-function clearTC(){setTC('--:--:--');}
-
-function onManualTC(inp){
-  var r=inp.value.replace(/[^0-9]/g,'').slice(0,6);
-  var f=r;
-  if(r.length>4) f=r.slice(0,2)+':'+r.slice(2,4)+':'+r.slice(4);
-  else if(r.length>2) f=r.slice(0,2)+':'+r.slice(2);
-  inp.value=f;
-  if(/^\d{2}:\d{2}:\d{2}$/.test(f)) setTC(f);
-}
-
-// ─── Jump ─────────────────────────────────────────────────────────────────────
 function jumpTo(tc){
-  var p=tc.split(':').map(Number),sec=p[0]*3600+p[1]*60+p[2];
-  if(nativeVid){
-      nativeVid.currentTime=sec;
-      nativeVid.play();
-  } else if(videoType === 'youtube' && ytPlayer) {
-      ytPlayer.seekTo(sec, true);
-      ytPlayer.playVideo();
-  }
+  var sec=toSeconds(tc);
+  if(nativeVid){ nativeVid.currentTime=sec; nativeVid.play(); } 
+  else if(videoType === 'youtube' && ytPlayer) { ytPlayer.seekTo(sec, true); ytPlayer.playVideo(); }
 }
 
-// ─── Add ──────────────────────────────────────────────────────────────────────
 function addFeedback(){
-  if(!videoUrl){toast('Chưa tải video nào!');return;}
+  if(!videoUrl){toast('Chưa tải video!');return;}
   var note=document.getElementById('noteText').value.trim();
-  if(!note){toast('Vui lòng nhập nội dung nhận xét!');return;}
-  if(currentTC==='--:--:--'){toast('Pause video để chụp timecode trước!');return;}
-  feedbacks.push({id:Date.now(),tc:currentTC,note:note,time:new Date(),url:videoUrl,type:videoType});
-  feedbacks.sort(function(a,b){
-    var s=function(t){return t.split(':').reduce(function(a,v){return a*60+parseInt(v);},0);};
-    return s(a.tc)-s(b.tc);
-  });
-  renderList();
-  document.getElementById('noteText').value='';
-  document.getElementById('manualTcInput').value='';
-  setTC('--:--:--');
+  if(!note){toast('Vui lòng nhập nội dung!');return;}
+  if(currentTC==='--:--:--'){toast('Chưa chụp timecode!');return;}
   
-  // Reset trạng thái thanh bar
-  var st=document.getElementById('tcStatus');
-  st.textContent='▶ Đang phát — pause để chụp timecode';
-  st.className='tc-status';
+  // Tạo Deep-Link dựa trên nền tảng
+  var deepLink = videoUrl;
+  if(videoType === 'youtube') deepLink = 'https://youtu.be/' + ytVideoId + '?t=' + toSeconds(currentTC);
   
-  toast('✅ Đã thêm!');
+  feedbacks.push({id:Date.now(), tc:currentTC, note:note, time:new Date(), url:deepLink});
+  feedbacks.sort(function(a,b){ return toSeconds(a.tc) - toSeconds(b.tc); });
+  
+  renderList(); saveLocal();
+  document.getElementById('noteText').value=''; clearTC();
+  toast('✅ Đã lưu!');
+  if(nativeVid) nativeVid.play(); else if(ytPlayer) ytPlayer.playVideo();
+  document.getElementById('noteText').blur();
 }
 
-function delFb(id){feedbacks=feedbacks.filter(function(f){return f.id!==id;});renderList();}
+function delFb(id){ feedbacks=feedbacks.filter(function(f){return f.id!==id;}); renderList(); saveLocal(); }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function renderList(){
   var list=document.getElementById('fbList');
   document.getElementById('fbCount').textContent=feedbacks.length;
   list.innerHTML='';
-  if(!feedbacks.length){
-    list.innerHTML='<div class="fb-empty">Chưa có feedback nào.<br>Pause video để bắt đầu.</div>';
-    return;
-  }
+  if(!feedbacks.length){ list.innerHTML='<div class="fb-empty">Chưa có feedback nào.</div>'; return; }
   feedbacks.forEach(function(fb){
-    var d=fb.time,ds=d.toLocaleDateString('vi-VN')+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
     var div=document.createElement('div');
     div.className='fb-item';
     div.innerHTML=
-      '<button class="fb-tc-btn" onclick="jumpTo(\''+fb.tc+'\')" title="Tua đến '+fb.tc+'">'+fb.tc+'</button>'+
-      '<div class="fb-body">'+
-        '<div class="fb-note-text">'+esc(fb.note)+'</div>'+
-        '<div class="fb-time">'+ds+'</div>'+
-      '</div>'+
-      '<button class="fb-del" onclick="delFb('+fb.id+')" title="Xoá">×</button>';
+      '<button class="fb-tc-btn" onclick="jumpTo(\''+fb.tc+'\')" title="Tua đến đoạn này">▶ '+fb.tc+'</button>'+
+      '<div class="fb-body"><div class="fb-note-text">'+esc(fb.note)+'</div></div>'+
+      '<button class="fb-del" onclick="delFb('+fb.id+')">×</button>';
     list.appendChild(div);
   });
 }
 
-// ─── Export ───────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', function(e){
+  var noteInput = document.getElementById('noteText');
+  var urlInput = document.getElementById('urlInput');
+  if(e.code === 'Space' && e.target !== noteInput && e.target !== urlInput){ e.preventDefault(); snapTC(); }
+  if(e.key === 'Enter' && !e.shiftKey && e.target === noteInput){ e.preventDefault(); addFeedback(); }
+});
+
 function exportXLSX(){
-  if(!feedbacks.length){toast('Chưa có feedback!');return;}
-  var rows=[['#','Timecode','Nội dung nhận xét','Thời điểm ghi','Link video']];
-  feedbacks.forEach(function(fb,i){
-    var d=fb.time;
-    rows.push([i+1,fb.tc,fb.note,
-      d.toLocaleDateString('vi-VN')+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),
-      fb.url]);
-  });
+  if(!feedbacks.length){toast('Chưa có dữ liệu!');return;}
+  var rows=[['#','Timecode','Nội dung nhận xét','Link xem đoạn cắt']];
+  feedbacks.forEach(function(fb,i){ rows.push([i+1, fb.tc, fb.note, fb.url]); });
   var ws=XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=[{wch:4},{wch:11},{wch:60},{wch:18},{wch:55}];
-  var wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'Feedback');
-  XLSX.writeFile(wb,'video-feedback-'+new Date().toISOString().slice(0,10)+'.xlsx');
-  toast('✅ Đã xuất Excel!');
-}
-function exportCSV(){
-  if(!feedbacks.length){toast('Chưa có feedback!');return;}
-  var rows=[['#','Timecode','Nội dung nhận xét','Thời điểm ghi','Link video']];
-  feedbacks.forEach(function(fb,i){
-    var d=fb.time;
-    rows.push([i+1,fb.tc,fb.note,
-      d.toLocaleDateString('vi-VN')+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),
-      fb.url]);
-  });
-  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
-  a.download='video-feedback-'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
-  toast('✅ Đã xuất CSV!');
-}
-function exportPDF(){
-  if(!feedbacks.length){toast('Chưa có feedback!');return;}
-  var now=new Date().toLocaleDateString('vi-VN');
-  var su=videoUrl.length>90?videoUrl.slice(0,87)+'...':videoUrl;
-  var rows=feedbacks.map(function(fb,i){
-    return '<tr><td style="text-align:center">'+(i+1)+'</td>'+
-      '<td style="font-weight:700;color:#4F46E5;text-align:center">'+fb.tc+'</td>'+
-      '<td style="white-space:pre-wrap">'+fb.note+'</td>'+
-      '<td style="font-size:11px;color:#64748B">'+
-        fb.time.toLocaleDateString('vi-VN')+' '+fb.time.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})+
-      '</td></tr>';
-  }).join('');
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'+
-    'body{font-family:Arial,sans-serif;margin:2cm;color:#111;font-size:12px}'+
-    'h1{font-size:17px;font-weight:700;margin-bottom:4px}'+
-    '.meta{color:#64748B;font-size:11px;margin-bottom:1.2rem;line-height:1.7}'+
-    'table{width:100%;border-collapse:collapse}'+
-    'th{background:#4F46E5;color:#fff;padding:7px 9px;text-align:left;font-size:11px}'+
-    'td{padding:7px 9px;border-bottom:1px solid #E2E8F0;vertical-align:top}'+
-    'tr:nth-child(even) td{background:#F8FAFC}'+
-    '@media print{@page{margin:1.5cm}}</style></head><body>'+
-    '<h1>🎬 Video Feedback Report</h1>'+
-    '<div class="meta"><b>Link:</b> '+su+'<br><b>Ngày:</b> '+now+' · <b>Tổng:</b> '+feedbacks.length+' feedback</div>'+
-    '<table><tr><th style="width:28px">#</th><th style="width:85px">Timecode</th>'+
-    '<th>Nội dung</th><th style="width:90px">Thời điểm</th></tr>'+rows+'</table></body></html>';
-  var w=window.open('','_blank');
-  w.document.write(html);w.document.close();
-  setTimeout(function(){w.print();},600);
-  toast('📑 Đang mở PDF...');
+  ws['!cols']=[{wch:4},{wch:11},{wch:60},{wch:45}];
+  var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Feedback');
+  XLSX.writeFile(wb,'feedback-'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
-// ─── Space key ────────────────────────────────────────────────────────────────
-document.addEventListener('keydown',function(e){
-  if(e.code==='Space'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='INPUT'){
-    e.preventDefault();snapTC();
+function exportPDF(){
+  if(!feedbacks.length){toast('Chưa có dữ liệu!');return;}
+  
+  // Tự động lấy ảnh bìa YouTube để report đẹp hơn
+  var coverImgHtml = '';
+  if(videoType === 'youtube' && ytVideoId) {
+    coverImgHtml = '<div style="margin-bottom:20px"><img src="https://img.youtube.com/vi/'+ytVideoId+'/maxresdefault.jpg" onerror="this.src=\'https://img.youtube.com/vi/'+ytVideoId+'/mqdefault.jpg\'" style="width:100%;max-width:400px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1)"/></div>';
   }
-});
+
+  var rows=feedbacks.map(function(fb,i){
+    // Tạo link click trực tiếp vào YouTube
+    var linkBtn = '<a href="'+fb.url+'" target="_blank" style="display:inline-block; margin-top:8px; font-size:11px; background:#EEF2FF; color:#4F46E5; padding:4px 10px; border-radius:4px; text-decoration:none; font-weight:bold;">▶ Xem tại '+fb.tc+'</a>';
+    
+    return '<tr><td style="text-align:center">'+(i+1)+'</td><td style="font-weight:bold;color:#111;text-align:center">'+fb.tc+'</td><td style="white-space:pre-wrap; line-height:1.6">'+fb.note+'<br>'+linkBtn+'</td></tr>';
+  }).join('');
+  
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:13px;color:#333; line-height:1.5}table{width:100%;border-collapse:collapse;margin-top:20px}th{background:#F8FAFC;color:#475569;padding:12px;text-align:left;border-bottom:2px solid #E2E8F0}td{padding:16px 12px;border-bottom:1px solid #E2E8F0;vertical-align:top}</style></head><body>'+
+    '<h1 style="font-size:20px; color:#0F1117">Báo cáo Feedback Video</h1>' + coverImgHtml +
+    '<table><tr><th style="width:30px;text-align:center">#</th><th style="width:90px;text-align:center">Timecode</th><th>Nội dung nhận xét & Liên kết</th></tr>'+rows+'</table></body></html>';
+  
+  var w=window.open('','_blank'); w.document.write(html); w.document.close();
+  setTimeout(function(){w.print();},800);
+}
 </script>
 </body>
 </html>
