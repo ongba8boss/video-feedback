@@ -45,14 +45,16 @@ video#dv{object-fit:contain}
 .fb-count{font-size:12px;padding:2px 10px;border-radius:20px;background:rgba(99,102,241,.2);color:var(--accent2);font-weight:600}
 
 .fp-input{padding:16px 20px;border-bottom:1px solid var(--border)}
-.cap-tc-info{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid transparent;}
+.cap-tc-info{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid transparent;transition:all 0.2s;}
 .cap-tc-info.active{border-color:var(--accent);background:rgba(99,102,241,.05)}
+.cap-tc-info.editing{border-color:var(--green);background:rgba(16,185,129,.05)}
 .cap-tc-val{font-size:14px;font-weight:700;color:var(--accent2)}
 .cap-tc-lbl{font-size:12px;color:var(--muted);flex:1}
 
 textarea.note{width:100%;resize:vertical;min-height:90px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;outline:none;}
-.btn-add{margin-top:12px;width:100%;padding:12px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;font-weight:600;cursor:pointer;}
+.btn-add{margin-top:12px;width:100%;padding:12px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;font-weight:600;cursor:pointer;transition:all 0.2s;}
 .btn-add.ready{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-add.editing{background:var(--green);color:#fff;border-color:var(--green)}
 
 .fp-list{flex:1;overflow-y:auto;max-height:450px}
 .fb-empty{padding:2.5rem 1rem;text-align:center;font-size:13px;color:var(--muted)}
@@ -61,9 +63,12 @@ textarea.note{width:100%;resize:vertical;min-height:90px;padding:12px 14px;borde
 .fb-tc-btn{flex-shrink:0;padding:4px 11px;background:rgba(99,102,241,.15);color:var(--accent2);border:1px solid rgba(99,102,241,.3);border-radius:6px;font-weight:700;cursor:pointer;height:fit-content;display:flex;align-items:center;gap:4px}
 .fb-body{flex:1;min-width:0}
 .fb-note-text{font-size:13px;line-height:1.5;white-space:pre-wrap;}
-.fb-time{font-size:11px;color:var(--muted);margin-top:6px}
-.fb-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;height:fit-content;opacity:0.5;transition:0.2s}
-.fb-del:hover{opacity:1;color:var(--red)}
+
+.fb-actions{display:flex;gap:8px;height:fit-content;}
+.fb-btn{background:none;border:none;cursor:pointer;font-size:15px;opacity:0.5;transition:0.2s;padding:2px}
+.fb-btn:hover{opacity:1}
+.fb-btn-edit:hover{color:var(--green)}
+.fb-btn-del:hover{color:var(--red)}
 
 .exp-panel{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:1.2rem;display:flex;flex-direction:column;gap:10px;}
 .exp-btns{display:flex;gap:10px}
@@ -127,7 +132,7 @@ textarea.note{width:100%;resize:vertical;min-height:90px;padding:12px 14px;borde
 
 <script>
 var feedbacks=[], currentTC='--:--:--', videoUrl='', videoType='', ytVideoId='';
-var ytPlayer=null, ytPlaying=false, clockTimer=null, nativeVid=null;
+var ytPlayer=null, ytPlaying=false, clockTimer=null, nativeVid=null, editingId=null;
 
 var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
 var firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
@@ -164,7 +169,7 @@ function loadVideo(){
   var info=parseUrl(url);
   if(!info||!info.id){toast('Link không hỗ trợ!');return;}
   
-  videoUrl=url; videoType=info.type; ytPlaying=false; nativeVid=null;
+  videoUrl=url; videoType=info.type; ytPlaying=false; nativeVid=null; clearTC();
   ytVideoId = info.type === 'youtube' ? info.id : '';
 
   document.getElementById('placeholder').style.display='none'; document.getElementById('dv').style.display='none';
@@ -181,9 +186,8 @@ function loadVideo(){
         'onStateChange': function(e) { 
           var wasPlaying = ytPlaying;
           ytPlaying = (e.data === YT.PlayerState.PLAYING);
-          // TỰ ĐỘNG LẤY TIMECODE KHI PAUSE YOUTUBE
           if (e.data === YT.PlayerState.PAUSED && wasPlaying) {
-             autoCap(ytPlayer.getCurrentTime());
+             if(!editingId) autoCap(ytPlayer.getCurrentTime());
           }
         } 
       } 
@@ -192,9 +196,8 @@ function loadVideo(){
     nativeVid=document.getElementById('dv');
     nativeVid.style.display='block';
     nativeVid.src='https://drive.google.com/uc?export=download&id='+info.id;
-    // TỰ ĐỘNG LẤY TIMECODE KHI PAUSE DRIVE VIDEO
     nativeVid.onpause = function() {
-        autoCap(nativeVid.currentTime);
+        if(!editingId) autoCap(nativeVid.currentTime);
     };
   }
   loadLocal(videoUrl); startClock();
@@ -210,7 +213,6 @@ function startClock(){
   }, 200);
 }
 
-// HÀM TỰ ĐỘNG XỬ LÝ GIAO DIỆN KHI CÓ SỰ KIỆN PAUSE
 function autoCap(sec){
   if(!videoUrl) return;
   currentTC = fmt(sec);
@@ -219,17 +221,22 @@ function autoCap(sec){
   document.getElementById('capTcBlock').classList.add('active');
   document.getElementById('btnAdd').classList.add('ready');
   document.getElementById('tcStatus').innerHTML='⏸ Timecode đã lấy: <span style="color:var(--accent2);font-weight:bold">'+currentTC+'</span>';
-  
-  // Tự động nháy chuột vào ô nhập liệu cho anh gõ luôn
   setTimeout(function(){ document.getElementById('noteText').focus(); }, 100);
 }
 
 function clearTC(){
-  currentTC='--:--:--';
+  editingId = null;
+  currentTC = '--:--:--';
   document.getElementById('capTcVal').textContent=currentTC;
   document.getElementById('capTcLbl').textContent='Chưa có (Pause video để lấy)';
-  document.getElementById('capTcBlock').classList.remove('active');
-  document.getElementById('btnAdd').classList.remove('ready');
+  var capBlock = document.getElementById('capTcBlock');
+  capBlock.classList.remove('active'); capBlock.classList.remove('editing');
+  
+  var btn = document.getElementById('btnAdd');
+  btn.classList.remove('ready'); btn.classList.remove('editing');
+  btn.textContent = 'Lưu feedback (Enter)';
+  
+  document.getElementById('noteText').value='';
   document.getElementById('tcStatus').innerHTML='▶ Đang phát — Pause video để tự động lấy timecode';
 }
 
@@ -239,21 +246,47 @@ function jumpTo(tc){
   else if(videoType === 'youtube' && ytPlayer) { ytPlayer.seekTo(sec, true); ytPlayer.playVideo(); }
 }
 
+function editFb(id) {
+  var fb = feedbacks.find(function(f){ return f.id === id; });
+  if(!fb) return;
+  
+  editingId = id;
+  currentTC = fb.tc;
+  document.getElementById('noteText').value = fb.note;
+  
+  document.getElementById('capTcVal').textContent = currentTC;
+  document.getElementById('capTcLbl').textContent = 'Đang sửa nhận xét...';
+  
+  var capBlock = document.getElementById('capTcBlock');
+  capBlock.classList.add('editing'); capBlock.classList.remove('active');
+  
+  var btn = document.getElementById('btnAdd');
+  btn.classList.add('editing'); btn.classList.remove('ready');
+  btn.textContent = 'Cập nhật feedback (Enter)';
+  
+  document.getElementById('noteText').focus();
+}
+
 function addFeedback(){
   if(!videoUrl){toast('Chưa tải video!');return;}
   var note=document.getElementById('noteText').value.trim();
   if(!note){toast('Vui lòng nhập nội dung!');return;}
-  if(currentTC==='--:--:--'){toast('Chưa có timecode!');return;}
   
-  var deepLink = videoUrl;
-  if(videoType === 'youtube') deepLink = 'https://youtu.be/' + ytVideoId + '?t=' + toSeconds(currentTC);
+  if(editingId) {
+    var fb = feedbacks.find(function(f){ return f.id === editingId; });
+    if(fb) fb.note = note;
+    toast('✅ Đã cập nhật!');
+  } else {
+    if(currentTC==='--:--:--'){toast('Chưa có timecode!');return;}
+    var deepLink = videoUrl;
+    if(videoType === 'youtube') deepLink = 'https://youtu.be/' + ytVideoId + '?t=' + toSeconds(currentTC);
+    
+    feedbacks.push({id:Date.now(), tc:currentTC, note:note, time:new Date(), url:deepLink});
+    feedbacks.sort(function(a,b){ return toSeconds(a.tc) - toSeconds(b.tc); });
+    toast('✅ Đã lưu mới!');
+  }
   
-  feedbacks.push({id:Date.now(), tc:currentTC, note:note, time:new Date(), url:deepLink});
-  feedbacks.sort(function(a,b){ return toSeconds(a.tc) - toSeconds(b.tc); });
-  
-  renderList(); saveLocal();
-  document.getElementById('noteText').value=''; clearTC();
-  toast('✅ Đã lưu!');
+  renderList(); saveLocal(); clearTC();
   if(nativeVid) nativeVid.play(); else if(ytPlayer) ytPlayer.playVideo();
   document.getElementById('noteText').blur();
 }
@@ -272,12 +305,14 @@ function renderList(){
     div.innerHTML=
       '<button class="fb-tc-btn" onclick="jumpTo(\''+fb.tc+'\')" title="Tua đến đoạn này">▶ '+fb.tc+'</button>'+
       '<div class="fb-body"><div class="fb-note-text">'+esc(fb.note)+'</div></div>'+
-      '<button class="fb-del" onclick="delFb('+fb.id+')">×</button>';
+      '<div class="fb-actions">'+
+        '<button class="fb-btn fb-btn-edit" onclick="editFb('+fb.id+')" title="Sửa">✏️</button>'+
+        '<button class="fb-btn fb-btn-del" onclick="delFb('+fb.id+')" title="Xoá">🗑️</button>'+
+      '</div>';
     list.appendChild(div);
   });
 }
 
-// Bắt phím Space để Play/Pause (sẽ kích hoạt autoCap gián tiếp)
 document.addEventListener('keydown', function(e){
   var noteInput = document.getElementById('noteText');
   var urlInput = document.getElementById('urlInput');
