@@ -52,6 +52,14 @@ video#dv{object-fit:contain}
 .cap-tc-lbl{font-size:12px;color:var(--muted);flex:1}
 
 textarea.note{width:100%;resize:vertical;min-height:90px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;outline:none;}
+input.source-link-input{width:100%;margin-top:8px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;outline:none;}
+
+/* Paste Image Preview */
+.paste-preview-box{display:none;margin-top:10px;position:relative;width:100%;border-radius:8px;overflow:hidden;border:1px dashed var(--accent)}
+.paste-preview-box.active{display:block}
+.paste-preview-img{width:100%;height:auto;display:block}
+.btn-remove-img{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+
 .btn-add{margin-top:12px;width:100%;padding:12px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;font-weight:600;cursor:pointer;transition:all 0.2s;}
 .btn-add.ready{background:var(--accent);color:#fff;border-color:var(--accent)}
 .btn-add.editing{background:var(--green);color:#fff;border-color:var(--green)}
@@ -63,6 +71,8 @@ textarea.note{width:100%;resize:vertical;min-height:90px;padding:12px 14px;borde
 .fb-tc-btn{flex-shrink:0;padding:4px 11px;background:rgba(99,102,241,.15);color:var(--accent2);border:1px solid rgba(99,102,241,.3);border-radius:6px;font-weight:700;cursor:pointer;height:fit-content;display:flex;align-items:center;gap:4px}
 .fb-body{flex:1;min-width:0}
 .fb-note-text{font-size:13px;line-height:1.5;white-space:pre-wrap;}
+.fb-source-link{display:inline-block;margin-top:6px;font-size:12px;color:var(--green);text-decoration:underline;word-break:break-all}
+.fb-saved-img{margin-top:8px;max-width:100%;border-radius:6px;border:1px solid var(--border)}
 
 .fb-actions{display:flex;gap:8px;height:fit-content;}
 .fb-btn{background:none;border:none;cursor:pointer;font-size:15px;opacity:0.5;transition:0.2s;padding:2px}
@@ -113,7 +123,14 @@ textarea.note{width:100%;resize:vertical;min-height:90px;padding:12px 14px;borde
             <button class="cap-tc-clear" onclick="clearTC()" style="background:none;border:none;color:#64748B;cursor:pointer;font-size:18px;">×</button>
           </div>
 
-          <textarea class="note" id="noteText" placeholder="Ghi nhận xét... (Nhấn Enter để lưu)"></textarea>
+          <textarea class="note" id="noteText" placeholder="Ghi nhận xét... (Nhấn Ctrl+V để dán ảnh chụp màn hình vào đây)"></textarea>
+          <input type="text" class="source-link-input" id="sourceLink" placeholder="Link Source đính kèm (Figma, Drive, Doc...) - Không bắt buộc"/>
+          
+          <div class="paste-preview-box" id="pastePreviewBox">
+            <button class="btn-remove-img" onclick="clearPastedImg()">×</button>
+            <img src="" id="pastePreviewImg" class="paste-preview-img"/>
+          </div>
+
           <button class="btn-add" id="btnAdd" onclick="addFeedback()">Lưu feedback (Enter)</button>
         </div>
         <div class="fp-list" id="fbList"><div class="fb-empty">Chưa có feedback nào.</div></div>
@@ -132,7 +149,7 @@ textarea.note{width:100%;resize:vertical;min-height:90px;padding:12px 14px;borde
 
 <script>
 var feedbacks=[], currentTC='--:--:--', videoUrl='', videoType='', ytVideoId='';
-var ytPlayer=null, ytPlaying=false, clockTimer=null, nativeVid=null, editingId=null;
+var ytPlayer=null, ytPlaying=false, clockTimer=null, nativeVid=null, editingId=null, currentImage=null;
 
 var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
 var firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
@@ -217,7 +234,7 @@ function autoCap(sec){
   if(!videoUrl) return;
   currentTC = fmt(sec);
   document.getElementById('capTcVal').textContent=currentTC;
-  document.getElementById('capTcLbl').textContent='✓ Đã lấy (Sẵn sàng ghi chú)';
+  document.getElementById('capTcLbl').textContent='✓ Đã lấy (Sẵn sàng ghi chú/Paste ảnh)';
   document.getElementById('capTcBlock').classList.add('active');
   document.getElementById('btnAdd').classList.add('ready');
   document.getElementById('tcStatus').innerHTML='⏸ Timecode đã lấy: <span style="color:var(--accent2);font-weight:bold">'+currentTC+'</span>';
@@ -227,6 +244,7 @@ function autoCap(sec){
 function clearTC(){
   editingId = null;
   currentTC = '--:--:--';
+  clearPastedImg();
   document.getElementById('capTcVal').textContent=currentTC;
   document.getElementById('capTcLbl').textContent='Chưa có (Pause video để lấy)';
   var capBlock = document.getElementById('capTcBlock');
@@ -237,8 +255,34 @@ function clearTC(){
   btn.textContent = 'Lưu feedback (Enter)';
   
   document.getElementById('noteText').value='';
+  document.getElementById('sourceLink').value='';
   document.getElementById('tcStatus').innerHTML='▶ Đang phát — Pause video để tự động lấy timecode';
 }
+
+function clearPastedImg() {
+  currentImage = null;
+  document.getElementById('pastePreviewImg').src = '';
+  document.getElementById('pastePreviewBox').classList.remove('active');
+}
+
+// Bắt sự kiện Paste ảnh
+document.addEventListener('paste', function (e) {
+  if(!editingId && currentTC === '--:--:--') return;
+  var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+  for (var index in items) {
+    var item = items[index];
+    if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
+      var blob = item.getAsFile();
+      var reader = new FileReader();
+      reader.onload = function (event) {
+        currentImage = event.target.result;
+        document.getElementById('pastePreviewImg').src = currentImage;
+        document.getElementById('pastePreviewBox').classList.add('active');
+      };
+      reader.readAsDataURL(blob);
+    }
+  }
+});
 
 function jumpTo(tc){
   var sec=toSeconds(tc);
@@ -252,7 +296,16 @@ function editFb(id) {
   
   editingId = id;
   currentTC = fb.tc;
-  document.getElementById('noteText').value = fb.note;
+  document.getElementById('noteText').value = fb.note || '';
+  document.getElementById('sourceLink').value = fb.source || '';
+  
+  if(fb.img) {
+    currentImage = fb.img;
+    document.getElementById('pastePreviewImg').src = currentImage;
+    document.getElementById('pastePreviewBox').classList.add('active');
+  } else {
+    clearPastedImg();
+  }
   
   document.getElementById('capTcVal').textContent = currentTC;
   document.getElementById('capTcLbl').textContent = 'Đang sửa nhận xét...';
@@ -270,18 +323,24 @@ function editFb(id) {
 function addFeedback(){
   if(!videoUrl){toast('Chưa tải video!');return;}
   var note=document.getElementById('noteText').value.trim();
-  if(!note){toast('Vui lòng nhập nội dung!');return;}
+  var source=document.getElementById('sourceLink').value.trim();
+  
+  if(!note && !currentImage){toast('Vui lòng nhập nội dung hoặc dán ảnh!');return;}
   
   if(editingId) {
     var fb = feedbacks.find(function(f){ return f.id === editingId; });
-    if(fb) fb.note = note;
+    if(fb) {
+      fb.note = note;
+      fb.source = source;
+      fb.img = currentImage;
+    }
     toast('✅ Đã cập nhật!');
   } else {
     if(currentTC==='--:--:--'){toast('Chưa có timecode!');return;}
     var deepLink = videoUrl;
     if(videoType === 'youtube') deepLink = 'https://youtu.be/' + ytVideoId + '?t=' + toSeconds(currentTC);
     
-    feedbacks.push({id:Date.now(), tc:currentTC, note:note, time:new Date(), url:deepLink});
+    feedbacks.push({id:Date.now(), tc:currentTC, note:note, source:source, img:currentImage, time:new Date(), url:deepLink});
     feedbacks.sort(function(a,b){ return toSeconds(a.tc) - toSeconds(b.tc); });
     toast('✅ Đã lưu mới!');
   }
@@ -300,11 +359,13 @@ function renderList(){
   list.innerHTML='';
   if(!feedbacks.length){ list.innerHTML='<div class="fb-empty">Chưa có feedback nào.</div>'; return; }
   feedbacks.forEach(function(fb){
+    var sourceHtml = fb.source ? '<a href="'+fb.source+'" target="_blank" class="fb-source-link">📎 Link Source đính kèm</a>' : '';
+    var imgHtml = fb.img ? '<img src="'+fb.img+'" class="fb-saved-img" />' : '';
     var div=document.createElement('div');
     div.className='fb-item';
     div.innerHTML=
       '<button class="fb-tc-btn" onclick="jumpTo(\''+fb.tc+'\')" title="Tua đến đoạn này">▶ '+fb.tc+'</button>'+
-      '<div class="fb-body"><div class="fb-note-text">'+esc(fb.note)+'</div></div>'+
+      '<div class="fb-body"><div class="fb-note-text">'+esc(fb.note)+'</div>'+sourceHtml+imgHtml+'</div>'+
       '<div class="fb-actions">'+
         '<button class="fb-btn fb-btn-edit" onclick="editFb('+fb.id+')" title="Sửa">✏️</button>'+
         '<button class="fb-btn fb-btn-del" onclick="delFb('+fb.id+')" title="Xoá">🗑️</button>'+
@@ -315,29 +376,30 @@ function renderList(){
 
 document.addEventListener('keydown', function(e){
   var noteInput = document.getElementById('noteText');
+  var srcInput = document.getElementById('sourceLink');
   var urlInput = document.getElementById('urlInput');
   
-  if(e.code === 'Space' && e.target !== noteInput && e.target !== urlInput){ 
+  if(e.code === 'Space' && e.target !== noteInput && e.target !== srcInput && e.target !== urlInput){ 
       e.preventDefault(); 
       if(nativeVid) {
-          if(!nativeVid.paused) nativeVid.pause(); 
-          else nativeVid.play();
+          if(!nativeVid.paused) nativeVid.pause(); else nativeVid.play();
       } else if(videoType === 'youtube' && ytPlayer) {
           var state = ytPlayer.getPlayerState();
-          if(state === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
-          else ytPlayer.playVideo();
+          if(state === YT.PlayerState.PLAYING) ytPlayer.pauseVideo(); else ytPlayer.playVideo();
       }
   }
   
-  if(e.key === 'Enter' && !e.shiftKey && e.target === noteInput){ e.preventDefault(); addFeedback(); }
+  if(e.key === 'Enter' && !e.shiftKey && (e.target === noteInput || e.target === srcInput)){ 
+      e.preventDefault(); addFeedback(); 
+  }
 });
 
 function exportXLSX(){
   if(!feedbacks.length){toast('Chưa có dữ liệu!');return;}
-  var rows=[['#','Timecode','Nội dung nhận xét','Link xem đoạn cắt']];
-  feedbacks.forEach(function(fb,i){ rows.push([i+1, fb.tc, fb.note, fb.url]); });
+  var rows=[['#','Timecode','Nội dung nhận xét','Link Source đính kèm','Có ảnh Paste?','Link xem video']];
+  feedbacks.forEach(function(fb,i){ rows.push([i+1, fb.tc, fb.note, fb.source || '', fb.img ? 'Có' : 'Không', fb.url]); });
   var ws=XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=[{wch:4},{wch:11},{wch:60},{wch:45}];
+  ws['!cols']=[{wch:4},{wch:11},{wch:60},{wch:30},{wch:15},{wch:45}];
   var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Feedback');
   XLSX.writeFile(wb,'feedback-'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
@@ -352,7 +414,10 @@ function exportPDF(){
 
   var rows=feedbacks.map(function(fb,i){
     var linkBtn = '<a href="'+fb.url+'" target="_blank" style="display:inline-block; margin-top:8px; font-size:11px; background:#EEF2FF; color:#4F46E5; padding:4px 10px; border-radius:4px; text-decoration:none; font-weight:bold;">▶ Xem tại '+fb.tc+'</a>';
-    return '<tr><td style="text-align:center">'+(i+1)+'</td><td style="font-weight:bold;color:#111;text-align:center">'+fb.tc+'</td><td style="white-space:pre-wrap; line-height:1.6">'+fb.note+'<br>'+linkBtn+'</td></tr>';
+    var srcLink = fb.source ? '<br><a href="'+fb.source+'" target="_blank" style="color:#10B981; font-size:12px; font-weight:bold; text-decoration:underline; display:inline-block; margin-top:4px;">📎 Source đính kèm</a>' : '';
+    var imgTag = fb.img ? '<br><img src="'+fb.img+'" style="max-width:300px; margin-top:10px; border:1px solid #ddd; border-radius:4px" />' : '';
+    
+    return '<tr><td style="text-align:center">'+(i+1)+'</td><td style="font-weight:bold;color:#111;text-align:center">'+fb.tc+'</td><td style="white-space:pre-wrap; line-height:1.6">'+fb.note+srcLink+imgTag+'<br>'+linkBtn+'</td></tr>';
   }).join('');
   
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:13px;color:#333; line-height:1.5}table{width:100%;border-collapse:collapse;margin-top:20px}th{background:#F8FAFC;color:#475569;padding:12px;text-align:left;border-bottom:2px solid #E2E8F0}td{padding:16px 12px;border-bottom:1px solid #E2E8F0;vertical-align:top}</style></head><body>'+
