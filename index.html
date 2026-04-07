@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Antigravity Video Feedback</title>
+<title>Antigravity Feedback - Simple Version</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,7 +27,6 @@
   --accent-glow: rgba(139, 92, 246, 0.3);
   --accent-solid: #8b5cf6;
   --green: #10B981;
-  --green-glow: rgba(16, 185, 129, 0.2);
   --red: #ef4444;
   --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
@@ -36,11 +35,9 @@
   --radius-md: 16px;
   --radius-sm: 10px;
   --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-  --transition-smooth: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
 body {
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-deep);
@@ -51,788 +48,248 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
 .app { display: grid; grid-template-rows: auto auto 1fr auto; min-height: 100vh; max-width: 1600px; margin: 0 auto; padding: 0 2rem; }
-
 .topbar { display: flex; align-items: center; justify-content: space-between; padding: 2rem 0 1rem; }
 .logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
 .logo span { background: var(--accent-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
 .bento-panel {
-  background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  background: var(--glass-bg); backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-glass);
 }
 
 .main { display: grid; grid-template-columns: 1fr 400px; gap: 2rem; padding-bottom: 2rem; align-items: start; }
 @media(max-width: 1200px) { .main { grid-template-columns: 1fr; } }
 
-/* --- VIDEO COLUMN --- */
+/* --- VIDEO --- */
 .video-container { position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; background: #000; }
 .video-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: rgba(0,0,0,0.6); z-index: 10;}
-.video-placeholder p { color: var(--text-secondary); font-size: 15px; text-align: center; }
-.video-placeholder svg { width: 48px; height: 48px; opacity: 0.5; }
 #yt-frame, #vimeo-frame, video#dv { width: 100%; height: 100%; position: absolute; inset: 0; display: none; z-index: 1;}
 video#dv { object-fit: contain; }
 
 .tc-bar { margin-top: 1.5rem; padding: 1.2rem 1.5rem; display: flex; align-items: center; gap: 1.5rem; }
 .tc-clock { font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -1px; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
-.tc-status { font-size: 14px; color: var(--text-secondary); font-weight: 500; display: flex; align-items: center; gap: 8px; }
-.status-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green); animation: pulse 2s infinite; }
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+.status-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green); }
 
-/* --- PANEL COLUMN --- */
+/* --- INPUTS --- */
 .panel-col { display: flex; flex-direction: column; gap: 1.5rem; height: 100%; }
-
 input[type="text"], textarea {
   width: 100%; background: var(--inner-bg); border: 1px solid var(--glass-border); color: var(--text-primary);
-  border-radius: var(--radius-sm); padding: 12px 16px; font-family: inherit; font-size: 14px; transition: var(--transition-smooth); outline: none;
+  border-radius: var(--radius-sm); padding: 12px 16px; font-family: inherit; font-size: 14px; outline: none; transition: 0.2s;
 }
-input[type="text"]:focus, textarea:focus { border-color: var(--accent-solid); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); }
-input[type="text"]::placeholder, textarea::placeholder { color: var(--text-tertiary); }
+input[type="text"]:focus, textarea:focus { border-color: var(--accent-solid); }
 
-.btn {
-  padding: 12px 24px; border: none; border-radius: var(--radius-sm); font-weight: 600; font-size: 14px; font-family: inherit;
-  cursor: pointer; transition: var(--transition-smooth); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-}
-.btn-primary { background: var(--accent-grad); color: #fff; box-shadow: 0 4px 15px var(--accent-glow); }
-.btn-primary:hover { box-shadow: 0 6px 20px var(--accent-glow); filter: brightness(1.1); transform: translateY(-1px); }
-
-.url-panel { padding: 1.25rem; display: flex; flex-direction: column; gap: 12px; }
-.url-row { display: flex; gap: 10px; }
-
-.fb-panel { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
-.fp-head { padding: 1.25rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
-.fp-head h2 { font-size: 16px; font-weight: 600; }
-.fb-count { font-size: 12px; padding: 4px 12px; border-radius: 100px; background: rgba(255,255,255,0.1); font-weight: 600; }
-
-.fp-input { padding: 1.25rem; border-bottom: 1px solid var(--glass-border); background: rgba(0,0,0,0.1); }
 .time-range-group { display: flex; gap: 10px; margin-bottom: 16px; }
 .tc-box {
   flex: 1; padding: 12px; background: var(--inner-bg); border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition-smooth); text-align: center; position: relative;
+  border-radius: var(--radius-sm); cursor: pointer; transition: 0.2s; text-align: center; position: relative;
 }
-.tc-box:hover { border-color: var(--glass-border-focus); }
-.tc-box.active { border-color: var(--accent-solid); background: rgba(139, 92, 246, 0.1); box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.05); }
-.tc-label { display: block; font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 600; }
+.tc-box.active { border-color: var(--accent-solid); background: rgba(139, 92, 246, 0.15); transform: scale(1.02); }
+.tc-label { display: block; font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 700; }
 .tc-time-input {
   background: transparent; border: none; color: var(--text-primary);
-  font-size: 18px; font-weight: 700; font-family: inherit; font-variant-numeric: tabular-nums;
-  text-align: center; width: 100%; outline: none; padding: 0; margin: 0; cursor: text;
+  font-size: 20px; font-weight: 800; text-align: center; width: 100%; outline: none; pointer-events: none;
 }
-.tc-box.active .tc-time-input { color: var(--accent-solid); }
-.tc-time-input:focus { border-bottom: 2px solid var(--accent-solid); }
+.tc-box.active .tc-label { color: var(--accent-solid); }
 
-.tc-clear { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.1); color: var(--text-secondary); border: none; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 14px; }
-.tc-clear:hover { background: var(--red); color: #fff; }
+.btn { padding: 12px 24px; border: none; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-primary { background: var(--accent-grad); color: #fff; width: 100%; margin-top: 12px; }
 
-textarea.note { min-height: 100px; resize: vertical; }
+/* --- LIST --- */
+.fb-panel { display: flex; flex-direction: column; overflow: hidden; }
+.fp-head { padding: 1.25rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; }
+.fp-list { overflow-y: auto; max-height: 500px; }
+.fb-item { padding: 1.25rem; border-bottom: 1px solid var(--glass-border); display: flex; gap: 14px; }
+.fb-tc-btn { flex-shrink: 0; padding: 4px 10px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); border-radius: 100px; font-size: 12px; height: fit-content; }
 
-.image-drop-zone {
-  border: 1px dashed var(--glass-border-focus); border-radius: var(--radius-sm); padding: 1.5rem 1rem; text-align: center;
-  cursor: pointer; transition: var(--transition-smooth); background: rgba(0,0,0,0.2); position: relative; margin-top: 12px;
-}
-.image-drop-zone:hover { border-color: var(--accent-solid); background: rgba(139, 92, 246, 0.05); }
-.image-drop-zone p { margin: 0; font-size: 13px; color: var(--text-secondary); }
-.image-drop-zone p strong { color: var(--text-primary); }
-.preview-img { max-width: 100%; border-radius: 6px; display: none; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-.remove-img-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-.remove-img-btn:hover { background: var(--red); border-color: var(--red); }
-
-.btn-add { width: 100%; margin-top: 16px; height: 48px; font-size: 15px; }
-.btn-add.editing { background: var(--green); box-shadow: 0 4px 15px var(--green-glow); }
-
-.fp-list { overflow-y: auto; max-height: 450px; padding-bottom: 10px; }
-.fb-empty { padding: 3rem 1rem; text-align: center; font-size: 14px; color: var(--text-tertiary); }
-.fb-item { padding: 1.25rem; border-bottom: 1px solid var(--glass-border); display: flex; gap: 14px; transition: var(--transition-smooth); }
-.fb-item:hover { background: var(--glass-bg-hover); }
-.fb-item:last-child { border-bottom: none; }
-.fb-tc-btn {
-  flex-shrink: 0; padding: 6px 12px; background: rgba(255,255,255,0.05); color: var(--text-primary); border: 1px solid var(--glass-border);
-  border-radius: 100px; font-weight: 600; font-size: 12px; cursor: pointer; height: fit-content; transition: var(--transition-smooth);
-}
-.fb-tc-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--glass-border-focus); transform: scale(1.05); }
-.fb-body { flex: 1; min-width: 0; }
-.fb-note-text { font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: var(--text-primary); }
-.fb-source-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 12px; color: var(--accent-solid); text-decoration: none; font-weight: 500; padding: 4px 10px; background: rgba(139, 92, 246, 0.1); border-radius: 6px; }
-.fb-source-link:hover { background: rgba(139, 92, 246, 0.2); }
-.fb-saved-img { margin-top: 10px; max-width: 100%; border-radius: 8px; border: 1px solid var(--glass-border); }
-
-.fb-actions { display: flex; flex-direction: column; gap: 6px; height: fit-content; opacity: 0; transition: var(--transition-smooth); }
-.fb-item:hover .fb-actions { opacity: 1; }
-.fb-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 6px; cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: var(--transition-smooth); }
-.fb-btn:hover { background: var(--glass-bg-hover); color: var(--text-primary); }
-.fb-btn-del:hover { background: rgba(239, 68, 68, 0.1); color: var(--red); border-color: rgba(239, 68, 68, 0.3); }
-
-.exp-panel { padding: 1.25rem; display: flex; flex-direction: column; gap: 12px; }
-.exp-btns { display: flex; gap: 12px; }
-.btn-exp { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); color: var(--text-primary); height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.btn-exp:hover { background: rgba(255,255,255,0.08); border-color: var(--glass-border-focus); }
-
-.footer { text-align: center; padding: 1.5rem 0; margin-top: 1rem; border-top: 1px solid var(--glass-border); color: var(--text-tertiary); font-size: 13px; }
-.footer span { color: var(--accent-solid); font-weight: 600; }
-
-.toast {
-  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
-  background: rgba(20, 20, 25, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--glass-border-focus);
-  color: #fff; padding: 12px 24px; border-radius: 100px; font-size: 14px; font-weight: 500;
-  opacity: 0; pointer-events: none; transition: var(--transition-smooth); z-index: 9999;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5); will-change: transform, opacity;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.footer { text-align: center; padding: 2rem 0; color: var(--text-tertiary); font-size: 13px; }
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #18181b; border: 1px solid #3f3f46; color: #fff; padding: 10px 20px; border-radius: 100px; opacity: 0; transition: 0.3s; z-index: 999; }
+.toast.show { opacity: 1; bottom: 50px; }
 </style>
 </head>
 <body>
+
 <div class="app">
   <header class="topbar">
-    <div class="logo">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1" /><stop offset="100%" stop-color="#a855f7" /></linearGradient></defs>
-            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-        </svg>
-        <span>Antigravity</span> Feedback
-    </div>
+    <div class="logo">🚀 <span>Antigravity</span> Feedback</div>
   </header>
 
   <main class="main">
     <div class="video-col">
       <div class="video-container bento-panel" id="videoBox">
-        <div class="video-placeholder" id="placeholder">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14v-4z"/><rect x="3" y="6" width="12" height="12" rx="2" ry="2"/></svg>
-          <p>Dán link YouTube, Vimeo hoặc Google Drive<br>vào ô bên phải để bắt đầu</p>
-        </div>
-        <div id="yt-frame"></div>
-        <div id="vimeo-frame"></div>
-        <video id="dv" controls preload="metadata"></video>
+        <div class="video-placeholder" id="placeholder"><p>Dán link vào ô bên phải để bắt đầu</p></div>
+        <div id="yt-frame"></div><div id="vimeo-frame"></div><video id="dv" controls></video>
       </div>
-      
-      <div class="tc-bar bento-panel" id="tcBar">
+      <div class="tc-bar bento-panel">
         <div class="tc-clock" id="tcClock">00:00:00</div>
         <div style="flex:1"></div>
-        <div class="tc-status" id="tcStatus">
-            <div class="status-dot"></div>
-            Luật 1: Pause -> Tự chốt A. Luật 2: Bấm nút -> Chốt B.
-        </div>
+        <div class="status-dot"></div>
+        <div style="font-size: 13px; color: var(--text-secondary)">Smarter & Simpler Sync</div>
       </div>
     </div>
 
     <div class="panel-col">
-      <div class="url-panel bento-panel">
-        <div class="url-row">
-            <input type="text" id="urlInput" placeholder="Dán link Video (YouTube/Vimeo/Drive)..."/>
-            <button class="btn btn-primary" onclick="loadVideo()">Load</button>
-        </div>
-        <input type="text" id="reportName" placeholder="Tên Report tự động lấy (Có thể sửa)"/>
+      <div class="url-panel bento-panel" style="padding:1.25rem; display:flex; gap:8px;">
+        <input type="text" id="urlInput" placeholder="Dán link YT/Drive..."/>
+        <button class="btn btn-primary" onclick="loadVideo()" style="width:auto; margin:0">Load</button>
       </div>
 
       <div class="fb-panel bento-panel">
-        <div class="fp-head">
-            <h2>Feedback Notes</h2>
-            <span class="fb-count" id="fbCount">0</span>
-        </div>
-        
-        <div class="fp-input">
+        <div class="fp-head"><h3>Ghi chú Feedback</h3> <span id="fbCount">0</span></div>
+        <div style="padding: 1.25rem; background: rgba(0,0,0,0.2)">
           <div class="time-range-group">
-            <div class="tc-box active" id="boxIn" onclick="manualSetIn()">
-              <span class="tc-label" style="cursor:pointer">Từ (A) - Phím I</span>
-              <input type="text" class="tc-time-input" id="tcIn" value="00:00:00" onchange="manualEditIn()" onclick="event.stopPropagation(); if(!isLockedIn) manualSetIn();"/>
+            <div class="tc-box active" id="boxIn" onclick="setSyncTarget('A')">
+              <span class="tc-label">Từ (A) - LIVE</span>
+              <input type="text" class="tc-time-input" id="tcIn" value="00:00:00"/>
             </div>
-            <div class="tc-box" id="boxOut" onclick="manualSetOut()">
-              <button class="tc-clear" id="btnClearOut" onclick="clearOut(event)">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
-              <span class="tc-label">Đến (B) - Click / Phím O</span>
-              <input type="text" class="tc-time-input" id="tcOut" value="--:--:--" onchange="manualEditOut()" onclick="event.stopPropagation(); if(!hasOut) manualSetOut();"/>
+            <div class="tc-box" id="boxOut" onclick="setSyncTarget('B')">
+              <span class="tc-label">Đến (B)</span>
+              <input type="text" class="tc-time-input" id="tcOut" value="--:--:--"/>
             </div>
           </div>
-
-          <textarea class="note" id="noteText" placeholder="Nhập comment... (Pause video để tự lấy timecode)"></textarea>
-          <input type="text" class="source-link-input" id="sourceLink" placeholder="🔗 Link tham chiếu (Figma, Notion, Drive) - Tuỳ chọn"/>
-          
-          <div class="image-drop-zone" id="imageDropZone" onclick="document.getElementById('fileInput').click()">
-            <p id="imgHint">🖼️ Bấm <strong>Ctrl+V</strong> để dán ảnh chụp màn hình<br>hoặc Click để chọn file đính kèm</p>
-            <img src="" id="pastePreviewImg" class="preview-img"/>
-            <button class="remove-img-btn" id="btnRemoveImg" onclick="clearPastedImg(event)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-          </div>
-          <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFileUpload(event)">
-
-          <button class="btn btn-primary btn-add" id="btnAdd" onclick="addFeedback()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-            Lưu Feedback (Enter)
-          </button>
+          <textarea id="noteText" placeholder="Gõ nhận xét tại đây..." onfocus="setSyncTarget(null)"></textarea>
+          <button class="btn btn-primary" onclick="addFeedback()">Lưu Feedback (Enter)</button>
         </div>
-        
-        <div class="fp-list" id="fbList"><div class="fb-empty">Chưa có dữ liệu. Bắt đầu xem video để thêm.</div></div>
+        <div class="fp-list" id="fbList"></div>
       </div>
-
-      <div class="exp-panel bento-panel">
-        <div class="exp-btns" style="margin-bottom: 6px;">
-          <button class="btn btn-exp" onclick="exportJSON()" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2); color: var(--accent2);">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-            Lưu Session
-          </button>
-          <button class="btn btn-exp" onclick="document.getElementById('jsonInput').click()" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2); color: var(--accent2);">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-            Mở Session
-          </button>
-          <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importJSON(event)">
-        </div>
-
-        <div class="exp-btns">
-          <button class="btn btn-exp" onclick="exportXLSX()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            Lưu Excel
-          </button>
-          <button class="btn btn-exp" id="btnPdf" onclick="exportPDF()" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #fca5a5;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15v-4"></path><path d="M12 15v-4"></path><path d="M15 15v-4"></path></svg>
-            Xuất PDF
-          </button>
-        </div>
+      
+      <div style="display:flex; gap:8px">
+          <button class="btn" style="flex:1; background: var(--inner-bg)" onclick="exportXLSX()">Excel</button>
+          <button class="btn" style="flex:1; background: var(--inner-bg)" onclick="exportPDF()">PDF</button>
       </div>
     </div>
   </main>
 
-  <footer class="footer">
-    &copy; 2026 Một sản phẩm của <span>MinXLabs Studio</span>. Xây dựng theo triết lý Antigravity.
-  </footer>
+  <footer class="footer">Xây dựng theo triết lý <span>Antigravity</span> - Smarter but Simple</footer>
 </div>
+
 <div class="toast" id="toast"></div>
 
-<div id="pdf-template" style="display: none; padding: 40px; font-family: 'Inter', sans-serif; background: #fff; color: #111; width: 1000px;">
-    <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
-        <h1 id="pdf-title" style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 0 0 8px 0; letter-spacing: -0.5px;">Báo cáo Feedback Video</h1>
-        <p style="color: #64748b; font-size: 14px; margin: 0;" id="pdf-meta"></p>
-    </div>
-    <table style="width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px;">
-        <thead>
-            <tr>
-                <th style="width: 6%; background: #f8fafc; color: #475569; padding: 16px; text-align: center; font-weight: 600; border-top-left-radius: 12px; border-bottom: 2px solid #e2e8f0;">#</th>
-                <th style="width: 18%; background: #f8fafc; color: #475569; padding: 16px; text-align: center; font-weight: 600; border-bottom: 2px solid #e2e8f0;">Timecode</th>
-                <th style="width: 76%; background: #f8fafc; color: #475569; padding: 16px; text-align: left; font-weight: 600; border-top-right-radius: 12px; border-bottom: 2px solid #e2e8f0;">Nội dung Note & Assets</th>
-            </tr>
-        </thead>
-        <tbody id="pdf-tbody"></tbody>
-    </table>
-</div>
-
 <script>
-var feedbacks=[], videoUrl='', videoType='', videoId='';
-var ytPlayer=null, vimeoPlayer=null, ytPlaying=false, clockTimer=null, nativeVid=null;
-var editingId=null, currentImage=null;
+var feedbacks=[], videoUrl='', videoType='', ytPlayer=null, vimeoPlayer=null, nativeVid=null, clockTimer=null;
+var syncTarget = 'A'; // 'A', 'B', hoặc null
 
-var isLockedIn = false;
-var hasOut = false;
-
-function onYouTubeIframeAPIReady() {}
-
-function toSeconds(tc) {
-  var p = tc.split(':').map(Number);
-  return (p[0]||0)*3600 + (p[1]||0)*60 + (p[2]||0);
+function toast(m){ 
+    const t=document.getElementById('toast'); t.innerText=m; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2000);
 }
+
 function fmt(s){
     s=Math.floor(s||0);
-    return [Math.floor(s/3600),Math.floor((s%3600)/60),s%60].map(function(v){return String(v).padStart(2,'0');}).join(':');
-}
-function toast(msg){
-    var t=document.getElementById('toast');
-    t.textContent=msg; t.classList.add('show');
-    setTimeout(function(){t.classList.remove('show');},2500);
+    return [Math.floor(s/3600), Math.floor((s%3600)/60), s%60].map(v=>String(v).padStart(2,'0')).join(':');
 }
 
-function parseUrl(url){
-  try{
-    var u=new URL(url);
-    if(u.hostname.includes('youtube.com')) return{type:'youtube',id:u.searchParams.get('v')};
-    if(u.hostname.includes('youtu.be')) return{type:'youtube',id:u.pathname.slice(1).split('?')[0]};
-    if(u.hostname.includes('drive.google.com')){var m=url.match(/\/d\/([^\/\?]+)/);return m?{type:'drive',id:m[1]}:null;}
-    var vimeoMatch = url.match(/(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:[a-zA-Z0-9_\-]+)?/i);
-    if (vimeoMatch) return {type:'vimeo', id:vimeoMatch[1]};
-  }catch(e){} return null;
+function setSyncTarget(target) {
+    syncTarget = target;
+    document.getElementById('boxIn').classList.toggle('active', target === 'A');
+    document.getElementById('boxOut').classList.toggle('active', target === 'B');
+    
+    const labelA = document.querySelector('#boxIn .tc-label');
+    const labelB = document.querySelector('#boxOut .tc-label');
+    labelA.innerText = (target === 'A') ? 'Từ (A) - LIVE' : 'Từ (A)';
+    labelB.innerText = (target === 'B') ? 'Đến (B) - LIVE' : 'Đến (B)';
+
+    if(target) toast(`Đang đồng bộ ô ${target}`);
 }
 
-function saveLocal(){if(videoUrl) localStorage.setItem('vfb_' + videoUrl, JSON.stringify(feedbacks));}
-function loadLocal(url){
-  var saved = localStorage.getItem('vfb_' + url);
-  if(saved){
-    try{ feedbacks = JSON.parse(saved); feedbacks.forEach(function(f){ f.time = new Date(f.time); }); renderList(); } catch(e){ feedbacks = []; }
-  } else { feedbacks = []; renderList(); }
-}
-
-function loadVideo(){
-  var url=document.getElementById('urlInput').value.trim();
-  if(!url){toast('⚠️ Dán link video vào nhé!');return;}
-  var info=parseUrl(url);
-  if(!info||!info.id){toast('❌ Link không hỗ trợ (Chỉ YT/Vimeo/Drive)');return;}
-  
-  videoUrl=url; videoType=info.type; ytPlaying=false; nativeVid=null; resetForm();
-  videoId = info.id;
-  document.getElementById('reportName').value = 'Video Report ' + new Date().toISOString().slice(0,10);
-
-  document.getElementById('placeholder').style.display='none'; document.getElementById('dv').style.display='none';
-  if(document.getElementById('yt-frame')) document.getElementById('yt-frame').style.display='none';
-  if(document.getElementById('vimeo-frame')) document.getElementById('vimeo-frame').style.display='none';
-  document.getElementById('tcBar').classList.add('visible');
-
-  if(info.type==='youtube'){
-    document.getElementById('yt-frame').style.display='block';
-    if(ytPlayer) {
-        ytPlayer.loadVideoById(info.id);
-    } else {
-        var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
-        var firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-        
-        var checkYT = setInterval(function() {
-            if(window.YT && window.YT.Player) {
-                clearInterval(checkYT);
-                ytPlayer = new YT.Player('yt-frame', { 
-                  videoId: info.id, 
-                  playerVars: { 'rel': 0, 'modestbranding': 1, 'autoplay': 0 }, 
-                  events: { 
-                    'onReady': function(e) {
-                         var title = e.target.getVideoData().title;
-                         if(title) document.getElementById('reportName').value = title;
-                    },
-                    'onStateChange': function(e) { 
-                        var wasPlaying = ytPlaying;
-                        ytPlaying = (e.data === YT.PlayerState.PLAYING); 
-                        // LUẬT 1: AUTO PAUSE CHỈ KÍCH HOẠT NẾU NOTE ĐANG TRỐNG ĐỂ BẢO VỆ DỮ LIỆU
-                        if (e.data === YT.PlayerState.PAUSED && wasPlaying) {
-                            handleVideoPause(ytPlayer.getCurrentTime());
-                        }
-                    } 
-                  } 
-                });
-            }
-        }, 100);
-    }
-  } else if(info.type==='vimeo') {
-    document.getElementById('vimeo-frame').style.display='block';
-    if(vimeoPlayer) {
-        vimeoPlayer.loadVideo(info.id).then(function() {
-            vimeoPlayer.getVideoTitle().then(function(title) { document.getElementById('reportName').value = title; });
-        });
-    } else {
-        if(window.Vimeo) {
-            vimeoPlayer = new Vimeo.Player('vimeo-frame', { id: info.id, responsive: true });
-            vimeoPlayer.on('play', function() { ytPlaying = true; });
-            vimeoPlayer.on('pause', function() { 
-                if(ytPlaying) {
-                    ytPlaying = false;
-                    vimeoPlayer.getCurrentTime().then(function(t){ handleVideoPause(t); });
-                }
-            });
-            vimeoPlayer.getVideoTitle().then(function(title) { document.getElementById('reportName').value = title; });
-        }
-    }
-  } else {
-    nativeVid=document.getElementById('dv');
-    nativeVid.style.display='block';
-    nativeVid.src='https://drive.google.com/uc?export=download&id='+info.id;
-    nativeVid.onplay = function() { ytPlaying = true; };
-    nativeVid.onpause = function() {
-        if(ytPlaying) {
-            ytPlaying = false;
-            handleVideoPause(nativeVid.currentTime);
-        }
-    };
-  }
-  
-  loadLocal(videoUrl); startClock();
-}
-
-function getCurrentVidTime() {
-    var s = 0;
-    if (nativeVid && !isNaN(nativeVid.currentTime)) s = nativeVid.currentTime;
-    else if (videoType === 'youtube' && ytPlayer && ytPlayer.getCurrentTime) s = ytPlayer.getCurrentTime();
-    else if (videoType === 'vimeo' && vimeoPlayer) {
-        vimeoPlayer.getCurrentTime().then(function(t){ window.vimeoCurrentTime = t; });
-        s = window.vimeoCurrentTime || 0;
-    }
-    return s;
+function getCurrentTime() {
+    if (nativeVid) return nativeVid.currentTime;
+    if (ytPlayer && ytPlayer.getCurrentTime) return ytPlayer.getCurrentTime();
+    if (window.vimeoTime) return window.vimeoTime;
+    return 0;
 }
 
 function startClock(){
-  if(clockTimer) clearInterval(clockTimer);
-  clockTimer=setInterval(function(){
-    var s = getCurrentVidTime();
-    var timeStr = fmt(s);
-    document.getElementById('tcClock').textContent = timeStr;
-    
-    // NẾU CHƯA LOCK -> ĐỒNG BỘ LIÊN TỤC VÀO Ô 'A'
-    if (!isLockedIn && !editingId) {
-        document.getElementById('tcIn').value = timeStr;
-    }
-  }, 200);
+    if(clockTimer) clearInterval(clockTimer);
+    clockTimer = setInterval(() => {
+        const now = getCurrentTime();
+        document.getElementById('tcClock').innerText = fmt(now);
+        
+        if(syncTarget === 'A') document.getElementById('tcIn').value = fmt(now);
+        if(syncTarget === 'B') document.getElementById('tcOut').value = fmt(now);
+    }, 200);
 }
 
-// === LOGIC LUẬT 1: XỬ LÝ AUTO-PAUSE ===
-function handleVideoPause(pausedTime) {
-    if (!videoUrl) return;
-    var currentNote = document.getElementById('noteText').value.trim();
-    
-    // Nếu note trống và chưa từng bấm nút Out -> Tự động chốt In
-    if (!currentNote && !hasOut) {
-        document.getElementById('tcIn').value = fmt(pausedTime);
-        isLockedIn = true;
-        document.getElementById('boxIn').classList.remove('active');
-        setTimeout(function(){ document.getElementById('noteText').focus(); }, 100);
-        toast('📌 Đã tự động chốt Từ (A)');
-    }
-}
-
-document.getElementById('noteText').addEventListener('focus', function() {
-    if(!isLockedIn && !editingId) {
-        isLockedIn = true;
-        document.getElementById('boxIn').classList.remove('active');
-    }
+// Tận dụng cơ chế update của Vimeo API
+window.addEventListener('message', function(e){
+    try { 
+        const d = JSON.parse(e.data); 
+        if(d.event === 'timeupdate') window.vimeoTime = d.data.seconds;
+    } catch(err){}
 });
 
-function cleanTc(val) {
-    if(val === '--:--:--' || !val) return '--:--:--';
-    var r = val.replace(/[^0-9:]/g, '');
-    var p = r.split(':');
-    if(p.length === 2) return '00:' + p[0].padStart(2,'0') + ':' + p[1].padStart(2,'0');
-    if(p.length >= 3) return p[0].padStart(2,'0') + ':' + p[1].padStart(2,'0') + ':' + p[2].padStart(2,'0');
-    return r;
-}
-
-function manualEditIn() {
-    isLockedIn = true;
-    var el = document.getElementById('tcIn');
-    el.value = cleanTc(el.value);
-}
-
-function manualEditOut() {
-    isLockedIn = true;
-    var el = document.getElementById('tcOut');
-    var val = cleanTc(el.value);
-    el.value = val;
-    if(val && val !== '--:--:--') {
-        hasOut = true;
-        document.getElementById('boxOut').classList.add('active');
-        document.getElementById('btnClearOut').style.display = 'flex';
-    }
-}
-
-function manualSetIn() {
-    isLockedIn = true;
-    document.getElementById('tcIn').value = fmt(getCurrentVidTime());
-    document.getElementById('boxIn').classList.remove('active');
-    toast('📌 Đã chốt điểm Từ (A)');
-}
-
-// === LOGIC LUẬT 2: NÚT CLICK LÀ CHỐT OUT LUÔN ===
-function manualSetOut() {
-    // Lấy thời gian hiện tại của video điền thẳng vào B
-    document.getElementById('tcOut').value = fmt(getCurrentVidTime());
-    hasOut = true;
-    isLockedIn = true; // Chốt luôn A nếu chưa chốt
+function loadVideo(){
+    const url = document.getElementById('urlInput').value.trim();
+    if(!url) return toast('⚠️ Chưa có link');
     
-    document.getElementById('boxIn').classList.remove('active');
-    document.getElementById('boxOut').classList.add('active');
-    document.getElementById('btnClearOut').style.display = 'flex';
-    toast('📌 Đã chốt điểm Đến (B)');
-}
-
-function clearOut(e) {
-    if(e) e.stopPropagation();
-    hasOut = false;
-    document.getElementById('tcOut').value = '--:--:--';
-    document.getElementById('boxOut').classList.remove('active');
-    document.getElementById('btnClearOut').style.display = 'none';
-}
-
-function resetForm(){
-  editingId = null;
-  isLockedIn = false;
-  hasOut = false;
-  
-  document.getElementById('tcOut').value = '--:--:--';
-  document.getElementById('boxIn').classList.add('active');
-  document.getElementById('boxOut').classList.remove('active');
-  document.getElementById('btnClearOut').style.display = 'none';
-  
-  var btn = document.getElementById('btnAdd');
-  btn.classList.remove('editing');
-  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Lưu Feedback (Enter)';
-  
-  document.getElementById('noteText').value='';
-  document.getElementById('sourceLink').value='';
-  clearPastedImg();
-}
-
-function processImage(file) {
-    var reader = new FileReader();
-    reader.onload = function (event) {
-        currentImage = event.target.result;
-        document.getElementById('pastePreviewImg').src = currentImage;
-        document.getElementById('pastePreviewImg').style.display = 'block';
-        document.getElementById('btnRemoveImg').style.display = 'flex';
-        document.getElementById('imgHint').style.display = 'none';
-        document.getElementById('imageDropZone').style.borderStyle = 'solid';
-    };
-    reader.readAsDataURL(file);
-}
-
-function handleFileUpload(e) {
-    var file = e.target.files[0];
-    if(file) processImage(file);
-}
-
-document.addEventListener('paste', function (e) {
-  var items = (e.clipboardData || e.originalEvent.clipboardData).items;
-  for (var index in items) {
-    var item = items[index];
-    if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
-      isLockedIn = true; 
-      processImage(item.getAsFile());
+    document.getElementById('placeholder').style.display='none';
+    document.getElementById('dv').style.display='none';
+    document.getElementById('yt-frame').innerHTML = '';
+    
+    if(url.includes('youtube.com') || url.includes('youtu.be')){
+        const id = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
+        document.getElementById('yt-frame').style.display='block';
+        ytPlayer = new YT.Player('yt-frame', { height: '100%', width: '100%', videoId: id });
+        videoType = 'yt';
+    } else if(url.includes('vimeo')){
+        const id = url.split('/').pop();
+        document.getElementById('vimeo-frame').style.display='block';
+        document.getElementById('vimeo-frame').innerHTML = `<iframe src="https://player.vimeo.com/video/${id}?api=1" width="100%" height="100%" frameborder="0"></iframe>`;
+        videoType = 'vimeo';
+    } else {
+        nativeVid = document.getElementById('dv');
+        nativeVid.style.display='block';
+        nativeVid.src = url;
+        videoType = 'native';
     }
-  }
-});
-
-function clearPastedImg(e) {
-  if(e) e.stopPropagation();
-  currentImage = null;
-  document.getElementById('fileInput').value = "";
-  document.getElementById('pastePreviewImg').src = '';
-  document.getElementById('pastePreviewImg').style.display = 'none';
-  document.getElementById('btnRemoveImg').style.display = 'none';
-  document.getElementById('imgHint').style.display = 'block';
-  document.getElementById('imageDropZone').style.borderStyle = 'dashed';
-}
-
-function jumpTo(tc){
-  var startTc = tc.split(' - ')[0]; 
-  var sec=toSeconds(startTc);
-  if(nativeVid){ nativeVid.currentTime=sec; nativeVid.play(); } 
-  else if(videoType === 'youtube' && ytPlayer) { ytPlayer.seekTo(sec, true); ytPlayer.playVideo(); }
-  else if(videoType === 'vimeo' && vimeoPlayer) { vimeoPlayer.setCurrentTime(sec); vimeoPlayer.play(); }
-}
-
-function editFb(id) {
-  var fb = feedbacks.find(function(f){ return f.id === id; });
-  if(!fb) return;
-  
-  editingId = id;
-  isLockedIn = true;
-  
-  if(fb.tc.includes(' - ')) {
-      var parts = fb.tc.split(' - ');
-      document.getElementById('tcIn').value = parts[0];
-      document.getElementById('tcOut').value = parts[1];
-      hasOut = true;
-      document.getElementById('btnClearOut').style.display = 'flex';
-      document.getElementById('boxOut').classList.add('active');
-  } else {
-      document.getElementById('tcIn').value = fb.tc;
-      clearOut();
-  }
-  
-  document.getElementById('noteText').value = fb.note || '';
-  document.getElementById('sourceLink').value = fb.source || '';
-  
-  if(fb.img) {
-    currentImage = fb.img;
-    document.getElementById('pastePreviewImg').src = currentImage;
-    document.getElementById('pastePreviewImg').style.display = 'block';
-    document.getElementById('btnRemoveImg').style.display = 'flex';
-    document.getElementById('imgHint').style.display = 'none';
-    document.getElementById('imageDropZone').style.borderStyle = 'solid';
-  } else {
-    clearPastedImg();
-  }
-  
-  document.getElementById('boxIn').classList.remove('active');
-  var btn = document.getElementById('btnAdd');
-  btn.classList.add('editing');
-  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> Cập nhật (Enter)';
-  document.getElementById('noteText').focus();
+    videoUrl = url;
+    startClock();
+    toast('✅ Đã tải video');
 }
 
 function addFeedback(){
-  if(!videoUrl){toast('⚠️ Chưa load video!');return;}
-  var note=document.getElementById('noteText').value.trim();
-  var source=document.getElementById('sourceLink').value.trim();
-  if(!note && !currentImage){toast('⚠️ Phải nhập text hoặc dán ảnh!');return;}
-  
-  var tA = document.getElementById('tcIn').value;
-  var tB = document.getElementById('tcOut').value;
-  var finalTc = hasOut ? (tA + ' - ' + tB) : tA;
-  
-  if(editingId) {
-    var fb = feedbacks.find(function(f){ return f.id === editingId; });
-    if(fb) { fb.tc = finalTc; fb.note = note; fb.source = source; fb.img = currentImage; }
-    toast('✅ Đã cập nhật!');
-  } else {
-    var deepLink = videoUrl;
-    if(videoType === 'youtube') deepLink = 'https://youtu.be/' + videoId + '?t=' + toSeconds(tA);
-    else if(videoType === 'vimeo') deepLink = 'https://vimeo.com/' + videoId + '#t=' + toSeconds(tA) + 's';
+    const note = document.getElementById('noteText').value.trim();
+    if(!note) return toast('⚠️ Nhập nội dung đã');
     
-    feedbacks.push({id:Date.now(), tc:finalTc, note:note, source:source, img:currentImage, time:new Date(), url:deepLink});
-    feedbacks.sort(function(a,b){ return toSeconds(a.tc.split(' - ')[0]) - toSeconds(b.tc.split(' - ')[0]); });
-    toast('✅ Đã thêm Feedback!');
-  }
-  
-  renderList(); saveLocal(); resetForm();
-  document.getElementById('noteText').blur();
+    const tA = document.getElementById('tcIn').value;
+    const tB = document.getElementById('tcOut').value;
+    const tc = (tB === '--:--:--') ? tA : `${tA} - ${tB}`;
+    
+    feedbacks.push({ tc, note, id: Date.now() });
+    render();
+    
+    // Reset cho phát tiếp theo
+    document.getElementById('noteText').value = '';
+    document.getElementById('tcOut').value = '--:--:--';
+    setSyncTarget('A');
+    toast('💾 Đã lưu!');
 }
 
-function delFb(id){ feedbacks=feedbacks.filter(function(f){return f.id!==id;}); renderList(); saveLocal(); }
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-function renderList(){
-  var list=document.getElementById('fbList');
-  document.getElementById('fbCount').textContent=feedbacks.length;
-  list.innerHTML='';
-  if(!feedbacks.length){ list.innerHTML='<div class="fb-empty">Chưa có dữ liệu. Bắt đầu xem video để thêm.</div>'; return; }
-  feedbacks.forEach(function(fb){
-    var sourceHtml = fb.source ? '<a href="'+fb.source+'" target="_blank" class="fb-source-link"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> Link File đính kèm</a>' : '';
-    var imgHtml = fb.img ? '<img src="'+fb.img+'" class="fb-saved-img" />' : '';
-    var div=document.createElement('div');
-    div.className='fb-item';
-    div.innerHTML=
-      '<button class="fb-tc-btn" onclick="jumpTo(\''+fb.tc+'\')" title="Tua đến">▶ '+fb.tc+'</button>'+
-      '<div class="fb-body"><div class="fb-note-text">'+esc(fb.note)+'</div>'+sourceHtml+imgHtml+'</div>'+
-      '<div class="fb-actions">'+
-        '<button class="fb-btn fb-btn-edit" onclick="editFb('+fb.id+')" title="Sửa"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>'+
-        '<button class="fb-btn fb-btn-del" onclick="delFb('+fb.id+')" title="Xoá"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>'+
-      '</div>';
-    list.appendChild(div);
-  });
+function render(){
+    const list = document.getElementById('fbList');
+    list.innerHTML = feedbacks.map(f => `
+        <div class="fb-item">
+            <div class="fb-tc-btn">${f.tc}</div>
+            <div style="font-size:14px">${f.note}</div>
+        </div>
+    `).join('');
+    document.getElementById('fbCount').innerText = feedbacks.length;
 }
 
-document.addEventListener('keydown', function(e){
-  var nt = document.getElementById('noteText');
-  var src = document.getElementById('sourceLink');
-  var url = document.getElementById('urlInput');
-  var repName = document.getElementById('reportName');
-  
-  var isTyping = (e.target === nt || e.target === src || e.target === url || e.target === repName);
-
-  if(e.code === 'Space' && !isTyping){ 
-      e.preventDefault(); 
-      if(nativeVid) { if(!nativeVid.paused) nativeVid.pause(); else nativeVid.play(); } 
-      else if(videoType === 'youtube' && ytPlayer) {
-          if(ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) ytPlayer.pauseVideo(); else ytPlayer.playVideo();
-      }
-      else if(videoType === 'vimeo' && vimeoPlayer) {
-          vimeoPlayer.getPaused().then(function(paused) { if(paused) vimeoPlayer.play(); else vimeoPlayer.pause(); });
-      }
-  }
-  
-  var key = e.key ? e.key.toLowerCase() : '';
-
-  if(e.altKey) {
-      if(key === 'i') { e.preventDefault(); manualSetIn(); }
-      if(key === 'o') { e.preventDefault(); manualSetOut(); }
-  } else if(!isTyping) {
-      if(key === 'i') { e.preventDefault(); manualSetIn(); }
-      if(key === 'o') { e.preventDefault(); manualSetOut(); }
-  }
-  
-  if(e.key === 'Enter' && !e.shiftKey && (e.target === nt || e.target === src)){ 
-      e.preventDefault(); 
-      addFeedback(); 
-  }
+// Phím tắt Space để Play/Pause (khi không gõ note)
+document.addEventListener('keydown', (e) => {
+    if(e.code === 'Space' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT'){
+        e.preventDefault();
+        if(nativeVid) nativeVid.paused ? nativeVid.play() : nativeVid.pause();
+        // YT và Vimeo cần API gọi sâu hơn, nhưng cơ bản space sẽ hoạt động nếu click vào iframe trước
+    }
+    if(e.key === 'Enter' && e.ctrlKey) addFeedback();
 });
 
-function exportJSON() {
-    if(!feedbacks.length){toast('⚠️ Chưa có dữ liệu để lưu!');return;}
-    var reportName = document.getElementById('reportName').value || 'Video-Feedback-Session';
-    var dataStr = JSON.stringify(feedbacks);
-    var dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    var exportFileDefaultName = reportName + '.json';
-    var linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-    toast('✅ Đã lưu file Session!');
-}
-
-function importJSON(e) {
-    var file = e.target.files[0];
-    if(!file) return;
-    var reader = new FileReader();
-    reader.onload = function(event) {
-        try {
-            var imported = JSON.parse(event.target.result);
-            if(Array.isArray(imported)) {
-                feedbacks = imported;
-                feedbacks.forEach(function(f){ f.time = new Date(f.time); });
-                renderList();
-                saveLocal();
-                toast('✅ Đã phục hồi Session thành công!');
-            } else {
-                toast('❌ File không đúng định dạng!');
-            }
-        } catch(err) {
-            toast('❌ Lỗi đọc file Session!');
-        }
-        document.getElementById('jsonInput').value = ''; 
-    };
-    reader.readAsText(file);
-}
-
-function exportXLSX(){
-  if(typeof XLSX === 'undefined') { toast('⏳ Đang tải thư viện Excel, thử lại sau 1 giây...'); return; }
-  if(!feedbacks.length){toast('⚠️ Trống trải quá, thêm note đi bạn!');return;}
-  var reportName = document.getElementById('reportName').value || 'Video-Feedback';
-  var rows=[['#','Timecode','Nội dung nhận xét','Link đính kèm','Có ảnh?','Link xem video']];
-  feedbacks.forEach(function(fb,i){ rows.push([i+1, fb.tc, fb.note, fb.source || '', fb.img ? 'Có' : 'Không', fb.url]); });
-  var ws=XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=[{wch:5},{wch:18},{wch:60},{wch:30},{wch:10},{wch:45}];
-  var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Feedback');
-  XLSX.writeFile(wb, reportName + '.xlsx');
-}
-
-function exportPDF(){
-  if(typeof html2pdf === 'undefined') { toast('⏳ Đang tải thư viện PDF, thử lại sau 1 giây...'); return; }
-  if(!feedbacks.length){toast('⚠️ File rỗng không xuất PDF được!');return;}
-  var btnPdf = document.getElementById('btnPdf');
-  var originalHtml = btnPdf.innerHTML;
-  btnPdf.innerHTML = '⏳ Rendering...';
-  
-  var reportName = document.getElementById('reportName').value || 'Report-Feedback';
-  document.getElementById('pdf-title').innerText = reportName;
-  document.getElementById('pdf-meta').innerText = "Tạo bởi hệ thống Antigravity | Tổng note: " + feedbacks.length + " | Ngày: " + new Date().toLocaleDateString('vi-VN');
-
-  var tbodyHtml = '';
-  feedbacks.forEach(function(fb, i){
-    var linkBtn = '<a href="'+fb.url+'" target="_blank" style="display:inline-block; margin-top:12px; font-size:13px; background:#eff6ff; color:#3b82f6; padding:8px 16px; border-radius:8px; text-decoration:none; font-weight:700;">▶ Phát video tại '+fb.tc.split(' - ')[0]+'</a>';
-    var srcLink = fb.source ? '<br><a href="'+fb.source+'" target="_blank" style="color:#10B981; font-size:14px; font-weight:600; text-decoration:underline; display:inline-block; margin-top:8px;">📎 Mở File đính kèm</a>' : '';
-    var imgTag = fb.img ? '<br><img src="'+fb.img+'" style="max-width:400px; margin-top:16px; border:1px solid #e2e8f0; border-radius:10px" />' : '';
-    
-    tbodyHtml += '<tr>'+
-        '<td style="text-align:center; border-bottom:1px solid #f1f5f9; padding:20px 16px;">'+(i+1)+'</td>'+
-        '<td style="font-weight:800; color:#0f172a; text-align:center; white-space:nowrap; border-bottom:1px solid #f1f5f9; padding:20px 16px; font-size: 15px;">'+fb.tc+'</td>'+
-        '<td style="white-space:pre-wrap; line-height:1.7; color:#334155; border-bottom:1px solid #f1f5f9; padding:20px 16px; font-size: 15px;">'+fb.note+srcLink+imgTag+'<br>'+linkBtn+'</td>'+
-    '</tr>';
-  });
-  
-  document.getElementById('pdf-tbody').innerHTML = tbodyHtml;
-
-  var element = document.getElementById('pdf-template');
-  element.style.display = 'block'; 
-  
-  var opt = {
-      margin:       [15, 10, 15, 10], 
-      filename:     reportName + '.pdf',
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, logging: false },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-
-  html2pdf().set(opt).from(element).save().then(function() {
-      element.style.display = 'none'; 
-      btnPdf.innerHTML = originalHtml;
-      toast('✅ Đã tải Report PDF!');
-  });
-}
+// Load YT API
+var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 </script>
 </body>
 </html>
