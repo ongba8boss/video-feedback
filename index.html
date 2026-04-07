@@ -1,9 +1,18 @@
+Đây là toàn bộ mã nguồn phiên bản **Antigravity Video Feedback Pro Max**. Mình đã tích hợp trực tiếp công cụ **Smarter Snip** (sử dụng Screen Capture API) để bạn có thể chụp màn hình và đính kèm vào feedback chỉ với một cú click, không cần dùng phần mềm ngoài.
+
+### Các điểm nâng cấp trong bản này:
+1.  **📸 Built-in Snip Tool:** Nút "Snip Screen" cho phép bạn chụp bất kỳ cửa sổ nào (Chrome, Excel, Figma) và tự động dán vào Note.
+2.  **⚡ Auto-Lock on Snip:** Khi bạn nhấn chụp, hệ thống tự động khóa Timecode và Focus vào ô nhập liệu để bạn gõ ngay.
+3.  **🎯 Smarter Sync:** Cơ chế chọn ô nào nhảy số ô đó, cực kỳ trực quan.
+4.  **📦 All-in-One Export:** Đầy đủ PDF (có kèm ảnh), Excel và Save Session.
+
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Antigravity Feedback - Simple Version</title>
+<title>Antigravity Feedback Pro Max</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,25 +25,18 @@
 <style>
 :root {
   --bg-deep: #050505;
-  --bg-glow: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%),
-             radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
+  --bg-glow: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.1), transparent 25%),
+             radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.1), transparent 25%);
   --glass-bg: rgba(255, 255, 255, 0.02);
-  --glass-bg-hover: rgba(255, 255, 255, 0.04);
-  --glass-border: rgba(255, 255, 255, 0.06);
-  --glass-border-focus: rgba(255, 255, 255, 0.15);
-  --inner-bg: rgba(0, 0, 0, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.08);
   --accent-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-  --accent-glow: rgba(139, 92, 246, 0.3);
   --accent-solid: #8b5cf6;
   --green: #10B981;
   --red: #ef4444;
   --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
-  --text-tertiary: #71717a;
   --radius-lg: 24px;
-  --radius-md: 16px;
   --radius-sm: 10px;
-  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,252 +46,447 @@ body {
   background-image: var(--bg-glow);
   color: var(--text-primary);
   min-height: 100vh;
-  line-height: 1.5;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-.app { display: grid; grid-template-rows: auto auto 1fr auto; min-height: 100vh; max-width: 1600px; margin: 0 auto; padding: 0 2rem; }
-.topbar { display: flex; align-items: center; justify-content: space-between; padding: 2rem 0 1rem; }
-.logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+.app { max-width: 1600px; margin: 0 auto; padding: 0 2rem; display: grid; grid-template-rows: auto 1fr auto; min-height: 100vh; }
+.topbar { padding: 2rem 0 1rem; display: flex; justify-content: space-between; align-items: center; }
+.logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
 .logo span { background: var(--accent-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-.bento-panel {
-  background: var(--glass-bg); backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-glass);
-}
-
-.main { display: grid; grid-template-columns: 1fr 400px; gap: 2rem; padding-bottom: 2rem; align-items: start; }
+.main { display: grid; grid-template-columns: 1fr 450px; gap: 2rem; padding-bottom: 2rem; align-items: start; }
 @media(max-width: 1200px) { .main { grid-template-columns: 1fr; } }
 
 /* --- VIDEO --- */
-.video-container { position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; background: #000; }
-.video-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: rgba(0,0,0,0.6); z-index: 10;}
-#yt-frame, #vimeo-frame, video#dv { width: 100%; height: 100%; position: absolute; inset: 0; display: none; z-index: 1;}
-video#dv { object-fit: contain; }
+.bento-panel { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); overflow: hidden; }
+.video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; display: flex; align-items: center; justify-content: center;}
+#yt-frame, #vimeo-frame, video#dv { width: 100%; height: 100%; display: none; }
 
 .tc-bar { margin-top: 1.5rem; padding: 1.2rem 1.5rem; display: flex; align-items: center; gap: 1.5rem; }
-.tc-clock { font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -1px; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
-.status-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green); }
+.tc-clock { font-size: 36px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -1.5px; }
 
-/* --- INPUTS --- */
-.panel-col { display: flex; flex-direction: column; gap: 1.5rem; height: 100%; }
-input[type="text"], textarea {
-  width: 100%; background: var(--inner-bg); border: 1px solid var(--glass-border); color: var(--text-primary);
-  border-radius: var(--radius-sm); padding: 12px 16px; font-family: inherit; font-size: 14px; outline: none; transition: 0.2s;
-}
-input[type="text"]:focus, textarea:focus { border-color: var(--accent-solid); }
+/* --- INPUT --- */
+.panel-col { display: flex; flex-direction: column; gap: 1.5rem; }
+input, textarea { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: #fff; padding: 12px 16px; border-radius: var(--radius-sm); outline: none; font-family: inherit; font-size: 14px; transition: 0.2s; }
+input:focus, textarea:focus { border-color: var(--accent-solid); background: rgba(0,0,0,0.5); }
 
-.time-range-group { display: flex; gap: 10px; margin-bottom: 16px; }
-.tc-box {
-  flex: 1; padding: 12px; background: var(--inner-bg); border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm); cursor: pointer; transition: 0.2s; text-align: center; position: relative;
-}
-.tc-box.active { border-color: var(--accent-solid); background: rgba(139, 92, 246, 0.15); transform: scale(1.02); }
-.tc-label { display: block; font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 700; }
-.tc-time-input {
-  background: transparent; border: none; color: var(--text-primary);
-  font-size: 20px; font-weight: 800; text-align: center; width: 100%; outline: none; pointer-events: none;
-}
+.time-range-group { display: flex; gap: 10px; margin-bottom: 12px; }
+.tc-box { flex: 1; padding: 12px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); text-align: center; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;}
+.tc-box.active { border-color: var(--accent-solid); background: rgba(139, 92, 246, 0.15); box-shadow: 0 0 20px rgba(139, 92, 246, 0.1); }
+.tc-label { display: block; font-size: 10px; font-weight: 800; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;}
 .tc-box.active .tc-label { color: var(--accent-solid); }
+.tc-time-input { background: transparent; border: none; font-size: 22px; font-weight: 800; text-align: center; pointer-events: none; padding: 0;}
 
-.btn { padding: 12px 24px; border: none; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-.btn-primary { background: var(--accent-grad); color: #fff; width: 100%; margin-top: 12px; }
+/* --- SNIP TOOL UI --- */
+.snip-area { margin-top: 10px; border: 1px dashed var(--glass-border); border-radius: var(--radius-sm); padding: 12px; text-align: center; position: relative; min-height: 60px; cursor: pointer; background: rgba(255,255,255,0.02); transition: 0.2s; }
+.snip-area:hover { border-color: var(--accent-solid); background: rgba(255,255,255,0.05); }
+.snip-area img { max-width: 100%; border-radius: 8px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-top: 10px;}
+.remove-img { position: absolute; top: 10px; right: 10px; background: var(--red); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: none; z-index: 5; font-weight: bold;}
+
+.btn { padding: 12px 20px; border-radius: var(--radius-sm); border: none; font-weight: 700; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-family: inherit;}
+.btn-primary { background: var(--accent-grad); color: #fff; width: 100%; margin-top: 10px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); }
+.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-secondary { background: rgba(255,255,255,0.08); color: #fff; flex: 1; font-size: 13px; border: 1px solid var(--glass-border); }
+.btn-secondary:hover { background: rgba(255,255,255,0.15); }
+.btn-snip { background: #3b82f6; color: #fff; width: 100%; }
 
 /* --- LIST --- */
-.fb-panel { display: flex; flex-direction: column; overflow: hidden; }
-.fp-head { padding: 1.25rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; }
-.fp-list { overflow-y: auto; max-height: 500px; }
-.fb-item { padding: 1.25rem; border-bottom: 1px solid var(--glass-border); display: flex; gap: 14px; }
-.fb-tc-btn { flex-shrink: 0; padding: 4px 10px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); border-radius: 100px; font-size: 12px; height: fit-content; }
+.fp-list { overflow-y: auto; max-height: 480px; padding: 0 5px; }
+.fb-item { padding: 1.5rem; border-bottom: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 10px; position: relative; transition: 0.2s; }
+.fb-item:hover { background: rgba(255,255,255,0.03); }
+.fb-meta { display: flex; align-items: center; gap: 10px; }
+.fb-tc-badge { padding: 5px 15px; background: var(--accent-solid); border-radius: 100px; font-size: 12px; font-weight: 800; cursor: pointer; color: #fff; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2); }
+.fb-text { font-size: 14px; line-height: 1.7; white-space: pre-wrap; color: #eee; }
+.fb-img-thumb { max-width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid var(--glass-border); cursor: zoom-in;}
+.fb-del { position: absolute; top: 1.5rem; right: 1.5rem; opacity: 0.3; cursor: pointer; font-size: 18px; }
+.fb-del:hover { opacity: 1; color: var(--red); }
 
-.footer { text-align: center; padding: 2rem 0; color: var(--text-tertiary); font-size: 13px; }
-.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #18181b; border: 1px solid #3f3f46; color: #fff; padding: 10px 20px; border-radius: 100px; opacity: 0; transition: 0.3s; z-index: 999; }
-.toast.show { opacity: 1; bottom: 50px; }
+.footer { text-align: center; padding: 2.5rem; font-size: 13px; color: var(--text-tertiary); }
+.footer span { color: var(--accent-solid); font-weight: 700; }
+.toast { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: #18181b; padding: 12px 28px; border-radius: 100px; border: 1px solid #3f3f46; color: #fff; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+.toast.show { bottom: 40px; }
 </style>
 </head>
 <body>
 
 <div class="app">
   <header class="topbar">
-    <div class="logo">🚀 <span>Antigravity</span> Feedback</div>
+    <div class="logo">🚀 <span>Antigravity</span> Feedback Pro</div>
+    <div style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">Smarter but Simple &bull; 2026 Edition</div>
   </header>
 
   <main class="main">
     <div class="video-col">
       <div class="video-container bento-panel" id="videoBox">
-        <div class="video-placeholder" id="placeholder"><p>Dán link vào ô bên phải để bắt đầu</p></div>
+        <div id="placeholder" style="padding: 20%; text-align: center; color: var(--text-secondary)">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 15px; opacity: 0.5;"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14v-4z"/><rect x="3" y="6" width="12" height="12" rx="2" ry="2"/></svg>
+            <p>Dán link Video (YouTube/Drive/Vimeo) <br>vào ô bên phải để bắt đầu</p>
+        </div>
         <div id="yt-frame"></div><div id="vimeo-frame"></div><video id="dv" controls></video>
       </div>
+      
       <div class="tc-bar bento-panel">
         <div class="tc-clock" id="tcClock">00:00:00</div>
         <div style="flex:1"></div>
-        <div class="status-dot"></div>
-        <div style="font-size: 13px; color: var(--text-secondary)">Smarter & Simpler Sync</div>
+        <div style="text-align: right;">
+            <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
+                <span style="width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green);"></span>
+                <span style="font-size: 11px; color: var(--accent-solid); font-weight: 800; letter-spacing: 1px;">SYNCING</span>
+            </div>
+            <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Click A hoặc B để bắt số</div>
+        </div>
       </div>
     </div>
 
     <div class="panel-col">
-      <div class="url-panel bento-panel" style="padding:1.25rem; display:flex; gap:8px;">
-        <input type="text" id="urlInput" placeholder="Dán link YT/Drive..."/>
-        <button class="btn btn-primary" onclick="loadVideo()" style="width:auto; margin:0">Load</button>
+      <div class="bento-panel" style="padding: 1.25rem; display: flex; gap: 8px;">
+        <input type="text" id="urlInput" placeholder="Dán link Video..."/>
+        <button class="btn btn-secondary" onclick="loadVideo()" style="flex:none; padding: 0 25px;">Load</button>
       </div>
 
       <div class="fb-panel bento-panel">
-        <div class="fp-head"><h3>Ghi chú Feedback</h3> <span id="fbCount">0</span></div>
-        <div style="padding: 1.25rem; background: rgba(0,0,0,0.2)">
+        <div style="padding: 1.25rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 15px; font-weight: 700;">Feedback Editor</h3>
+            <span id="fbCount" style="font-size: 11px; background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 100px;">0 notes</span>
+        </div>
+
+        <div style="padding: 1.25rem; background: rgba(0,0,0,0.15)">
           <div class="time-range-group">
-            <div class="tc-box active" id="boxIn" onclick="setSyncTarget('A')">
-              <span class="tc-label">Từ (A) - LIVE</span>
+            <div class="tc-box active" id="boxIn" onclick="setSync('A')">
+              <span class="tc-label">Từ (A)</span>
               <input type="text" class="tc-time-input" id="tcIn" value="00:00:00"/>
             </div>
-            <div class="tc-box" id="boxOut" onclick="setSyncTarget('B')">
+            <div class="tc-box" id="boxOut" onclick="setSync('B')">
               <span class="tc-label">Đến (B)</span>
               <input type="text" class="tc-time-input" id="tcOut" value="--:--:--"/>
             </div>
           </div>
-          <textarea id="noteText" placeholder="Gõ nhận xét tại đây..." onfocus="setSyncTarget(null)"></textarea>
-          <button class="btn btn-primary" onclick="addFeedback()">Lưu Feedback (Enter)</button>
+
+          <textarea id="noteText" placeholder="Nhận xét của bạn... (Phím tắt Ctrl+V để dán ảnh)" onfocus="setSync(null)" rows="3"></textarea>
+          
+          <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+              <button class="btn btn-snip" onclick="startSnip()">📸 Chụp màn hình (Snip Tool)</button>
+              
+              <div class="snip-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <p id="imgHint" style="font-size: 12px; color: var(--text-secondary)">Hoặc dán ảnh từ Clipboard</p>
+                <img src="" id="prevImg"/>
+                <button class="remove-img" id="btnRemImg" onclick="removeImage(event)">✕</button>
+              </div>
+          </div>
+          <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(event)">
+
+          <button class="btn btn-primary" onclick="addFeedback()">Lưu Feedback (Ctrl + Enter)</button>
         </div>
+
         <div class="fp-list" id="fbList"></div>
       </div>
-      
-      <div style="display:flex; gap:8px">
-          <button class="btn" style="flex:1; background: var(--inner-bg)" onclick="exportXLSX()">Excel</button>
-          <button class="btn" style="flex:1; background: var(--inner-bg)" onclick="exportPDF()">PDF</button>
+
+      <div style="display: flex; gap: 8px; margin-bottom: 2rem;">
+          <button class="btn btn-secondary" onclick="exportXLSX()">Excel</button>
+          <button class="btn btn-secondary" onclick="exportPDF()">PDF Report</button>
+          <button class="btn btn-secondary" onclick="saveSession()">Save JSON</button>
       </div>
     </div>
   </main>
 
-  <footer class="footer">Xây dựng theo triết lý <span>Antigravity</span> - Smarter but Simple</footer>
+  <footer class="footer">
+      Triết lý <span>Antigravity</span> &bull; 2026 MinXLabs
+  </footer>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script>
-var feedbacks=[], videoUrl='', videoType='', ytPlayer=null, vimeoPlayer=null, nativeVid=null, clockTimer=null;
-var syncTarget = 'A'; // 'A', 'B', hoặc null
+<div id="pdf-tpl" style="display:none; padding: 50px; background: #fff; color: #000; font-family: sans-serif;">
+    <div style="border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h1 style="margin:0; font-size: 32px;">Video Feedback Report</h1>
+            <p style="margin:5px 0 0 0; color: #666;" id="pdf-meta-date"></p>
+        </div>
+        <p style="margin:0; font-weight: bold; color: #6366f1;">Antigravity Systems</p>
+    </div>
+    <div id="pdf-body-content"></div>
+</div>
 
+<script>
+let feedbacks = [];
+let videoType = ''; 
+let videoId = '';
+let videoUrl = '';
+let syncTarget = 'A'; // 'A', 'B', hoặc null
+let currentImgData = null;
+let ytPlayer = null;
+
+// Toast Notification
 function toast(m){ 
     const t=document.getElementById('toast'); t.innerText=m; t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'), 2000);
+    setTimeout(()=>t.classList.remove('show'), 2500);
 }
 
+// Format Seconds to HH:MM:SS
 function fmt(s){
     s=Math.floor(s||0);
-    return [Math.floor(s/3600), Math.floor((s%3600)/60), s%60].map(v=>String(v).padStart(2,'0')).join(':');
+    const h = Math.floor(s/3600);
+    const m = Math.floor((s%3600)/60);
+    const sec = s%60;
+    return [h, m, sec].map(v=>String(v).padStart(2,'0')).join(':');
 }
 
-function setSyncTarget(target) {
-    syncTarget = target;
-    document.getElementById('boxIn').classList.toggle('active', target === 'A');
-    document.getElementById('boxOut').classList.toggle('active', target === 'B');
-    
-    const labelA = document.querySelector('#boxIn .tc-label');
-    const labelB = document.querySelector('#boxOut .tc-label');
-    labelA.innerText = (target === 'A') ? 'Từ (A) - LIVE' : 'Từ (A)';
-    labelB.innerText = (target === 'B') ? 'Đến (B) - LIVE' : 'Đến (B)';
-
-    if(target) toast(`Đang đồng bộ ô ${target}`);
+// Select Sync Target
+function setSync(t){
+    syncTarget = t;
+    document.getElementById('boxIn').classList.toggle('active', t==='A');
+    document.getElementById('boxOut').classList.toggle('active', t==='B');
 }
 
-function getCurrentTime() {
-    if (nativeVid) return nativeVid.currentTime;
-    if (ytPlayer && ytPlayer.getCurrentTime) return ytPlayer.getCurrentTime();
-    if (window.vimeoTime) return window.vimeoTime;
+// Get Current Time from Players
+function getTime(){
+    if(videoType === 'native') return document.getElementById('dv').currentTime;
+    if(videoType === 'yt' && ytPlayer && ytPlayer.getCurrentTime) return ytPlayer.getCurrentTime();
+    if(videoType === 'vimeo') return window.vimeoTime || 0;
     return 0;
 }
 
-function startClock(){
-    if(clockTimer) clearInterval(clockTimer);
-    clockTimer = setInterval(() => {
-        const now = getCurrentTime();
-        document.getElementById('tcClock').innerText = fmt(now);
-        
-        if(syncTarget === 'A') document.getElementById('tcIn').value = fmt(now);
-        if(syncTarget === 'B') document.getElementById('tcOut').value = fmt(now);
-    }, 200);
-}
+// Main Sync Loop
+setInterval(() => {
+    const now = getTime();
+    document.getElementById('tcClock').innerText = fmt(now);
+    if(syncTarget === 'A') document.getElementById('tcIn').value = fmt(now);
+    if(syncTarget === 'B') document.getElementById('tcOut').value = fmt(now);
+}, 200);
 
-// Tận dụng cơ chế update của Vimeo API
-window.addEventListener('message', function(e){
-    try { 
-        const d = JSON.parse(e.data); 
-        if(d.event === 'timeupdate') window.vimeoTime = d.data.seconds;
-    } catch(err){}
-});
-
+// Load Video Logic
 function loadVideo(){
     const url = document.getElementById('urlInput').value.trim();
-    if(!url) return toast('⚠️ Chưa có link');
-    
+    if(!url) return toast("⚠️ Vui lòng dán link");
+    videoUrl = url;
     document.getElementById('placeholder').style.display='none';
     document.getElementById('dv').style.display='none';
-    document.getElementById('yt-frame').innerHTML = '';
-    
+    document.getElementById('yt-frame').style.display='none';
+    document.getElementById('vimeo-frame').style.display='none';
+
     if(url.includes('youtube.com') || url.includes('youtu.be')){
-        const id = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
-        document.getElementById('yt-frame').style.display='block';
-        ytPlayer = new YT.Player('yt-frame', { height: '100%', width: '100%', videoId: id });
         videoType = 'yt';
+        const id = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
+        videoId = id;
+        document.getElementById('yt-frame').style.display='block';
+        document.getElementById('yt-frame').innerHTML = '<div id="yt-player"></div>';
+        ytPlayer = new YT.Player('yt-player', { height: '100%', width: '100%', videoId: id });
     } else if(url.includes('vimeo')){
+        videoType = 'vimeo';
         const id = url.split('/').pop();
         document.getElementById('vimeo-frame').style.display='block';
         document.getElementById('vimeo-frame').innerHTML = `<iframe src="https://player.vimeo.com/video/${id}?api=1" width="100%" height="100%" frameborder="0"></iframe>`;
-        videoType = 'vimeo';
     } else {
-        nativeVid = document.getElementById('dv');
-        nativeVid.style.display='block';
-        nativeVid.src = url;
         videoType = 'native';
+        const v = document.getElementById('dv');
+        v.style.display='block'; v.src = url;
     }
-    videoUrl = url;
-    startClock();
-    toast('✅ Đã tải video');
+    toast('🚀 Video đã sẵn sàng!');
 }
 
+/* --- SNIP TOOL CORE --- */
+async function startSnip() {
+    try {
+        // Yêu cầu quay màn hình
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+            video: { cursor: "always" },
+            audio: false
+        });
+
+        const video = document.createElement("video");
+        video.srcObject = stream;
+        video.play();
+
+        video.onloadedmetadata = () => {
+            setTimeout(() => {
+                const canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                currentImgData = canvas.toDataURL("image/png");
+                showPrev(currentImgData);
+
+                // Tắt stream ngay sau khi chụp
+                stream.getTracks().forEach(track => track.stop());
+                
+                // Khóa sync và focus note
+                setSync(null);
+                document.getElementById('noteText').focus();
+                toast("📸 Đã chụp màn hình!");
+            }, 500); 
+        };
+    } catch (err) {
+        toast("⚠️ Đã hủy chụp màn hình");
+    }
+}
+
+// Paste Image from Clipboard
+document.addEventListener('paste', (e) => {
+    const item = Array.from(e.clipboardData.items).find(x => x.type.indexOf('image') !== -1);
+    if(item){
+        const blob = item.getAsFile();
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            currentImgData = event.target.result;
+            showPrev(currentImgData);
+            setSync(null); 
+            toast("🖼️ Đã dán ảnh!");
+        };
+        reader.readAsDataURL(blob);
+    }
+});
+
+function showPrev(src){
+    const img = document.getElementById('prevImg');
+    img.src = src; img.style.display = 'block';
+    document.getElementById('imgHint').style.display = 'none';
+    document.getElementById('btnRemImg').style.display = 'block';
+}
+
+function removeImage(e){
+    if(e) e.stopPropagation();
+    currentImgData = null;
+    document.getElementById('prevImg').style.display = 'none';
+    document.getElementById('imgHint').style.display = 'block';
+    document.getElementById('btnRemImg').style.display = 'none';
+}
+
+function handleFile(e){
+    const file = e.target.files[0];
+    if(file){
+        const reader = new FileReader();
+        reader.onload = (ex) => { currentImgData = ex.target.result; showPrev(currentImgData); setSync(null); };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Save Feedback
 function addFeedback(){
     const note = document.getElementById('noteText').value.trim();
-    if(!note) return toast('⚠️ Nhập nội dung đã');
-    
+    if(!note && !currentImgData) return toast("⚠️ Hãy nhập gì đó");
+
     const tA = document.getElementById('tcIn').value;
     const tB = document.getElementById('tcOut').value;
-    const tc = (tB === '--:--:--') ? tA : `${tA} - ${tB}`;
+    const timeDisplay = (tB === '--:--:--') ? tA : `${tA} - ${tB}`;
     
-    feedbacks.push({ tc, note, id: Date.now() });
+    // Deep Link
+    let jumpUrl = videoUrl;
+    const secs = tA.split(':').reduce((acc, t) => (60 * acc) + +t, 0);
+    if(videoType === 'yt') jumpUrl = `https://youtu.be/${videoId}?t=${secs}`;
+    if(videoType === 'vimeo') jumpUrl = `${videoUrl}#t=${secs}s`;
+
+    feedbacks.push({
+        id: Date.now(),
+        tc: timeDisplay,
+        seconds: secs,
+        note: note,
+        img: currentImgData,
+        url: jumpUrl
+    });
+
     render();
-    
-    // Reset cho phát tiếp theo
     document.getElementById('noteText').value = '';
     document.getElementById('tcOut').value = '--:--:--';
-    setSyncTarget('A');
-    toast('💾 Đã lưu!');
+    removeImage();
+    setSync('A');
+    toast('✅ Đã lưu Note');
 }
 
 function render(){
     const list = document.getElementById('fbList');
-    list.innerHTML = feedbacks.map(f => `
+    list.innerHTML = feedbacks.sort((a,b) => a.seconds - b.seconds).map(f => `
         <div class="fb-item">
-            <div class="fb-tc-btn">${f.tc}</div>
-            <div style="font-size:14px">${f.note}</div>
+            <div class="fb-meta">
+                <div class="fb-tc-badge" onclick="window.open('${f.url}', '_blank')">▶ ${f.tc}</div>
+            </div>
+            <div class="fb-text">${f.note}</div>
+            ${f.img ? `<img src="${f.img}" class="fb-img-thumb" onclick="window.open('${f.img}')">` : ''}
+            <div class="fb-del" onclick="deleteFb(${f.id})">✕</div>
         </div>
     `).join('');
-    document.getElementById('fbCount').innerText = feedbacks.length;
+    document.getElementById('fbCount').innerText = `${feedbacks.length} notes`;
 }
 
-// Phím tắt Space để Play/Pause (khi không gõ note)
+function deleteFb(id){
+    feedbacks = feedbacks.filter(f => f.id !== id);
+    render();
+}
+
+/* --- EXPORT SYSTEMS --- */
+function exportXLSX(){
+    const rows = feedbacks.map((f, i) => ({ STT: i+1, Time: f.tc, Content: f.note, Link: f.url }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "VideoFeedback");
+    XLSX.writeFile(wb, `Feedback_${new Date().getTime()}.xlsx`);
+}
+
+function exportPDF(){
+    if(!feedbacks.length) return toast("⚠️ Không có dữ liệu");
+    const container = document.getElementById('pdf-body-content');
+    document.getElementById('pdf-meta-date').innerText = `Ngày tạo: ${new Date().toLocaleString()}`;
+    
+    container.innerHTML = feedbacks.map(f => `
+        <div style="margin-bottom: 40px; page-break-inside: avoid; border-bottom: 1px solid #eee; padding-bottom: 20px;">
+            <div style="background: #6366f1; color: #fff; display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-bottom: 15px;">Time: ${f.tc}</div>
+            <div style="font-size: 16px; line-height: 1.6; margin-bottom: 15px;">${f.note}</div>
+            ${f.img ? `<img src="${f.img}" style="max-width: 100%; border: 1px solid #ddd; border-radius: 10px;">` : ''}
+            <p style="font-size: 12px; color: #6366f1;">Link: ${f.url}</p>
+        </div>
+    `).join('');
+
+    const element = document.getElementById('pdf-tpl');
+    element.style.display = 'block';
+    
+    const opt = {
+        margin: 10,
+        filename: 'Video_Feedback_Report.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    html2pdf().set(opt).from(element).save().then(() => element.style.display='none');
+}
+
+function saveSession(){
+    const blob = new Blob([JSON.stringify(feedbacks)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `session_${new Date().getTime()}.json`;
+    a.click();
+}
+
+// Global Shortcuts
 document.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && e.ctrlKey) addFeedback();
     if(e.code === 'Space' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT'){
         e.preventDefault();
-        if(nativeVid) nativeVid.paused ? nativeVid.play() : nativeVid.pause();
-        // YT và Vimeo cần API gọi sâu hơn, nhưng cơ bản space sẽ hoạt động nếu click vào iframe trước
+        const v = document.getElementById('dv');
+        if(videoType === 'native') v.paused ? v.play() : v.pause();
     }
-    if(e.key === 'Enter' && e.ctrlKey) addFeedback();
 });
 
 // Load YT API
 var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
 var firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+window.addEventListener('message', (e) => {
+    try { const d = JSON.parse(e.data); if(d.event === 'timeupdate') window.vimeoTime = d.data.seconds; } catch(err){}
+});
 </script>
+
 </body>
 </html>
+```
+
+### Cách dùng Sniptool mới:
+1.  **Nhấn nút "📸 Chụp màn hình":** Trình duyệt sẽ hiện danh sách các cửa sổ đang mở.
+2.  **Chọn vùng muốn chụp:** Bạn có thể chọn chính tab trình duyệt này hoặc một cửa sổ phần mềm khác.
+3.  **Hệ thống tự động xử lý:** Sau khi bạn chọn, ảnh sẽ được "snap" ngay vào preview, đồng thời con trỏ chuột sẽ tự nhảy vào ô nhập Note để bạn gõ nhận xét.
+4.  **Xuất báo cáo:** Khi xuất PDF, tất cả các ảnh chụp này sẽ hiển thị sắc nét kèm theo timecode tương ứng.
+
+Đúng chất **Antigravity** chưa bạn? Ít thao tác nhất nhưng kết quả chuyên nghiệp nhất!
