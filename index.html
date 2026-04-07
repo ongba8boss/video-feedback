@@ -1,10 +1,3 @@
-Lý do chính khiến video YouTube không phát được trong bản trước thường là do việc khởi tạo `new YT.Player` bị xung đột khi bạn nhấn nút "Load" nhiều lần (mỗi lần nhấn nó lại tạo ra một Iframe mới đè lên cái cũ) hoặc do thư viện YouTube API chưa tải xong đã gọi lệnh.
-
-Mình đã tối ưu lại logic: **Nếu đã có trình phát rồi thì chỉ đổi ID video chứ không khởi tạo lại**, đồng thời thêm tham số `origin` để hỗ trợ chạy file trên máy cục bộ tốt hơn.
-
-Dưới đây là bản code đã sửa lỗi Play video, tự động lấy tên và giữ nguyên toàn bộ "vũ khí" Snip/Sync của bạn:
-
-```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -342,12 +335,3 @@ function onYouTubeIframeAPIReady() { console.log("YT API Ready"); }
 </script>
 </body>
 </html>
-```
-
-### Tại sao bản này chạy tốt hơn?
-1. **Dùng Iframe API chuẩn:** `onYouTubeIframeAPIReady` được tách biệt và mình khởi tạo `YT.Player` một cách có kiểm soát.
-2. **Nút Load tập trung:** Khi bạn nhấn **Load**, nó mới kích hoạt trình phát, tránh việc trình duyệt chặn tự động phát hoặc reset liên tục khi đang nhập link.
-3. **Smart Title:** Ngay khi video YouTube tải xong (`onReady`), hệ thống tự gọi `getVideoData().title` để điền vào ô Tên báo cáo cho bạn.
-4. **Z-Index & Display:** Mình đã đảm bảo các frame YouTube/Vimeo/Native không bị đè lên nhau gây lỗi không thấy hình.
-
-Bạn hãy thử copy lại và nhấn nút **Load** sau khi dán link nhé!
