@@ -3,165 +3,392 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Video Feedback Tool</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<title>Antigravity Video Feedback</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+<script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script defer src="https://player.vimeo.com/api/player.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <style>
-:root{
-  --bg:#0F1117; --surface:#1A1D27; --surface2:#22263A; --border:#2E3248;
-  --accent:#6366F1; --accent2:#818CF8; --green:#10B981; --red:#EF4444;
-  --text:#F1F5F9; --muted:#64748B; --muted2:#94A3B8; --radius:16px;
+/* =========================================================
+   ANTIGRAVITY DESIGN SYSTEM 2026 - SPATIAL UI
+   ========================================================= */
+:root {
+  --bg-deep: #050505;
+  --bg-glow: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%),
+             radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-bg-hover: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-border-focus: rgba(255, 255, 255, 0.15);
+  --inner-bg: rgba(0, 0, 0, 0.3);
+  --accent-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  --accent-glow: rgba(139, 92, 246, 0.3);
+  --accent-solid: #8b5cf6;
+  --green: #10B981;
+  --green-glow: rgba(16, 185, 129, 0.2);
+  --red: #ef4444;
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --transition-smooth: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
 
-.app{display:grid;grid-template-rows:auto 1fr;min-height:100vh;max-width:1600px;margin:0 auto;padding:0 2rem}
-.topbar{display:flex;align-items:center;gap:12px;padding:1.5rem 0;border-bottom:1px solid var(--border)}
-.logo{font-size:20px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px}
-.logo span{color:var(--accent2)}
-.main{display:grid;grid-template-columns:1.5fr 380px;gap:2rem;padding:1.5rem 0;align-items:start}
-@media(max-width:1100px){.main{grid-template-columns:1fr}}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-deep);
+  background-image: var(--bg-glow);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
-.video-container{background:#000;border-radius:var(--radius);overflow:hidden;position:relative;width:100%;aspect-ratio:16/9;box-shadow:0 10px 40px rgba(0,0,0,.3)}
-.video-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0a0a0f}
-.video-placeholder p{font-size:14px;color:var(--muted);text-align:center}
-#yt-frame, video#dv{width:100%;height:100%;position:absolute;inset:0;display:none}
-video#dv{object-fit:contain}
+.app { display: grid; grid-template-rows: auto auto 1fr auto; min-height: 100vh; max-width: 1600px; margin: 0 auto; padding: 0 2rem; }
 
-.tc-bar{display:none;margin-top:14px;background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:12px 18px;align-items:center;gap:14px;flex-wrap:wrap}
-.tc-bar.visible{display:flex}
-.tc-clock{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);letter-spacing:1px;min-width:110px}
-.tc-status{font-size:13px;color:var(--muted2);flex:1}
+/* --- TOPBAR --- */
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 2rem 0 1rem; }
+.logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+.logo span { background: var(--accent-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.nav-menu { display: flex; gap: 2rem; align-items: center; }
+.nav-menu a { color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500; transition: var(--transition-smooth); }
+.nav-menu a:hover { color: var(--text-primary); }
+.nav-btn { 
+  background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-primary);
+  padding: 8px 20px; border-radius: 100px; backdrop-filter: blur(10px);
+}
+.nav-btn:hover { background: var(--glass-bg-hover); border-color: var(--glass-border-focus); transform: translateY(-1px); }
 
-.panel-col{display:flex;flex-direction:column;gap:1.5rem}
-.url-panel{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:1rem;display:flex;gap:10px}
-.url-panel input{flex:1;padding:11px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font-size:13px;color:var(--text);outline:none;}
-.btn-load{padding:11px 22px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;}
+/* --- BENTO GLASS PANELS --- */
+.bento-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-glass);
+}
 
-.fb-panel{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-.fp-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.fp-head h2{font-size:16px;font-weight:600}
-.fb-count{font-size:12px;padding:2px 10px;border-radius:20px;background:rgba(99,102,241,.2);color:var(--accent2);font-weight:600}
+/* --- ADS SPACES --- */
+.ad-slot {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-tertiary); font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+  background: repeating-linear-gradient(45deg, var(--glass-bg), var(--glass-bg) 10px, transparent 10px, transparent 20px);
+  border: 1px dashed var(--glass-border); border-radius: var(--radius-md); overflow: hidden;
+}
+.ad-horizontal { width: 100%; height: 90px; margin-bottom: 1.5rem; border-radius: var(--radius-lg); }
+.ad-sidebar { width: 100%; height: 250px; margin-top: auto; }
 
-.fp-input{padding:16px 20px;border-bottom:1px solid var(--border)}
-.cap-tc-info{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid transparent;transition:all 0.2s;}
-.cap-tc-info.active{border-color:var(--accent);background:rgba(99,102,241,.05)}
-.cap-tc-info.editing{border-color:var(--green);background:rgba(16,185,129,.05)}
-.cap-tc-val{font-size:14px;font-weight:700;color:var(--accent2)}
-.cap-tc-lbl{font-size:12px;color:var(--muted);flex:1}
+/* --- MAIN LAYOUT --- */
+.main { display: grid; grid-template-columns: 1fr 400px; gap: 2rem; padding-bottom: 2rem; align-items: start; }
+@media(max-width: 1200px) { .main { grid-template-columns: 1fr; } }
 
-textarea.note{width:100%;resize:vertical;min-height:90px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;outline:none;}
-input.source-link-input{width:100%;margin-top:8px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;outline:none;}
+/* --- VIDEO COLUMN --- */
+.video-container { position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; background: #000; }
+.video-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: rgba(0,0,0,0.6); z-index: 10;}
+.video-placeholder p { color: var(--text-secondary); font-size: 15px; text-align: center; }
+.video-placeholder svg { width: 48px; height: 48px; opacity: 0.5; }
+#yt-frame, #vimeo-frame, video#dv { width: 100%; height: 100%; position: absolute; inset: 0; display: none; z-index: 1;}
+video#dv { object-fit: contain; }
 
-/* Paste Image Preview */
-.paste-preview-box{display:none;margin-top:10px;position:relative;width:100%;border-radius:8px;overflow:hidden;border:1px dashed var(--accent)}
-.paste-preview-box.active{display:block}
-.paste-preview-img{width:100%;height:auto;display:block}
-.btn-remove-img{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.tc-bar { margin-top: 1.5rem; padding: 1.2rem 1.5rem; display: flex; align-items: center; gap: 1.5rem; }
+.tc-clock { font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -1px; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
+.tc-status { font-size: 14px; color: var(--text-secondary); font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.status-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-.btn-add{margin-top:12px;width:100%;padding:12px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;font-weight:600;cursor:pointer;transition:all 0.2s;}
-.btn-add.ready{background:var(--accent);color:#fff;border-color:var(--accent)}
-.btn-add.editing{background:var(--green);color:#fff;border-color:var(--green)}
+/* --- PANEL COLUMN --- */
+.panel-col { display: flex; flex-direction: column; gap: 1.5rem; height: 100%; }
 
-.fp-list{flex:1;overflow-y:auto;max-height:450px}
-.fb-empty{padding:2.5rem 1rem;text-align:center;font-size:13px;color:var(--muted)}
-.fb-item{padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:12px;transition:background 0.2s;}
-.fb-item:hover{background:var(--surface2)}
-.fb-tc-btn{flex-shrink:0;padding:4px 11px;background:rgba(99,102,241,.15);color:var(--accent2);border:1px solid rgba(99,102,241,.3);border-radius:6px;font-weight:700;cursor:pointer;height:fit-content;display:flex;align-items:center;gap:4px}
-.fb-body{flex:1;min-width:0}
-.fb-note-text{font-size:13px;line-height:1.5;white-space:pre-wrap;}
-.fb-source-link{display:inline-block;margin-top:6px;font-size:12px;color:var(--green);text-decoration:underline;word-break:break-all}
-.fb-saved-img{margin-top:8px;max-width:100%;border-radius:6px;border:1px solid var(--border)}
+/* Inputs & Common */
+input[type="text"], textarea {
+  width: 100%; background: var(--inner-bg); border: 1px solid var(--glass-border); color: var(--text-primary);
+  border-radius: var(--radius-sm); padding: 12px 16px; font-family: inherit; font-size: 14px; transition: var(--transition-smooth); outline: none;
+}
+input[type="text"]:focus, textarea:focus { border-color: var(--accent-solid); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); }
+input[type="text"]::placeholder, textarea::placeholder { color: var(--text-tertiary); }
 
-.fb-actions{display:flex;gap:8px;height:fit-content;}
-.fb-btn{background:none;border:none;cursor:pointer;font-size:15px;opacity:0.5;transition:0.2s;padding:2px}
-.fb-btn:hover{opacity:1}
-.fb-btn-edit:hover{color:var(--green)}
-.fb-btn-del:hover{color:var(--red)}
+.btn {
+  padding: 12px 24px; border: none; border-radius: var(--radius-sm); font-weight: 600; font-size: 14px; font-family: inherit;
+  cursor: pointer; transition: var(--transition-smooth); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-primary { background: var(--accent-grad); color: #fff; box-shadow: 0 4px 15px var(--accent-glow); }
+.btn-primary:hover { box-shadow: 0 6px 20px var(--accent-glow); filter: brightness(1.1); transform: translateY(-1px); }
 
-.exp-panel{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:1.2rem;display:flex;flex-direction:column;gap:10px;}
-.exp-btns{display:flex;gap:10px}
-.btn-exp{flex:1;padding:12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;}
-.btn-xl{background:rgba(16,185,129,.15);color:#10B981;border:1px solid rgba(16,185,129,.3)}
-.btn-pf{background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)}
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1E293B;color:var(--text);padding:10px 22px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;z-index:999;}
-.toast.show{opacity:1}
+/* URL Panel */
+.url-panel { padding: 1.25rem; display: flex; flex-direction: column; gap: 12px; }
+.url-row { display: flex; gap: 10px; }
+
+/* Feedback Panel */
+.fb-panel { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
+.fp-head { padding: 1.25rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
+.fp-head h2 { font-size: 16px; font-weight: 600; }
+.fb-count { font-size: 12px; padding: 4px 12px; border-radius: 100px; background: rgba(255,255,255,0.1); font-weight: 600; }
+
+.fp-input { padding: 1.25rem; border-bottom: 1px solid var(--glass-border); background: rgba(0,0,0,0.1); }
+.time-range-group { display: flex; gap: 10px; margin-bottom: 16px; }
+.tc-box {
+  flex: 1; padding: 12px; background: var(--inner-bg); border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition-smooth); text-align: center; position: relative;
+}
+.tc-box:hover { border-color: var(--glass-border-focus); }
+.tc-box.active { border-color: var(--accent-solid); background: rgba(139, 92, 246, 0.1); box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.05); }
+.tc-label { display: block; font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 600; }
+.tc-time { font-size: 18px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.tc-box.active .tc-time { background: var(--accent-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.tc-clear { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.1); color: var(--text-secondary); border: none; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 14px; }
+.tc-clear:hover { background: var(--red); color: #fff; }
+
+textarea.note { min-height: 100px; resize: vertical; }
+
+.image-drop-zone {
+  border: 1px dashed var(--glass-border-focus); border-radius: var(--radius-sm); padding: 1.5rem 1rem; text-align: center;
+  cursor: pointer; transition: var(--transition-smooth); background: rgba(0,0,0,0.2); position: relative; margin-top: 12px;
+}
+.image-drop-zone:hover { border-color: var(--accent-solid); background: rgba(139, 92, 246, 0.05); }
+.image-drop-zone p { margin: 0; font-size: 13px; color: var(--text-secondary); }
+.image-drop-zone p strong { color: var(--text-primary); }
+.preview-img { max-width: 100%; border-radius: 6px; display: none; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+.remove-img-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.remove-img-btn:hover { background: var(--red); border-color: var(--red); }
+
+.btn-add { width: 100%; margin-top: 16px; height: 48px; font-size: 15px; }
+.btn-add.editing { background: var(--green); box-shadow: 0 4px 15px var(--green-glow); }
+
+/* Feedback List */
+.fp-list { overflow-y: auto; max-height: 450px; padding-bottom: 10px; }
+.fb-empty { padding: 3rem 1rem; text-align: center; font-size: 14px; color: var(--text-tertiary); }
+.fb-item { padding: 1.25rem; border-bottom: 1px solid var(--glass-border); display: flex; gap: 14px; transition: var(--transition-smooth); }
+.fb-item:hover { background: var(--glass-bg-hover); }
+.fb-item:last-child { border-bottom: none; }
+.fb-tc-btn {
+  flex-shrink: 0; padding: 6px 12px; background: rgba(255,255,255,0.05); color: var(--text-primary); border: 1px solid var(--glass-border);
+  border-radius: 100px; font-weight: 600; font-size: 12px; cursor: pointer; height: fit-content; transition: var(--transition-smooth);
+}
+.fb-tc-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--glass-border-focus); transform: scale(1.05); }
+.fb-body { flex: 1; min-width: 0; }
+.fb-note-text { font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: var(--text-primary); }
+.fb-source-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 12px; color: var(--accent-solid); text-decoration: none; font-weight: 500; padding: 4px 10px; background: rgba(139, 92, 246, 0.1); border-radius: 6px; }
+.fb-source-link:hover { background: rgba(139, 92, 246, 0.2); }
+.fb-saved-img { margin-top: 10px; max-width: 100%; border-radius: 8px; border: 1px solid var(--glass-border); }
+
+.fb-actions { display: flex; flex-direction: column; gap: 6px; height: fit-content; opacity: 0; transition: var(--transition-smooth); }
+.fb-item:hover .fb-actions { opacity: 1; }
+.fb-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 6px; cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: var(--transition-smooth); }
+.fb-btn:hover { background: var(--glass-bg-hover); color: var(--text-primary); }
+.fb-btn-del:hover { background: rgba(239, 68, 68, 0.1); color: var(--red); border-color: rgba(239, 68, 68, 0.3); }
+
+/* Export Panel */
+.exp-panel { padding: 1.25rem; display: flex; flex-direction: column; gap: 12px; }
+.exp-btns { display: flex; gap: 12px; }
+.btn-exp { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); color: var(--text-primary); height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-exp:hover { background: rgba(255,255,255,0.08); border-color: var(--glass-border-focus); }
+
+/* Footer */
+.footer { text-align: center; padding: 1.5rem 0; margin-top: 1rem; border-top: 1px solid var(--glass-border); color: var(--text-tertiary); font-size: 13px; }
+.footer span { color: var(--accent-solid); font-weight: 600; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: rgba(20, 20, 25, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--glass-border-focus);
+  color: #fff; padding: 12px 24px; border-radius: 100px; font-size: 14px; font-weight: 500;
+  opacity: 0; pointer-events: none; transition: var(--transition-smooth); z-index: 9999;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5); will-change: transform, opacity;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="topbar"><div class="logo">🎬 <span>Video</span> Feedback</div></div>
+  <header class="topbar">
+    <div class="logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1" /><stop offset="100%" stop-color="#a855f7" /></linearGradient></defs>
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <span>Antigravity</span> Feedback
+    </div>
+    <nav class="nav-menu">
+        <a href="#">Workflow</a>
+        <a href="#">Pro Features</a>
+        <a href="#">Agency Plan</a>
+        <a href="#" class="nav-btn">Workspace</a>
+    </nav>
+  </header>
 
-  <div class="main">
+  <div class="ad-slot ad-horizontal bento-panel">
+      <p>Sponsorship / Google AdSense (728x90)</p>
+  </div>
+
+  <main class="main">
     <div class="video-col">
-      <div class="video-container" id="videoBox">
-        <div class="video-placeholder" id="placeholder"><p>Dán link YouTube / Google Drive<br>rồi nhấn "Tải video"</p></div>
+      <div class="video-container bento-panel" id="videoBox">
+        <div class="video-placeholder" id="placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14v-4z"/><rect x="3" y="6" width="12" height="12" rx="2" ry="2"/></svg>
+          <p>Dán link YouTube, Vimeo hoặc Google Drive<br>vào ô bên phải để bắt đầu</p>
+        </div>
         <div id="yt-frame"></div>
+        <div id="vimeo-frame"></div>
         <video id="dv" controls preload="metadata"></video>
       </div>
-      <div class="tc-bar" id="tcBar">
-        <div>
-          <div class="tc-clock" id="tcClock">00:00:00</div>
-          <div class="tc-status" id="tcStatus">▶ Đang phát — Pause video để tự động lấy timecode</div>
+      
+      <div class="tc-bar bento-panel" id="tcBar">
+        <div class="tc-clock" id="tcClock">00:00:00</div>
+        <div style="flex:1"></div>
+        <div class="tc-status" id="tcStatus">
+            <div class="status-dot"></div>
+            Live sync — Nhấn 'I' chốt điểm Đầu, 'O' chốt điểm Cuối
         </div>
       </div>
     </div>
 
     <div class="panel-col">
-      <div class="url-panel">
-        <input type="text" id="urlInput" placeholder="Dán link YouTube..."/>
-        <button class="btn-load" onclick="loadVideo()">Tải video</button>
+      <div class="url-panel bento-panel">
+        <div class="url-row">
+            <input type="text" id="urlInput" placeholder="Dán link Video (YouTube/Vimeo/Drive)..."/>
+            <button class="btn btn-primary" onclick="loadVideo()">Load</button>
+        </div>
+        <input type="text" id="reportName" placeholder="Tên Report tự động lấy (Có thể sửa)"/>
       </div>
 
-      <div class="fb-panel">
-        <div class="fp-head"><h2>Nhận xét</h2><span class="fb-count" id="fbCount">0</span></div>
+      <div class="fb-panel bento-panel">
+        <div class="fp-head">
+            <h2>Feedback Notes</h2>
+            <span class="fb-count" id="fbCount">0</span>
+        </div>
+        
         <div class="fp-input">
-          <div class="cap-tc-info" id="capTcBlock">
-            <span class="cap-tc-val" id="capTcVal">--:--:--</span>
-            <span class="cap-tc-lbl" id="capTcLbl">Chưa có (Pause video để lấy)</span>
-            <button class="cap-tc-clear" onclick="clearTC()" style="background:none;border:none;color:#64748B;cursor:pointer;font-size:18px;">×</button>
+          <div class="time-range-group">
+            <div class="tc-box active" id="boxIn" onclick="manualSetIn()">
+              <span class="tc-label">In Point (I)</span>
+              <span class="tc-time" id="tcIn">00:00:00</span>
+            </div>
+            <div class="tc-box" id="boxOut" onclick="manualSetOut()">
+              <button class="tc-clear" id="btnClearOut" onclick="clearOut(event)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+              <span class="tc-label">Out Point (O)</span>
+              <span class="tc-time" id="tcOut">--:--:--</span>
+            </div>
           </div>
 
-          <textarea class="note" id="noteText" placeholder="Ghi nhận xét... (Nhấn Ctrl+V để dán ảnh chụp màn hình vào đây)"></textarea>
-          <input type="text" class="source-link-input" id="sourceLink" placeholder="Link Source đính kèm (Figma, Drive, Doc...) - Không bắt buộc"/>
+          <textarea class="note" id="noteText" placeholder="Nhập comment... (Gõ chữ là thời gian IN tự động chốt)"></textarea>
+          <input type="text" class="source-link-input" id="sourceLink" placeholder="🔗 Link tham chiếu (Figma, Notion, Drive) - Tuỳ chọn"/>
           
-          <div class="paste-preview-box" id="pastePreviewBox">
-            <button class="btn-remove-img" onclick="clearPastedImg()">×</button>
-            <img src="" id="pastePreviewImg" class="paste-preview-img"/>
+          <div class="image-drop-zone" id="imageDropZone" onclick="document.getElementById('fileInput').click()">
+            <p id="imgHint">🖼️ Bấm <strong>Ctrl+V</strong> để dán ảnh chụp màn hình<br>hoặc Click để chọn file đính kèm</p>
+            <img src="" id="pastePreviewImg" class="preview-img"/>
+            <button class="remove-img-btn" id="btnRemoveImg" onclick="clearPastedImg(event)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
           </div>
+          <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFileUpload(event)">
 
-          <button class="btn-add" id="btnAdd" onclick="addFeedback()">Lưu feedback (Enter)</button>
+          <button class="btn btn-primary btn-add" id="btnAdd" onclick="addFeedback()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Lưu Feedback (Enter)
+          </button>
         </div>
-        <div class="fp-list" id="fbList"><div class="fb-empty">Chưa có feedback nào.</div></div>
+        
+        <div class="fp-list" id="fbList"><div class="fb-empty">Chưa có dữ liệu. Bắt đầu xem video để thêm.</div></div>
       </div>
 
-      <div class="exp-panel">
+      <div class="exp-panel bento-panel">
+        <div class="exp-btns" style="margin-bottom: 6px;">
+          <button class="btn btn-exp" onclick="exportJSON()" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2); color: var(--accent2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Lưu Session
+          </button>
+          <button class="btn btn-exp" onclick="document.getElementById('jsonInput').click()" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2); color: var(--accent2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Mở Session
+          </button>
+          <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importJSON(event)">
+        </div>
+
         <div class="exp-btns">
-          <button class="btn-exp btn-xl" onclick="exportXLSX()">📊 Xuất file Excel</button>
-          <button class="btn-exp btn-pf" onclick="exportPDF()">📑 Xuất file PDF</button>
+          <button class="btn btn-exp" onclick="exportXLSX()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Lưu Excel
+          </button>
+          <button class="btn btn-exp" id="btnPdf" onclick="exportPDF()" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #fca5a5;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15v-4"></path><path d="M12 15v-4"></path><path d="M15 15v-4"></path></svg>
+            Xuất PDF
+          </button>
         </div>
       </div>
+
+      <div class="ad-slot ad-sidebar bento-panel">
+          <p>Ad Space (300x250)</p>
+      </div>
+
     </div>
   </div>
+
+  <footer class="footer">
+    &copy; 2026 Một sản phẩm của <span>MinXLabs Studio</span>. Xây dựng theo triết lý Antigravity.
+  </footer>
 </div>
 <div class="toast" id="toast"></div>
 
-<script>
-var feedbacks=[], currentTC='--:--:--', videoUrl='', videoType='', ytVideoId='';
-var ytPlayer=null, ytPlaying=false, clockTimer=null, nativeVid=null, editingId=null, currentImage=null;
+<div id="pdf-template" style="display: none; padding: 40px; font-family: 'Inter', sans-serif; background: #fff; color: #111; width: 1000px;">
+    <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+        <h1 id="pdf-title" style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 0 0 8px 0; letter-spacing: -0.5px;">Báo cáo Feedback Video</h1>
+        <p style="color: #64748b; font-size: 14px; margin: 0;" id="pdf-meta"></p>
+    </div>
+    <div id="pdf-cover" style="text-align: center; margin-bottom: 30px; display: none;">
+        <img id="pdf-cover-img" src="" style="max-width: 60%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);" />
+    </div>
+    <table style="width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px;">
+        <thead>
+            <tr>
+                <th style="width: 6%; background: #f8fafc; color: #475569; padding: 16px; text-align: center; font-weight: 600; border-top-left-radius: 12px; border-bottom: 2px solid #e2e8f0;">#</th>
+                <th style="width: 18%; background: #f8fafc; color: #475569; padding: 16px; text-align: center; font-weight: 600; border-bottom: 2px solid #e2e8f0;">Timecode</th>
+                <th style="width: 76%; background: #f8fafc; color: #475569; padding: 16px; text-align: left; font-weight: 600; border-top-right-radius: 12px; border-bottom: 2px solid #e2e8f0;">Nội dung Note & Assets</th>
+            </tr>
+        </thead>
+        <tbody id="pdf-tbody">
+            </tbody>
+    </table>
+</div>
 
-var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+<script>
+var feedbacks=[], videoUrl='', videoType='', videoId='';
+var ytPlayer=null, vimeoPlayer=null, ytPlaying=false, clockTimer=null, nativeVid=null;
+var editingId=null, currentImage=null;
+var isLockedIn = false, hasOut = false;
+
 function onYouTubeIframeAPIReady() {}
 
 function toSeconds(tc) {
   var p = tc.split(':').map(Number);
-  return p[0]*3600 + p[1]*60 + p[2];
+  return (p[0]||0)*3600 + (p[1]||0)*60 + (p[2]||0);
 }
-
-function fmt(s){s=Math.floor(s||0);return [Math.floor(s/3600),Math.floor((s%3600)/60),s%60].map(function(v){return String(v).padStart(2,'0');}).join(':');}
-function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
+function fmt(s){
+    s=Math.floor(s||0);
+    return [Math.floor(s/3600),Math.floor((s%3600)/60),s%60].map(function(v){return String(v).padStart(2,'0');}).join(':');
+}
+function toast(msg){
+    var t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    setTimeout(function(){t.classList.remove('show');},2500);
+}
 
 function parseUrl(url){
   try{
@@ -169,6 +396,8 @@ function parseUrl(url){
     if(u.hostname.includes('youtube.com')) return{type:'youtube',id:u.searchParams.get('v')};
     if(u.hostname.includes('youtu.be')) return{type:'youtube',id:u.pathname.slice(1).split('?')[0]};
     if(u.hostname.includes('drive.google.com')){var m=url.match(/\/d\/([^\/\?]+)/);return m?{type:'drive',id:m[1]}:null;}
+    var vimeoMatch = url.match(/(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:[a-zA-Z0-9_\-]+)?/i);
+    if (vimeoMatch) return {type:'vimeo', id:vimeoMatch[1]};
   }catch(e){} return null;
 }
 
@@ -182,112 +411,193 @@ function loadLocal(url){
 
 function loadVideo(){
   var url=document.getElementById('urlInput').value.trim();
-  if(!url){toast('Vui lòng dán link video!');return;}
+  if(!url){toast('⚠️ Dán link video vào nhé!');return;}
   var info=parseUrl(url);
-  if(!info||!info.id){toast('Link không hỗ trợ!');return;}
+  if(!info||!info.id){toast('❌ Link không hỗ trợ (Chỉ YT/Vimeo/Drive)');return;}
   
-  videoUrl=url; videoType=info.type; ytPlaying=false; nativeVid=null; clearTC();
-  ytVideoId = info.type === 'youtube' ? info.id : '';
+  videoUrl=url; videoType=info.type; ytPlaying=false; nativeVid=null; resetForm();
+  videoId = info.id;
+  document.getElementById('reportName').value = 'Video Report ' + new Date().toISOString().slice(0,10);
 
   document.getElementById('placeholder').style.display='none'; document.getElementById('dv').style.display='none';
   if(document.getElementById('yt-frame')) document.getElementById('yt-frame').style.display='none';
+  if(document.getElementById('vimeo-frame')) document.getElementById('vimeo-frame').style.display='none';
+  
   document.getElementById('tcBar').classList.add('visible');
 
   if(info.type==='youtube'){
     document.getElementById('yt-frame').style.display='block';
-    if(ytPlayer) ytPlayer.loadVideoById(info.id);
-    else ytPlayer = new YT.Player('yt-frame', { 
-      videoId: info.id, 
-      playerVars: { 'rel': 0, 'modestbranding': 1, 'autoplay': 0 }, 
-      events: { 
-        'onStateChange': function(e) { 
-          var wasPlaying = ytPlaying;
-          ytPlaying = (e.data === YT.PlayerState.PLAYING);
-          if (e.data === YT.PlayerState.PAUSED && wasPlaying) {
-             if(!editingId) autoCap(ytPlayer.getCurrentTime());
-          }
-        } 
-      } 
-    });
+    if(ytPlayer) {
+        ytPlayer.loadVideoById(info.id);
+    } else {
+        var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        
+        var checkYT = setInterval(function() {
+            if(window.YT && window.YT.Player) {
+                clearInterval(checkYT);
+                ytPlayer = new YT.Player('yt-frame', { 
+                  videoId: info.id, 
+                  playerVars: { 'rel': 0, 'modestbranding': 1, 'autoplay': 0 }, 
+                  events: { 
+                    'onReady': function(e) {
+                         var title = e.target.getVideoData().title;
+                         if(title) document.getElementById('reportName').value = title;
+                    },
+                    'onStateChange': function(e) { ytPlaying = (e.data === YT.PlayerState.PLAYING); } 
+                  } 
+                });
+            }
+        }, 100);
+    }
+  } else if(info.type==='vimeo') {
+    document.getElementById('vimeo-frame').style.display='block';
+    if(vimeoPlayer) {
+        vimeoPlayer.loadVideo(info.id).then(function() {
+            vimeoPlayer.getVideoTitle().then(function(title) { document.getElementById('reportName').value = title; });
+        });
+    } else {
+        if(window.Vimeo) {
+            vimeoPlayer = new Vimeo.Player('vimeo-frame', { id: info.id, responsive: true });
+            vimeoPlayer.on('play', function() { ytPlaying = true; });
+            vimeoPlayer.on('pause', function() { ytPlaying = false; });
+            vimeoPlayer.getVideoTitle().then(function(title) { document.getElementById('reportName').value = title; });
+        }
+    }
   } else {
     nativeVid=document.getElementById('dv');
     nativeVid.style.display='block';
     nativeVid.src='https://drive.google.com/uc?export=download&id='+info.id;
-    nativeVid.onpause = function() {
-        if(!editingId) autoCap(nativeVid.currentTime);
-    };
   }
+  
+  if(ytPlayer && ytPlayer.getVideoData && ytPlayer.getVideoData().title) {
+       document.getElementById('reportName').value = ytPlayer.getVideoData().title;
+  }
+
   loadLocal(videoUrl); startClock();
+}
+
+function getCurrentVidTime() {
+    var s = 0;
+    if (nativeVid && !isNaN(nativeVid.currentTime)) s = nativeVid.currentTime;
+    else if (videoType === 'youtube' && ytPlayer && ytPlayer.getCurrentTime) s = ytPlayer.getCurrentTime();
+    else if (videoType === 'vimeo' && vimeoPlayer) {
+        vimeoPlayer.getCurrentTime().then(function(t){ window.vimeoCurrentTime = t; });
+        s = window.vimeoCurrentTime || 0;
+    }
+    return s;
 }
 
 function startClock(){
   if(clockTimer) clearInterval(clockTimer);
   clockTimer=setInterval(function(){
-    var s = 0;
-    if (nativeVid && !isNaN(nativeVid.currentTime)) s = nativeVid.currentTime;
-    else if (videoType === 'youtube' && ytPlayer && ytPlayer.getCurrentTime) s = ytPlayer.getCurrentTime();
-    document.getElementById('tcClock').textContent=fmt(s);
+    var s = getCurrentVidTime();
+    var timeStr = fmt(s);
+    document.getElementById('tcClock').textContent = timeStr;
+    
+    if (!isLockedIn && !editingId) {
+        document.getElementById('tcIn').textContent = timeStr;
+    }
   }, 200);
 }
 
-function autoCap(sec){
-  if(!videoUrl) return;
-  currentTC = fmt(sec);
-  document.getElementById('capTcVal').textContent=currentTC;
-  document.getElementById('capTcLbl').textContent='✓ Đã lấy (Sẵn sàng ghi chú/Paste ảnh)';
-  document.getElementById('capTcBlock').classList.add('active');
-  document.getElementById('btnAdd').classList.add('ready');
-  document.getElementById('tcStatus').innerHTML='⏸ Timecode đã lấy: <span style="color:var(--accent2);font-weight:bold">'+currentTC+'</span>';
-  setTimeout(function(){ document.getElementById('noteText').focus(); }, 100);
+document.getElementById('noteText').addEventListener('focus', function() {
+    if(!isLockedIn && !editingId) {
+        isLockedIn = true;
+        document.getElementById('boxIn').classList.remove('active');
+    }
+});
+
+function manualSetIn() {
+    isLockedIn = true;
+    document.getElementById('tcIn').textContent = fmt(getCurrentVidTime());
+    document.getElementById('boxIn').classList.remove('active');
+    toast('📌 Đã chốt điểm Đầu');
 }
 
-function clearTC(){
+function manualSetOut() {
+    hasOut = true;
+    isLockedIn = true;
+    document.getElementById('tcOut').textContent = fmt(getCurrentVidTime());
+    document.getElementById('boxIn').classList.remove('active');
+    document.getElementById('boxOut').classList.add('active');
+    document.getElementById('btnClearOut').style.display = 'flex';
+    toast('📌 Đã chốt điểm Cuối');
+}
+
+function clearOut(e) {
+    e.stopPropagation();
+    hasOut = false;
+    document.getElementById('tcOut').textContent = '--:--:--';
+    document.getElementById('boxOut').classList.remove('active');
+    document.getElementById('btnClearOut').style.display = 'none';
+}
+
+function resetForm(){
   editingId = null;
-  currentTC = '--:--:--';
-  clearPastedImg();
-  document.getElementById('capTcVal').textContent=currentTC;
-  document.getElementById('capTcLbl').textContent='Chưa có (Pause video để lấy)';
-  var capBlock = document.getElementById('capTcBlock');
-  capBlock.classList.remove('active'); capBlock.classList.remove('editing');
+  isLockedIn = false;
+  hasOut = false;
+  
+  document.getElementById('tcOut').textContent = '--:--:--';
+  document.getElementById('boxIn').classList.add('active');
+  document.getElementById('boxOut').classList.remove('active');
+  document.getElementById('btnClearOut').style.display = 'none';
   
   var btn = document.getElementById('btnAdd');
-  btn.classList.remove('ready'); btn.classList.remove('editing');
-  btn.textContent = 'Lưu feedback (Enter)';
+  btn.classList.remove('editing');
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Lưu Feedback (Enter)';
   
   document.getElementById('noteText').value='';
   document.getElementById('sourceLink').value='';
-  document.getElementById('tcStatus').innerHTML='▶ Đang phát — Pause video để tự động lấy timecode';
+  clearPastedImg();
 }
 
-function clearPastedImg() {
-  currentImage = null;
-  document.getElementById('pastePreviewImg').src = '';
-  document.getElementById('pastePreviewBox').classList.remove('active');
+function processImage(file) {
+    var reader = new FileReader();
+    reader.onload = function (event) {
+        currentImage = event.target.result;
+        document.getElementById('pastePreviewImg').src = currentImage;
+        document.getElementById('pastePreviewImg').style.display = 'block';
+        document.getElementById('btnRemoveImg').style.display = 'flex';
+        document.getElementById('imgHint').style.display = 'none';
+        document.getElementById('imageDropZone').style.borderStyle = 'solid';
+    };
+    reader.readAsDataURL(file);
 }
 
-// Bắt sự kiện Paste ảnh
+function handleFileUpload(e) {
+    var file = e.target.files[0];
+    if(file) processImage(file);
+}
+
 document.addEventListener('paste', function (e) {
-  if(!editingId && currentTC === '--:--:--') return;
   var items = (e.clipboardData || e.originalEvent.clipboardData).items;
   for (var index in items) {
     var item = items[index];
     if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
-      var blob = item.getAsFile();
-      var reader = new FileReader();
-      reader.onload = function (event) {
-        currentImage = event.target.result;
-        document.getElementById('pastePreviewImg').src = currentImage;
-        document.getElementById('pastePreviewBox').classList.add('active');
-      };
-      reader.readAsDataURL(blob);
+      isLockedIn = true; 
+      processImage(item.getAsFile());
     }
   }
 });
 
+function clearPastedImg(e) {
+  if(e) e.stopPropagation();
+  currentImage = null;
+  document.getElementById('fileInput').value = "";
+  document.getElementById('pastePreviewImg').src = '';
+  document.getElementById('pastePreviewImg').style.display = 'none';
+  document.getElementById('btnRemoveImg').style.display = 'none';
+  document.getElementById('imgHint').style.display = 'block';
+  document.getElementById('imageDropZone').style.borderStyle = 'dashed';
+}
+
 function jumpTo(tc){
-  var sec=toSeconds(tc);
+  var startTc = tc.split(' - ')[0]; 
+  var sec=toSeconds(startTc);
   if(nativeVid){ nativeVid.currentTime=sec; nativeVid.play(); } 
   else if(videoType === 'youtube' && ytPlayer) { ytPlayer.seekTo(sec, true); ytPlayer.playVideo(); }
+  else if(videoType === 'vimeo' && vimeoPlayer) { vimeoPlayer.setCurrentTime(sec); vimeoPlayer.play(); }
 }
 
 function editFb(id) {
@@ -295,58 +605,66 @@ function editFb(id) {
   if(!fb) return;
   
   editingId = id;
-  currentTC = fb.tc;
+  isLockedIn = true;
+  
+  if(fb.tc.includes(' - ')) {
+      var parts = fb.tc.split(' - ');
+      document.getElementById('tcIn').textContent = parts[0];
+      document.getElementById('tcOut').textContent = parts[1];
+      hasOut = true;
+      document.getElementById('btnClearOut').style.display = 'flex';
+      document.getElementById('boxOut').classList.add('active');
+  } else {
+      document.getElementById('tcIn').textContent = fb.tc;
+      clearOut({stopPropagation:function(){}});
+  }
+  
   document.getElementById('noteText').value = fb.note || '';
   document.getElementById('sourceLink').value = fb.source || '';
   
   if(fb.img) {
     currentImage = fb.img;
     document.getElementById('pastePreviewImg').src = currentImage;
-    document.getElementById('pastePreviewBox').classList.add('active');
+    document.getElementById('pastePreviewImg').style.display = 'block';
+    document.getElementById('btnRemoveImg').style.display = 'flex';
+    document.getElementById('imgHint').style.display = 'none';
+    document.getElementById('imageDropZone').style.borderStyle = 'solid';
   } else {
     clearPastedImg();
   }
   
-  document.getElementById('capTcVal').textContent = currentTC;
-  document.getElementById('capTcLbl').textContent = 'Đang sửa nhận xét...';
-  
-  var capBlock = document.getElementById('capTcBlock');
-  capBlock.classList.add('editing'); capBlock.classList.remove('active');
-  
+  document.getElementById('boxIn').classList.remove('active');
   var btn = document.getElementById('btnAdd');
-  btn.classList.add('editing'); btn.classList.remove('ready');
-  btn.textContent = 'Cập nhật feedback (Enter)';
-  
+  btn.classList.add('editing');
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> Cập nhật (Enter)';
   document.getElementById('noteText').focus();
 }
 
 function addFeedback(){
-  if(!videoUrl){toast('Chưa tải video!');return;}
+  if(!videoUrl){toast('⚠️ Chưa load video!');return;}
   var note=document.getElementById('noteText').value.trim();
   var source=document.getElementById('sourceLink').value.trim();
+  if(!note && !currentImage){toast('⚠️ Phải nhập text hoặc dán ảnh!');return;}
   
-  if(!note && !currentImage){toast('Vui lòng nhập nội dung hoặc dán ảnh!');return;}
+  var tA = document.getElementById('tcIn').textContent;
+  var tB = document.getElementById('tcOut').textContent;
+  var finalTc = hasOut ? (tA + ' - ' + tB) : tA;
   
   if(editingId) {
     var fb = feedbacks.find(function(f){ return f.id === editingId; });
-    if(fb) {
-      fb.note = note;
-      fb.source = source;
-      fb.img = currentImage;
-    }
+    if(fb) { fb.tc = finalTc; fb.note = note; fb.source = source; fb.img = currentImage; }
     toast('✅ Đã cập nhật!');
   } else {
-    if(currentTC==='--:--:--'){toast('Chưa có timecode!');return;}
     var deepLink = videoUrl;
-    if(videoType === 'youtube') deepLink = 'https://youtu.be/' + ytVideoId + '?t=' + toSeconds(currentTC);
+    if(videoType === 'youtube') deepLink = 'https://youtu.be/' + videoId + '?t=' + toSeconds(tA);
+    else if(videoType === 'vimeo') deepLink = 'https://vimeo.com/' + videoId + '#t=' + toSeconds(tA) + 's';
     
-    feedbacks.push({id:Date.now(), tc:currentTC, note:note, source:source, img:currentImage, time:new Date(), url:deepLink});
-    feedbacks.sort(function(a,b){ return toSeconds(a.tc) - toSeconds(b.tc); });
-    toast('✅ Đã lưu mới!');
+    feedbacks.push({id:Date.now(), tc:finalTc, note:note, source:source, img:currentImage, time:new Date(), url:deepLink});
+    feedbacks.sort(function(a,b){ return toSeconds(a.tc.split(' - ')[0]) - toSeconds(b.tc.split(' - ')[0]); });
+    toast('✅ Đã thêm Feedback!');
   }
   
-  renderList(); saveLocal(); clearTC();
-  if(nativeVid) nativeVid.play(); else if(ytPlayer) ytPlayer.playVideo();
+  renderList(); saveLocal(); resetForm();
   document.getElementById('noteText').blur();
 }
 
@@ -357,75 +675,152 @@ function renderList(){
   var list=document.getElementById('fbList');
   document.getElementById('fbCount').textContent=feedbacks.length;
   list.innerHTML='';
-  if(!feedbacks.length){ list.innerHTML='<div class="fb-empty">Chưa có feedback nào.</div>'; return; }
+  if(!feedbacks.length){ list.innerHTML='<div class="fb-empty">Chưa có dữ liệu. Bắt đầu xem video để thêm.</div>'; return; }
   feedbacks.forEach(function(fb){
-    var sourceHtml = fb.source ? '<a href="'+fb.source+'" target="_blank" class="fb-source-link">📎 Link Source đính kèm</a>' : '';
+    var sourceHtml = fb.source ? '<a href="'+fb.source+'" target="_blank" class="fb-source-link"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> Link File đính kèm</a>' : '';
     var imgHtml = fb.img ? '<img src="'+fb.img+'" class="fb-saved-img" />' : '';
     var div=document.createElement('div');
     div.className='fb-item';
     div.innerHTML=
-      '<button class="fb-tc-btn" onclick="jumpTo(\''+fb.tc+'\')" title="Tua đến đoạn này">▶ '+fb.tc+'</button>'+
+      '<button class="fb-tc-btn" onclick="jumpTo(\''+fb.tc+'\')" title="Tua đến">▶ '+fb.tc+'</button>'+
       '<div class="fb-body"><div class="fb-note-text">'+esc(fb.note)+'</div>'+sourceHtml+imgHtml+'</div>'+
       '<div class="fb-actions">'+
-        '<button class="fb-btn fb-btn-edit" onclick="editFb('+fb.id+')" title="Sửa">✏️</button>'+
-        '<button class="fb-btn fb-btn-del" onclick="delFb('+fb.id+')" title="Xoá">🗑️</button>'+
+        '<button class="fb-btn fb-btn-edit" onclick="editFb('+fb.id+')" title="Sửa"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>'+
+        '<button class="fb-btn fb-btn-del" onclick="delFb('+fb.id+')" title="Xoá"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>'+
       '</div>';
     list.appendChild(div);
   });
 }
 
 document.addEventListener('keydown', function(e){
-  var noteInput = document.getElementById('noteText');
-  var srcInput = document.getElementById('sourceLink');
-  var urlInput = document.getElementById('urlInput');
+  var nt = document.getElementById('noteText');
+  var src = document.getElementById('sourceLink');
+  var url = document.getElementById('urlInput');
+  var repName = document.getElementById('reportName');
   
-  if(e.code === 'Space' && e.target !== noteInput && e.target !== srcInput && e.target !== urlInput){ 
+  var isTyping = (e.target === nt || e.target === src || e.target === url || e.target === repName);
+
+  if(e.code === 'Space' && !isTyping){ 
       e.preventDefault(); 
-      if(nativeVid) {
-          if(!nativeVid.paused) nativeVid.pause(); else nativeVid.play();
-      } else if(videoType === 'youtube' && ytPlayer) {
-          var state = ytPlayer.getPlayerState();
-          if(state === YT.PlayerState.PLAYING) ytPlayer.pauseVideo(); else ytPlayer.playVideo();
+      if(nativeVid) { if(!nativeVid.paused) nativeVid.pause(); else nativeVid.play(); } 
+      else if(videoType === 'youtube' && ytPlayer) {
+          if(ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) ytPlayer.pauseVideo(); else ytPlayer.playVideo();
+      }
+      else if(videoType === 'vimeo' && vimeoPlayer) {
+          vimeoPlayer.getPaused().then(function(paused) { if(paused) vimeoPlayer.play(); else vimeoPlayer.pause(); });
       }
   }
   
-  if(e.key === 'Enter' && !e.shiftKey && (e.target === noteInput || e.target === srcInput)){ 
-      e.preventDefault(); addFeedback(); 
+  if(!isTyping) {
+      if(e.code === 'KeyI') { e.preventDefault(); manualSetIn(); }
+      if(e.code === 'KeyO') { e.preventDefault(); manualSetOut(); }
   }
+  
+  if(e.key === 'Enter' && !e.shiftKey && (e.target === nt || e.target === src)){ e.preventDefault(); addFeedback(); }
 });
 
+// --- LƯU / MỞ SESSION (JSON) ---
+function exportJSON() {
+    if(!feedbacks.length){toast('⚠️ Chưa có dữ liệu để lưu!');return;}
+    var reportName = document.getElementById('reportName').value || 'Video-Feedback-Session';
+    var dataStr = JSON.stringify(feedbacks);
+    var dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    var exportFileDefaultName = reportName + '.json';
+    var linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    toast('✅ Đã lưu file Session!');
+}
+
+function importJSON(e) {
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(event) {
+        try {
+            var imported = JSON.parse(event.target.result);
+            if(Array.isArray(imported)) {
+                feedbacks = imported;
+                feedbacks.forEach(function(f){ f.time = new Date(f.time); });
+                renderList();
+                saveLocal();
+                toast('✅ Đã phục hồi Session thành công!');
+            } else {
+                toast('❌ File không đúng định dạng!');
+            }
+        } catch(err) {
+            toast('❌ Lỗi đọc file Session!');
+        }
+        document.getElementById('jsonInput').value = ''; 
+    };
+    reader.readAsText(file);
+}
+
 function exportXLSX(){
-  if(!feedbacks.length){toast('Chưa có dữ liệu!');return;}
-  var rows=[['#','Timecode','Nội dung nhận xét','Link Source đính kèm','Có ảnh Paste?','Link xem video']];
+  if(typeof XLSX === 'undefined') { toast('⏳ Đang tải thư viện Excel, thử lại sau 1 giây...'); return; }
+  if(!feedbacks.length){toast('⚠️ Trống trải quá, thêm note đi bạn!');return;}
+  var reportName = document.getElementById('reportName').value || 'Video-Feedback';
+  var rows=[['#','Timecode','Nội dung nhận xét','Link đính kèm','Có ảnh?','Link xem video']];
   feedbacks.forEach(function(fb,i){ rows.push([i+1, fb.tc, fb.note, fb.source || '', fb.img ? 'Có' : 'Không', fb.url]); });
   var ws=XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=[{wch:4},{wch:11},{wch:60},{wch:30},{wch:15},{wch:45}];
+  ws['!cols']=[{wch:5},{wch:18},{wch:60},{wch:30},{wch:10},{wch:45}];
   var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Feedback');
-  XLSX.writeFile(wb,'feedback-'+new Date().toISOString().slice(0,10)+'.xlsx');
+  XLSX.writeFile(wb, reportName + '.xlsx');
 }
 
 function exportPDF(){
-  if(!feedbacks.length){toast('Chưa có dữ liệu!');return;}
+  if(typeof html2pdf === 'undefined') { toast('⏳ Đang tải thư viện PDF, thử lại sau 1 giây...'); return; }
+  if(!feedbacks.length){toast('⚠️ File rỗng không xuất PDF được!');return;}
+  var btnPdf = document.getElementById('btnPdf');
+  var originalHtml = btnPdf.innerHTML;
+  btnPdf.innerHTML = '⏳ Rendering...';
   
-  var coverImgHtml = '';
-  if(videoType === 'youtube' && ytVideoId) {
-    coverImgHtml = '<div style="margin-bottom:20px"><img src="https://img.youtube.com/vi/'+ytVideoId+'/maxresdefault.jpg" onerror="this.src=\'https://img.youtube.com/vi/'+ytVideoId+'/mqdefault.jpg\'" style="width:100%;max-width:400px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1)"/></div>';
+  var reportName = document.getElementById('reportName').value || 'Report-Feedback';
+  document.getElementById('pdf-title').innerText = reportName;
+  document.getElementById('pdf-meta').innerText = "Tạo bởi hệ thống Antigravity | Tổng note: " + feedbacks.length + " | Ngày: " + new Date().toLocaleDateString('vi-VN');
+
+  var coverDiv = document.getElementById('pdf-cover');
+  var coverImg = document.getElementById('pdf-cover-img');
+  if(videoType === 'youtube' && videoId) {
+    coverImg.src = 'https://img.youtube.com/vi/'+videoId+'/maxresdefault.jpg';
+    coverImg.onerror = function() { coverImg.src = 'https://img.youtube.com/vi/'+videoId+'/mqdefault.jpg'; };
+    coverDiv.style.display = 'block';
+  } else {
+    coverDiv.style.display = 'none';
   }
 
-  var rows=feedbacks.map(function(fb,i){
-    var linkBtn = '<a href="'+fb.url+'" target="_blank" style="display:inline-block; margin-top:8px; font-size:11px; background:#EEF2FF; color:#4F46E5; padding:4px 10px; border-radius:4px; text-decoration:none; font-weight:bold;">▶ Xem tại '+fb.tc+'</a>';
-    var srcLink = fb.source ? '<br><a href="'+fb.source+'" target="_blank" style="color:#10B981; font-size:12px; font-weight:bold; text-decoration:underline; display:inline-block; margin-top:4px;">📎 Source đính kèm</a>' : '';
-    var imgTag = fb.img ? '<br><img src="'+fb.img+'" style="max-width:300px; margin-top:10px; border:1px solid #ddd; border-radius:4px" />' : '';
+  var tbodyHtml = '';
+  feedbacks.forEach(function(fb, i){
+    var linkBtn = '<a href="'+fb.url+'" target="_blank" style="display:inline-block; margin-top:12px; font-size:13px; background:#eff6ff; color:#3b82f6; padding:8px 16px; border-radius:8px; text-decoration:none; font-weight:700;">▶ Phát video tại '+fb.tc.split(' - ')[0]+'</a>';
+    var srcLink = fb.source ? '<br><a href="'+fb.source+'" target="_blank" style="color:#10B981; font-size:14px; font-weight:600; text-decoration:underline; display:inline-block; margin-top:8px;">📎 Mở File đính kèm</a>' : '';
+    var imgTag = fb.img ? '<br><img src="'+fb.img+'" style="max-width:400px; margin-top:16px; border:1px solid #e2e8f0; border-radius:10px" />' : '';
     
-    return '<tr><td style="text-align:center">'+(i+1)+'</td><td style="font-weight:bold;color:#111;text-align:center">'+fb.tc+'</td><td style="white-space:pre-wrap; line-height:1.6">'+fb.note+srcLink+imgTag+'<br>'+linkBtn+'</td></tr>';
-  }).join('');
+    tbodyHtml += '<tr>'+
+        '<td style="text-align:center; border-bottom:1px solid #f1f5f9; padding:20px 16px;">'+(i+1)+'</td>'+
+        '<td style="font-weight:800; color:#0f172a; text-align:center; white-space:nowrap; border-bottom:1px solid #f1f5f9; padding:20px 16px; font-size: 15px;">'+fb.tc+'</td>'+
+        '<td style="white-space:pre-wrap; line-height:1.7; color:#334155; border-bottom:1px solid #f1f5f9; padding:20px 16px; font-size: 15px;">'+fb.note+srcLink+imgTag+'<br>'+linkBtn+'</td>'+
+    '</tr>';
+  });
   
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:13px;color:#333; line-height:1.5}table{width:100%;border-collapse:collapse;margin-top:20px}th{background:#F8FAFC;color:#475569;padding:12px;text-align:left;border-bottom:2px solid #E2E8F0}td{padding:16px 12px;border-bottom:1px solid #E2E8F0;vertical-align:top}</style></head><body>'+
-    '<h1 style="font-size:20px; color:#0F1117">Báo cáo Feedback Video</h1>' + coverImgHtml +
-    '<table><tr><th style="width:30px;text-align:center">#</th><th style="width:90px;text-align:center">Timecode</th><th>Nội dung nhận xét & Liên kết</th></tr>'+rows+'</table></body></html>';
+  document.getElementById('pdf-tbody').innerHTML = tbodyHtml;
+
+  var element = document.getElementById('pdf-template');
+  element.style.display = 'block'; 
   
-  var w=window.open('','_blank'); w.document.write(html); w.document.close();
-  setTimeout(function(){w.print();},800);
+  var opt = {
+      margin:       [15, 10, 15, 10], // Top, Left, Bottom, Right
+      filename:     reportName + '.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(element).save().then(function() {
+      element.style.display = 'none'; 
+      btnPdf.innerHTML = originalHtml;
+      toast('✅ Đã tải Report PDF!');
+  });
 }
 </script>
 </body>
