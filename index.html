@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Antigravity Feedback - Smarter Edition</title>
+<title>Antigravity Feedback Pro - Ultimate</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
@@ -34,7 +34,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-deep); color: #fff
 /* Video Area */
 .video-main { position: sticky; top: 2rem; }
 .v-container { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; border-radius: 24px; overflow: hidden; }
-#yt-frame, #vimeo-frame, video#dv { width: 100%; height: 100%; position: absolute; }
+#yt-frame, #vimeo-frame, video#dv { width: 100%; height: 100%; position: absolute; top:0; left:0; }
 
 .tc-bar { margin-top: 1rem; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; }
 .tc-clock { font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -2px; }
@@ -50,68 +50,60 @@ input:focus, textarea:focus { border-color: var(--accent-solid); }
 .tc-label { display: block; font-size: 10px; font-weight: 800; color: var(--text-sec); margin-bottom: 4px; text-transform: uppercase; pointer-events: none; }
 .tc-box.active .tc-label { color: var(--accent-solid); }
 .tc-val { font-size: 22px; font-weight: 800; pointer-events: none; font-variant-numeric: tabular-nums; }
-.btn-clear-b { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; transition: 0.2s; cursor: pointer; }
-.btn-clear-b:hover { background: var(--red); transform: rotate(90deg); }
+.btn-clear-b { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; cursor: pointer; }
 
 .snip-preview { margin-top: 10px; border: 1px dashed var(--border); border-radius: 12px; min-height: 50px; position: relative; cursor: pointer; text-align: center; padding: 10px; }
 .snip-preview img { max-width: 100%; border-radius: 8px; display: none; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
 .btn { padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.btn-primary { background: var(--accent-grad); color: #fff; width: 100%; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2); }
-.btn-primary:hover { transform: translateY(-2px); filter: brightness(1.1); }
-.btn-snip { background: #3b82f6; color: #fff; width: 100%; margin-top: 10px; }
+.btn-primary { background: var(--accent-grad); color: #fff; width: 100%; }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-load { background: #333; color: #fff; width: auto; font-size: 13px; }
 
-/* Feedback List */
 .fb-list { overflow-y: auto; max-height: 500px; padding-right: 5px; }
-.fb-item { padding: 1.5rem; border-bottom: 1px solid var(--border); position: relative; transition: 0.2s; }
-.fb-item:hover { background: rgba(255,255,255,0.02); }
+.fb-item { padding: 1.5rem; border-bottom: 1px solid var(--border); position: relative; }
 .fb-tc { display: inline-block; padding: 4px 12px; background: var(--accent-solid); border-radius: 100px; font-size: 12px; font-weight: 800; margin-bottom: 10px; cursor: pointer; }
-.fb-links { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-.link-tag { font-size: 11px; padding: 4px 10px; background: rgba(255,255,255,0.1); border-radius: 6px; color: var(--text-sec); text-decoration: none; border: 1px solid var(--border); }
-.link-tag:hover { border-color: var(--accent-solid); color: #fff; }
 
 /* CROP OVERLAY */
-#crop-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; cursor: crosshair; align-items: center; justify-content: center; }
-#crop-canvas { max-width: 100%; max-height: 100%; display: block; border: 1px solid var(--accent-solid); }
-.crop-inst { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: #000; padding: 12px 24px; border-radius: 100px; border: 1px solid var(--accent-solid); font-weight: 700; box-shadow: 0 0 30px rgba(139, 92, 246, 0.3); }
+#crop-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; cursor: crosshair; }
+#crop-canvas { max-width: 100%; max-height: 100%; margin: auto; display: block; }
 
-.toast { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: #18181b; padding: 12px 24px; border-radius: 100px; border: 1px solid #3f3f46; color: #fff; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 10000; }
-.toast.show { bottom: 50px; }
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #18181b; padding: 12px 24px; border-radius: 100px; border: 1px solid #3f3f46; opacity: 0; transition: 0.3s; z-index: 10000; }
+.toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
 <div id="crop-overlay">
-    <div class="crop-inst">Kéo chuột để chọn vùng muốn Snip (Esc để hủy)</div>
     <canvas id="crop-canvas"></canvas>
 </div>
 
 <div class="app">
   <div class="video-main">
     <div class="v-container bento" id="vBox">
-        <div id="v-msg" style="padding: 20%; text-align: center; color: var(--text-sec)">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 15px; opacity: 0.3;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M10 9l5 3-5 3V9z"/></svg>
-            <p>Dán Link Video để bắt đầu</p>
-        </div>
+        <div id="v-msg" style="padding: 20%; text-align: center; color: var(--text-sec)">Nhập link và nhấn Load Video</div>
         <div id="yt-frame"></div><div id="vimeo-frame"></div><video id="dv" controls></video>
     </div>
     
     <div class="tc-bar bento">
       <div class="tc-clock" id="tcClock">00:00:00</div>
       <div style="text-align: right">
-          <div style="color: var(--accent-solid); font-weight: 800; font-size: 11px; letter-spacing: 1px;">SYNC ENGINE</div>
-          <div style="color: var(--text-sec); font-size: 13px;">Antigravity Workflow</div>
+          <div style="color: var(--accent-solid); font-weight: 800; font-size: 11px;">SYNC STATUS: LIVE</div>
+          <div style="color: var(--text-sec); font-size: 13px;">Antigravity System</div>
       </div>
     </div>
   </div>
 
   <div class="panel">
-    <div class="bento" style="padding: 1.5rem">
-        <textarea id="urlInput" placeholder="Dán link Video (YT/Drive/Vimeo) vào đây..." rows="1" oninput="loadVideo()"></textarea>
+    <div class="bento" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="urlInput" placeholder="Dán link Video (YouTube/Drive/Vimeo)...">
+            <button class="btn btn-load" onclick="loadVideo()">Load</button>
+        </div>
+        <input type="text" id="reportName" placeholder="Tên báo cáo (Tự động lấy)..." style="border-color: rgba(139, 92, 246, 0.3); font-weight: 700;">
     </div>
 
     <div class="fb-editor bento">
-      <div style="padding: 1.25rem; border-bottom: 1px solid var(--border); font-weight: 800; font-size: 14px;">FEEDBACK EDITOR</div>
       <div style="padding: 1.5rem;">
         <div class="time-row">
           <div class="tc-box active" id="boxA" onclick="setSync('A')">
@@ -121,17 +113,16 @@ input:focus, textarea:focus { border-color: var(--accent-solid); }
           <div class="tc-box" id="boxB" onclick="setSync('B')">
             <span class="tc-label">Đến (B)</span>
             <div class="tc-val" id="valB">--:--:--</div>
-            <span class="btn-clear-b" onclick="clearB(event)" title="Xóa B (Trở lại Single Point)">✕</span>
+            <span class="btn-clear-b" onclick="clearB(event)">✕</span>
           </div>
         </div>
 
-        <textarea id="noteText" placeholder="Nhập nhận xét..." rows="4" onfocus="setSync(null)"></textarea>
-        
-        <textarea id="sourceLinks" placeholder="Dán các link tham chiếu (Figma, Drive...)" rows="2" style="margin-top:10px; font-size: 12px;"></textarea>
+        <textarea id="noteText" placeholder="Nội dung nhận xét..." rows="4" onfocus="setSync(null)"></textarea>
+        <textarea id="sourceLinks" placeholder="Dán các link tham chiếu (Figma, Notion...)" rows="2" style="margin-top:10px; font-size: 12px;"></textarea>
 
-        <button class="btn btn-snip" onclick="initSnip()">📸 Snip vùng ảnh tự chọn</button>
+        <button class="btn" style="background:#3b82f6; width:100%; margin-top:10px;" onclick="initSnip()">📸 Snip Vùng Ảnh</button>
         <div class="snip-preview" id="snipZone" onclick="document.getElementById('fileIn').click()">
-            <span id="snipHint" style="font-size: 12px; color: var(--text-sec)">Hoặc Ctrl+V dán ảnh chụp màn hình</span>
+            <span id="snipHint" style="font-size: 12px; color: var(--text-sec)">Hoặc Ctrl+V để dán ảnh</span>
             <img src="" id="pImg"/>
         </div>
         <input type="file" id="fileIn" hidden onchange="handleFile(event)">
@@ -139,11 +130,6 @@ input:focus, textarea:focus { border-color: var(--accent-solid); }
         <button class="btn btn-primary" style="margin-top:1rem" onclick="saveFb()">Lưu Feedback (Ctrl + Enter)</button>
       </div>
       <div class="fb-list" id="fbList"></div>
-    </div>
-    
-    <div style="display:flex; gap:10px; margin-bottom: 2rem;">
-        <button class="btn" style="flex:1; background: var(--glass)" onclick="exportXLSX()">Excel</button>
-        <button class="btn" style="flex:1; background: var(--glass)" onclick="exportPDF()">PDF Report</button>
     </div>
   </div>
 </div>
@@ -155,7 +141,7 @@ let feedbacks = [], videoType = '', videoId = '', videoUrl = '', syncTarget = 'A
 
 function toast(m){ 
     const t=document.getElementById('toast'); t.innerText=m; t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'), 2500);
+    setTimeout(()=>t.classList.remove('show'), 2000);
 }
 
 function fmt(s){
@@ -169,22 +155,18 @@ function setSync(t){
     document.getElementById('boxB').classList.toggle('active', t==='B');
 }
 
-/* --- LOGIC CLEAR B ĐỂ VỀ SINGLE POINT --- */
 function clearB(e){
     if(e) e.stopPropagation();
     document.getElementById('valB').innerText = '--:--:--';
     setSync('A');
-    toast("📍 Quay lại mốc Single Point");
 }
 
 function getTime(){
     if(videoType === 'native') return document.getElementById('dv').currentTime;
     if(videoType === 'yt' && ytPlayer?.getCurrentTime) return ytPlayer.getCurrentTime();
-    if(videoType === 'vimeo') return window.vTime || 0;
     return 0;
 }
 
-// Sync Clock
 setInterval(() => {
     const now = getTime();
     document.getElementById('tcClock').innerText = fmt(now);
@@ -194,41 +176,50 @@ setInterval(() => {
 
 function loadVideo(){
     const url = document.getElementById('urlInput').value.trim();
-    if(!url || url === videoUrl) return;
+    if(!url) return;
     videoUrl = url;
     document.getElementById('v-msg').style.display='none';
     document.getElementById('dv').style.display='none';
     document.getElementById('yt-frame').style.display='none';
-    
+    document.getElementById('yt-frame').innerHTML = '';
+
     if(url.includes('youtube.com') || url.includes('youtu.be')){
         videoType = 'yt';
         videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
         document.getElementById('yt-frame').style.display='block';
-        document.getElementById('yt-frame').innerHTML = '<div id="yt-player"></div>';
-        ytPlayer = new YT.Player('yt-player', { height: '100%', width: '100%', videoId: videoId });
+        document.getElementById('yt-frame').innerHTML = '<div id="player"></div>';
+        ytPlayer = new YT.Player('player', {
+            height: '100%', width: '100%', videoId: videoId,
+            events: {
+                'onReady': (event) => {
+                    // Tự động lấy tên video YouTube
+                    const title = event.target.getVideoData().title;
+                    if(title) document.getElementById('reportName').value = title;
+                }
+            }
+        });
     } else {
         videoType = 'native';
-        const v = document.getElementById('dv'); v.style.display='block'; v.src = url;
+        const v = document.getElementById('dv'); 
+        v.style.display='block'; v.src = url;
+        document.getElementById('reportName').value = "Báo cáo video Local";
     }
+    toast("🚀 Đã tải video!");
 }
 
-/* --- SNIP TOOL WITH CROP (KÉO CHỌN VÙNG) --- */
 async function initSnip() {
     try {
         const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         const video = document.createElement("video");
-        video.srcObject = stream;
-        video.play();
-        
+        video.srcObject = stream; video.play();
         video.onloadedmetadata = () => {
             const canvas = document.createElement("canvas");
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
             canvas.getContext("2d").drawImage(video, 0, 0);
             stream.getTracks().forEach(t => t.stop());
             startCrop(canvas);
         };
-    } catch (e) { toast("Hủy chụp màn hình"); }
+    } catch (e) { toast("Hủy chụp"); }
 }
 
 function startCrop(fullCanvas) {
@@ -236,108 +227,58 @@ function startCrop(fullCanvas) {
     const canvas = document.getElementById('crop-canvas');
     const ctx = canvas.getContext('2d');
     overlay.style.display = 'flex';
-    
-    const scale = Math.min(window.innerWidth / fullCanvas.width, window.innerHeight / fullCanvas.height);
-    canvas.width = fullCanvas.width * scale;
-    canvas.height = fullCanvas.height * scale;
-    
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     ctx.drawImage(fullCanvas, 0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "rgba(0,0,0,0.6)";
-    ctx.fillRect(0,0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0,0, canvas.width, canvas.height);
 
     let startX, startY, isDrawing = false;
-
-    canvas.onmousedown = (e) => {
-        const rect = canvas.getBoundingClientRect();
-        startX = e.clientX - rect.left;
-        startY = e.clientY - rect.top;
-        isDrawing = true;
-    };
+    canvas.onmousedown = (e) => { startX = e.clientX; startY = e.clientY; isDrawing = true; };
     canvas.onmousemove = (e) => {
         if(!isDrawing) return;
-        const rect = canvas.getBoundingClientRect();
-        const curX = e.clientX - rect.left;
-        const curY = e.clientY - rect.top;
-        
         ctx.clearRect(0,0, canvas.width, canvas.height);
         ctx.drawImage(fullCanvas, 0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "rgba(0,0,0,0.6)";
-        ctx.fillRect(0,0, canvas.width, canvas.height);
-        
-        ctx.clearRect(startX, startY, curX - startX, curY - startY);
+        ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0,0, canvas.width, canvas.height);
+        ctx.clearRect(startX, startY, e.clientX - startX, e.clientY - startY);
         ctx.drawImage(fullCanvas, 
             (startX/canvas.width)*fullCanvas.width, (startY/canvas.height)*fullCanvas.height, 
-            ((curX-startX)/canvas.width)*fullCanvas.width, ((curY-startY)/canvas.height)*fullCanvas.height,
-            startX, startY, curX - startX, curY - startY
+            ((e.clientX-startX)/canvas.width)*fullCanvas.width, ((e.clientY-startY)/canvas.height)*fullCanvas.height,
+            startX, startY, e.clientX - startX, e.clientY - startY
         );
-        ctx.strokeStyle = '#8b5cf6';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(startX, startY, curX - startX, curY - startY);
     };
     canvas.onmouseup = (e) => {
         isDrawing = false;
-        const rect = canvas.getBoundingClientRect();
-        const endX = e.clientX - rect.left;
-        const endY = e.clientY - rect.top;
-        
-        const w = endX - startX;
-        const h = endY - startY;
-        if(Math.abs(w) < 5 || Math.abs(h) < 5) return;
-
         const cropCanvas = document.createElement('canvas');
-        cropCanvas.width = Math.abs(w * (fullCanvas.width/canvas.width));
-        cropCanvas.height = Math.abs(h * (fullCanvas.height/canvas.height));
-        
+        const w = e.clientX - startX, h = e.clientY - startY;
+        cropCanvas.width = Math.abs(w); cropCanvas.height = Math.abs(h);
         cropCanvas.getContext('2d').drawImage(fullCanvas, 
             (startX/canvas.width)*fullCanvas.width, (startY/canvas.height)*fullCanvas.height, 
             (w/canvas.width)*fullCanvas.width, (h/canvas.height)*fullCanvas.height,
             0, 0, cropCanvas.width, cropCanvas.height
         );
-        
         currentImg = cropCanvas.toDataURL();
         document.getElementById('pImg').src = currentImg;
         document.getElementById('pImg').style.display = 'block';
         document.getElementById('snipHint').style.display = 'none';
         overlay.style.display = 'none';
-        setSync(null);
-        document.getElementById('noteText').focus();
+        setSync(null); document.getElementById('noteText').focus();
     };
 }
 
-/* --- SAVE & PARSE LINK --- */
 function saveFb(){
     const note = document.getElementById('noteText').value.trim();
-    const sourceText = document.getElementById('sourceLinks').value.trim();
-    if(!note && !currentImg) return toast("⚠️ Hãy nhập nội dung");
-
+    if(!note && !currentImg) return toast("⚠️ Nhập nội dung!");
     let tA = document.getElementById('valA').innerText;
     let tB = document.getElementById('valB').innerText;
-    
-    // Auto Reverse Logic
     const secA = tA.split(':').reduce((acc, t) => (60 * acc) + +t, 0);
-    let secB = tB === '--:--:--' ? null : tB.split(':').reduce((acc, t) => (60 * acc) + +t, 0);
+    const secB = tB === '--:--:--' ? null : tB.split(':').reduce((acc, t) => (60 * acc) + +t, 0);
     
-    if(secB !== null && secB < secA) {
-        [tA, tB] = [tB, tA];
-        toast("🔄 Đã đảo ngược mốc thời gian cho đúng");
-    }
-
+    if(secB !== null && secB < secA) [tA, tB] = [tB, tA];
     const timeDisplay = (tB === '--:--:--') ? tA : `${tA} - ${tB}`;
-    const links = sourceText.match(/\bhttps?:\/\/\S+/gi) || [];
+    const links = document.getElementById('sourceLinks').value.match(/\bhttps?:\/\/\S+/gi) || [];
 
-    feedbacks.push({
-        id: Date.now(),
-        tc: timeDisplay,
-        sec: secA,
-        note,
-        img: currentImg,
-        links,
-        url: videoType === 'yt' ? `https://youtu.be/${videoId}?t=${secA}` : videoUrl
-    });
-
+    feedbacks.push({ id: Date.now(), tc: timeDisplay, sec: secA, note, img: currentImg, links });
     render();
     resetEditor();
-    toast("💾 Đã lưu thành công");
 }
 
 function resetEditor(){
@@ -346,44 +287,26 @@ function resetEditor(){
     document.getElementById('valB').innerText = '--:--:--';
     document.getElementById('pImg').style.display = 'none';
     document.getElementById('snipHint').style.display = 'block';
-    currentImg = null;
-    setSync('A');
+    currentImg = null; setSync('A');
 }
 
 function render(){
     const list = document.getElementById('fbList');
     list.innerHTML = feedbacks.sort((a,b)=>a.sec - b.sec).map(f => `
         <div class="fb-item">
-            <div class="fb-tc" onclick="window.open('${f.url}', '_blank')">▶ ${f.tc}</div>
-            <div style="font-size:14px; color:#fff">${f.note}</div>
-            ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:12px; border-radius:10px; border:1px solid var(--border)">` : ''}
-            <div class="fb-links">
-                ${f.links.map(l => `<a href="${l}" target="_blank" class="link-tag">🔗 ${l.split('/')[2]}</a>`).join('')}
+            <div class="fb-tc">▶ ${f.tc}</div>
+            <div style="font-size:14px">${f.note}</div>
+            ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:10px; border-radius:8px">` : ''}
+            <div style="display:flex; gap:5px; margin-top:8px">
+                ${f.links.map(l => `<a href="${l}" target="_blank" style="font-size:10px; color:var(--accent-solid)">🔗 Link</a>`).join('')}
             </div>
-            <div style="position:absolute; top:1.5rem; right:1rem; opacity:0.2; cursor:pointer" onclick="delFb(${f.id})">✕</div>
         </div>
     `).join('');
-    document.getElementById('fbCount').innerText = `${feedbacks.length} notes`;
 }
 
-function delFb(id){ feedbacks = feedbacks.filter(f => f.id !== id); render(); }
-
-/* --- GLOBAL EVENTS --- */
 document.addEventListener('keydown', (e) => {
-    const isTyping = document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT';
-    
-    // Ctrl + Enter để Save
     if(e.key === 'Enter' && e.ctrlKey) saveFb();
-
-    // Delete/Backspace để xóa B (Khi không đang gõ chữ)
-    if(!isTyping && (e.key === 'Delete' || e.key === 'Backspace')){
-        clearB(e);
-    }
-    
-    // Esc để hủy Snip
-    if(e.key === 'Escape'){
-        document.getElementById('crop-overlay').style.display = 'none';
-    }
+    if(document.activeElement.tagName !== 'TEXTAREA' && (e.key === 'Delete' || e.key === 'Backspace')) clearB();
 });
 
 document.addEventListener('paste', (e) => {
