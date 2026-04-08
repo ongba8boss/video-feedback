@@ -4,165 +4,519 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Antigravity | Collaboration Notebook</title>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://player.vimeo.com/api/player.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
 <style>
 :root {
-  --system-bg: #000000;
-  --system-secondary-bg: #1C1C1E;
-  --system-tertiary-bg: #2C2C2E;
-  --system-blue: #0A84FF;
-  --system-green: #30D158;
-  --label-primary: #FFFFFF;
-  --label-secondary: #8E8E93;
-  --glass: rgba(28, 28, 30, 0.85);
-  --border-subtle: rgba(255,255,255,0.1);
+  --bg:       #0b0b0f;
+  --surface:  #13131a;
+  --card:     #1a1a24;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.13);
+  --blue:     #3b82f6;
+  --blue-dim: rgba(59,130,246,0.12);
+  --green:    #22c55e;
+  --red:      #ef4444;
+  --text:     #f0f0f5;
+  --muted:    #6b6b80;
+  --mono:     'DM Mono', monospace;
+  --sans:     'DM Sans', sans-serif;
 }
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { 
-  font-family: 'Inter', -apple-system, sans-serif; 
-  background-color: var(--system-bg); color: var(--label-primary); 
-  height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
 }
 
-/* --- HEADER --- */
+/* ─── HEADER ─── */
 header {
-  height: 64px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-  background: var(--glass); border-bottom: 0.5px solid var(--border-subtle);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 1.5rem; z-index: 2000;
+  height: 56px;
+  background: rgba(11,11,15,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  z-index: 100;
+  flex-shrink: 0;
 }
-.logo { font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; letter-spacing: 1px; }
 
-.url-section { display: flex; align-items: center; gap: 10px; transition: 0.3s; flex: 1; justify-content: center; }
-.url-input { 
-    background: var(--system-tertiary-bg); border: none; color: #fff; 
-    padding: 8px 16px; border-radius: 10px; width: 300px; font-size: 13px; outline: none; transition: 0.3s;
+.logo {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-.url-section.active .url-input { width: 60px; opacity: 0.2; }
 
-.header-actions { display: flex; gap: 8px; }
-
-/* --- BUTTONS --- */
-.btn-round { 
-    width: 38px; height: 38px; border-radius: 50%; background: var(--system-tertiary-bg); 
-    border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; 
+.logo-icon {
+  width: 28px; height: 28px;
+  background: var(--blue);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
 }
-.btn-round:hover { transform: scale(1.05); background: var(--system-blue); }
-.btn-export-main {
-    background: var(--system-blue); border-radius: 10px; padding: 0 16px; height: 38px;
-    color: #fff; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; border: none; cursor: pointer; transition: 0.2s;
-}
-.btn-export-main:hover { filter: brightness(1.1); }
 
-/* --- DROPDOWN MENU --- */
+/* URL bar */
+.url-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 0 6px 0 12px;
+  transition: border-color .2s;
+  min-width: 0;
+}
+.url-bar:focus-within { border-color: var(--blue); }
+
+.url-bar input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  min-width: 0;
+  height: 36px;
+}
+.url-bar input::placeholder { color: var(--muted); }
+
+.btn-load {
+  background: var(--blue);
+  border: none;
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 14px;
+  height: 28px;
+  border-radius: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity .15s;
+}
+.btn-load:hover { opacity: .85; }
+
+/* header right actions */
+.h-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.icon-btn {
+  width: 34px; height: 34px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+  flex-shrink: 0;
+}
+.icon-btn:hover { background: var(--blue-dim); border-color: var(--blue); }
+
+.export-btn {
+  background: var(--blue);
+  border: none;
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 14px;
+  height: 34px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: opacity .15s;
+}
+.export-btn:hover { opacity: .85; }
+
+/* ─── DROPDOWN ─── */
 .dropdown { position: relative; }
-.dropdown-content {
-    position: absolute; right: 0; top: 45px; background: rgba(44, 44, 46, 0.98);
-    backdrop-filter: blur(30px); border-radius: 14px; width: 220px;
-    padding: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    display: none; z-index: 2100; border: 0.5px solid var(--border-subtle);
+.dd-menu {
+  position: absolute;
+  right: 0; top: calc(100% + 8px);
+  background: rgba(26,26,36,0.97);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 210px;
+  display: none;
+  z-index: 200;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5);
 }
-.dropdown-content.show { display: block; }
-.menu-item {
-    padding: 10px 12px; font-size: 14px; border-radius: 8px; cursor: pointer;
-    display: flex; align-items: center; justify-content: space-between; transition: 0.15s;
+.dd-menu.open { display: block; }
+
+.dd-item {
+  padding: 9px 11px;
+  border-radius: 7px;
+  font-size: 13px;
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer;
+  transition: background .12s;
 }
-.menu-item:hover { background: var(--system-blue); color: #fff; }
-.menu-item span.shortcut { font-size: 10px; opacity: 0.5; font-family: 'JetBrains Mono', monospace; }
-
-/* --- MAIN LAYOUT --- */
-main { display: flex; flex: 1; overflow: hidden; }
-.workspace { flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.2rem; }
-.v-viewport { 
-    background: #000; border-radius: 20px; overflow: hidden; aspect-ratio: 16/9; 
-    position: relative; box-shadow: 0 40px 80px rgba(0,0,0,0.7); 
+.dd-item:hover { background: var(--blue-dim); }
+.dd-item.divider {
+  border-top: 1px solid var(--border);
+  margin-top: 4px; padding-top: 10px;
+  color: var(--muted); font-size: 10px; letter-spacing: 1.5px;
+  pointer-events: none; cursor: default;
 }
-#yt-frame, #drive-frame, video#dv { width: 100%; height: 100%; position: absolute; border: none; }
-
-.tc-big { font-family: 'JetBrains Mono', monospace; font-size: 3.5rem; font-weight: 600; letter-spacing: -4px; text-align: center; color: var(--label-primary); }
-
-/* --- SIDEBAR --- */
-.sidebar { width: 440px; background: var(--system-secondary-bg); border-left: 0.5px solid var(--border-subtle); display: flex; flex-direction: column; }
-.editor-area { padding: 1.5rem; border-bottom: 0.5px solid var(--border-subtle); }
-
-.pill-group { display: flex; gap: 8px; margin-bottom: 1rem; }
-.pill { 
-    flex: 1; background: var(--system-tertiary-bg); padding: 10px; border-radius: 12px; 
-    text-align: center; cursor: pointer; border: 1.5px solid transparent; transition: 0.2s;
+.dd-item kbd {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  background: rgba(255,255,255,0.06);
+  padding: 2px 6px; border-radius: 4px;
 }
-.pill.active { border-color: var(--system-blue); background: rgba(10, 132, 255, 0.1); }
-.pill .val { font-size: 17px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
 
-textarea { 
-    width: 100%; background: var(--system-tertiary-bg); border: none; 
-    color: #fff; padding: 12px; border-radius: 12px; font-size: 14px;
-    resize: none; outline: none; margin-bottom: 8px; line-height: 1.5; font-family: inherit;
+/* ─── MAIN ─── */
+main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
-.link-box { font-size: 12px; opacity: 0.7; color: var(--system-blue); }
 
-.img-preview { 
-    background: rgba(255,255,255,0.03); border-radius: 12px; padding: 10px; 
-    text-align: center; cursor: pointer; margin-bottom: 12px; font-size: 11px; color: var(--label-secondary);
+/* ─── WORKSPACE ─── */
+.workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  gap: 16px;
+  overflow: hidden;
+  min-width: 0;
 }
-.img-preview img { max-width: 100%; border-radius: 8px; display: none; margin-top: 8px; }
 
-/* --- LIST --- */
-.cell-list { flex: 1; overflow-y: auto; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem; }
-.fb-card { background: var(--system-tertiary-bg); border-radius: 16px; padding: 14px; position: relative; }
-.fb-card.done { opacity: 0.3; filter: saturate(0.2); }
-.fb-badge { background: var(--system-blue); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-block; margin-bottom: 8px; }
-.fb-links { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
-.link-pill { font-size: 10px; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; color: var(--label-secondary); text-decoration: none; }
+.video-wrap {
+  flex: 1;
+  background: #000;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  min-height: 0;
+  border: 1px solid var(--border);
+}
 
-.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #fff; color: #000; padding: 10px 24px; border-radius: 100px; font-weight: 600; opacity: 0; transition: 0.3s; z-index: 3000; }
-.toast.show { opacity: 1; top: 40px; }
+.video-wrap iframe,
+.video-wrap video { width: 100%; height: 100%; position: absolute; border: none; }
+
+.video-placeholder {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.video-placeholder .big-icon { font-size: 40px; opacity: .3; }
+
+.timecode {
+  font-family: var(--mono);
+  font-size: 2.8rem;
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: -2px;
+  color: var(--text);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: 400px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.sidebar-top {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.proj-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.proj-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 230px;
+}
+.progress-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--blue);
+  background: var(--blue-dim);
+  padding: 3px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+/* TC pills */
+.tc-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.tc-pill {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.tc-pill.active {
+  border-color: var(--blue);
+  background: var(--blue-dim);
+}
+.tc-pill .label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.tc-pill .val {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* Textareas */
+.field {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  width: 100%;
+  margin-bottom: 8px;
+  transition: border-color .15s;
+}
+.field::placeholder { color: var(--muted); }
+.field:focus { border-color: rgba(59,130,246,0.5); }
+
+/* Bottom actions */
+.action-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+}
+.img-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0 14px;
+  height: 36px;
+  border-radius: 9px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: background .15s;
+  white-space: nowrap;
+}
+.img-btn:hover { background: rgba(255,255,255,0.08); }
+
+.save-btn {
+  background: var(--blue);
+  border: none;
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  height: 36px;
+  border-radius: 9px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: opacity .15s;
+}
+.save-btn:hover { opacity: .85; }
+
+#pImg {
+  max-width: 100%;
+  border-radius: 8px;
+  display: none;
+  margin-top: 10px;
+  border: 1px solid var(--border);
+}
+
+/* ─── CELL LIST ─── */
+.cell-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cell-list::-webkit-scrollbar { width: 4px; }
+.cell-list::-webkit-scrollbar-track { background: transparent; }
+.cell-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.fb-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  position: relative;
+  transition: opacity .2s, filter .2s;
+}
+.fb-card.done { opacity: .35; filter: saturate(.2); }
+
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+
+.tc-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid rgba(59,130,246,0.2);
+  padding: 3px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.tc-badge:hover { background: rgba(59,130,246,0.25); }
+
+.card-actions { display: flex; gap: 8px; }
+.card-act {
+  width: 22px; height: 22px;
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  background: rgba(255,255,255,0.05);
+  transition: background .15s;
+}
+.card-act.done-btn:hover { background: rgba(34,197,94,.2); color: var(--green); }
+.card-act.del-btn:hover { background: rgba(239,68,68,.2); color: var(--red); }
+
+.card-note { font-size: 13px; line-height: 1.55; white-space: pre-wrap; color: var(--text); }
+.card-img { max-width: 100%; border-radius: 8px; margin-top: 8px; border: 1px solid var(--border); }
+
+.ref-links { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.ref-link {
+  font-size: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: color .15s;
+}
+.ref-link:hover { color: var(--blue); }
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.3);
+  color: var(--green);
+  font-size: 13px; font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 100px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+  z-index: 999;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    <div class="logo-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+    </div>
     ANTIGRAVITY
   </div>
-  
-  <div class="url-section" id="urlSection">
-    <input type="text" id="urlInput" class="url-input" placeholder="Dán link Video...">
-    <button class="btn-round" onclick="loadVideo()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 4v7a3 3 0 0 1-3 3H4M4 14l-4-4 4-4"/></svg>
-    </button>
+
+  <div class="url-bar">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted);flex-shrink:0">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input type="text" id="urlInput" placeholder="Dán link YouTube, Google Drive hoặc video URL...">
+    <button class="btn-load" onclick="loadVideo()">Load</button>
   </div>
 
-  <div class="header-actions">
-    <button class="btn-export-main" onclick="toggleMenu('exportMenu')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        Export
+  <div class="h-actions">
+    <button class="export-btn" onclick="toggleMenu('exportMenu')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Export
     </button>
-    
+    <div class="dd-menu" id="exportMenu" style="right:auto;left:0">
+      <div class="dd-item" onclick="exportPDF()">📄 Export PDF Report</div>
+      <div class="dd-item" onclick="exportXLSX()">📊 Export Excel (.xlsx)</div>
+    </div>
+
     <div class="dropdown">
-        <button class="btn-round" onclick="toggleMenu('moreMenu')">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-        </button>
-        <div class="dropdown-content" id="moreMenu">
-            <div class="menu-item" onclick="exportJSON()">💾 Save Session (JSON)</div>
-            <div class="menu-item" onclick="document.getElementById('importIn').click()">📂 Open Session</div>
-            <div class="menu-item" style="border-top:0.5px solid var(--border-subtle); color:var(--label-secondary); pointer-events:none;">SHORCUTS:</div>
-            <div class="menu-item">Tới/Lùi 1s <span class="shortcut">← / →</span></div>
-            <div class="menu-item">Tới/Lùi 5s <span class="shortcut">↑ / ↓</span></div>
-            <div class="menu-item">Play/Pause <span class="shortcut">Space</span></div>
-            <div class="menu-item">Lưu Cell <span class="shortcut">Ctrl+↵</span></div>
-        </div>
-        <div class="dropdown-content" id="exportMenu" style="right: auto; left: -100px;">
-            <div class="menu-item" onclick="exportPDF()">📄 Export PDF Report</div>
-            <div class="menu-item" onclick="exportXLSX()">📊 Export Excel (.xlsx)</div>
-        </div>
+      <div class="icon-btn" onclick="toggleMenu('moreMenu')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+        </svg>
+      </div>
+      <div class="dd-menu" id="moreMenu">
+        <div class="dd-item" onclick="exportJSON()">💾 Save Session (JSON)</div>
+        <div class="dd-item" onclick="document.getElementById('importIn').click()">📂 Open Session</div>
+        <div class="dd-item divider">SHORTCUTS</div>
+        <div class="dd-item">Play / Pause <kbd>Space</kbd></div>
+        <div class="dd-item">±1 giây <kbd>← / →</kbd></div>
+        <div class="dd-item">±5 giây <kbd>↑ / ↓</kbd></div>
+        <div class="dd-item">Lưu Cell <kbd>Ctrl+Enter</kbd></div>
+        <div class="dd-item">Xoá điểm B <kbd>Del</kbd></div>
+      </div>
     </div>
   </div>
   <input type="file" id="importIn" hidden accept=".json" onchange="importJSON(event)">
@@ -170,233 +524,367 @@ textarea {
 
 <main>
   <section class="workspace">
-    <div class="v-viewport" id="vBox">
-      <div id="yt-frame"></div><iframe id="drive-frame" style="display:none"></iframe><video id="dv" controls></video>
-      <div id="v-msg" style="padding: 20%; text-align: center; color: var(--label-secondary);">Vui lòng nạp link video.</div>
+    <div class="video-wrap" id="vBox">
+      <div id="yt-frame"></div>
+      <iframe id="drive-frame" style="display:none" allowfullscreen></iframe>
+      <video id="dv" controls style="display:none"></video>
+      <div class="video-placeholder" id="v-msg">
+        <div class="big-icon">▶</div>
+        <span>Dán link video vào thanh trên và nhấn Load</span>
+      </div>
     </div>
-    <div class="tc-big" id="tcClock">00:00:00</div>
+    <div class="timecode" id="tcClock">00:00:00</div>
   </section>
 
   <aside class="sidebar">
-    <div class="sidebar-header">
-      <h2 id="projTitle">Notebook</h2>
-      <span id="progress-text" style="font-size: 11px; font-weight: 700; color: var(--system-blue);">0/0 DONE</span>
-    </div>
-
-    <div class="editor-area">
-      <div class="pill-group">
-        <div class="pill active" id="boxA" onclick="setSync('A')"><div class="val" id="valA">00:00:00</div></div>
-        <div class="pill" id="boxB" onclick="setSync('B')"><div class="val" id="valB">--:--:--</div></div>
+    <div class="sidebar-top">
+      <div class="proj-row">
+        <div class="proj-title" id="projTitle">Notebook</div>
+        <div class="progress-badge" id="progressBadge">0/0</div>
       </div>
 
-      <textarea id="noteText" placeholder="Nhập nhận xét của bạn..." rows="3" onfocus="setSync(null)"></textarea>
-      
-      <textarea id="refLinks" class="link-box" placeholder="Dán các link tham chiếu (Figma, Notion, Drive...)" rows="2"></textarea>
-      
-      <div style="display:flex; gap:8px;">
-          <button class="btn-round" onclick="document.getElementById('fileIn').click()" style="width:auto; border-radius:12px; flex:1; font-size:12px;">🖼️ Ảnh</button>
-          <button class="btn-round" onclick="saveFb()" style="width:auto; border-radius:12px; flex:2; background:var(--system-blue); font-size:13px; font-weight:700;">Lưu Cell</button>
+      <div class="tc-row">
+        <div class="tc-pill active" id="boxA" onclick="setSync('A')">
+          <div class="label">Điểm A</div>
+          <div class="val" id="valA">00:00:00</div>
+        </div>
+        <div class="tc-pill" id="boxB" onclick="setSync('B')">
+          <div class="label">Điểm B</div>
+          <div class="val" id="valB">--:--:--</div>
+        </div>
       </div>
-      <input type="file" id="fileIn" hidden onchange="handleFile(event)">
-      <img id="pImg" style="max-width:100%; border-radius:10px; display:none; margin-top:10px; border:0.5px solid var(--border-subtle)"/>
+
+      <textarea id="noteText" class="field" placeholder="Nhập nhận xét của bạn..." rows="3" onfocus="setSync(null)"></textarea>
+      <textarea id="refLinks" class="field" placeholder="Dán link tham chiếu (Figma, Notion, Drive...)" rows="2" onfocus="setSync(null)"></textarea>
+
+      <div class="action-row">
+        <button class="img-btn" onclick="document.getElementById('fileIn').click()" title="Upload ảnh hoặc Ctrl+V để dán từ Snipping Tool">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Ảnh / Ctrl+V
+        </button>
+        <button class="save-btn" onclick="saveFb()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          + Thêm nhận xét
+        </button>
+      </div>
+      <input type="file" id="fileIn" hidden accept="image/*" onchange="handleFile(event)">
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:5px;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/></svg>
+        Snipping Tool → <kbd style="font-family:var(--mono);font-size:10px;background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;color:var(--text)">Ctrl+V</kbd> để dán ảnh chụp màn hình
+      </div>
+      <img id="pImg"/>
     </div>
 
-    <div class="cell-list" id="fbList"></div>
+    <div class="cell-list" id="fbList">
+      <div style="text-align:center; color:var(--muted); font-size:12px; padding: 40px 0;">Chưa có ghi chú nào</div>
+    </div>
   </aside>
 </main>
 
 <div class="toast" id="toast"></div>
 
 <script>
-let feedbacks = [], videoType = '', videoId = '', videoUrl = '', syncTarget = 'A', currentImg = null, ytPlayer = null;
+let feedbacks = [], videoType = '', videoUrl = '', syncTarget = 'A', currentImg = null, ytPlayer = null;
+let spaceKeyDown = false; // Track space key state to prevent repeat
 
-function toast(m){ 
-    const t=document.getElementById('toast'); t.innerText=m; t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'), 2000);
+/* ─── UTILS ─── */
+function toast(m) {
+  const t = document.getElementById('toast');
+  t.innerText = m;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
 }
 
-function fmt(s){
-    s=Math.floor(s||0);
-    return [Math.floor(s/3600), Math.floor((s%3600)/60), s%60].map(v=>String(v).padStart(2,'0')).join(':');
+function fmt(s) {
+  s = Math.floor(s || 0);
+  return [Math.floor(s / 3600), Math.floor((s % 3600) / 60), s % 60]
+    .map(v => String(v).padStart(2, '0')).join(':');
 }
 
-function toggleMenu(id) { 
-    document.querySelectorAll('.dropdown-content').forEach(el => { if(el.id !== id) el.classList.remove('show'); });
-    document.getElementById(id).classList.toggle('show'); 
+function toggleMenu(id) {
+  document.querySelectorAll('.dd-menu').forEach(el => {
+    if (el.id !== id) el.classList.remove('open');
+  });
+  document.getElementById(id).classList.toggle('open');
 }
 
-function setSync(t){
-    syncTarget = t;
-    document.getElementById('boxA').classList.toggle('active', t==='A');
-    document.getElementById('boxB').classList.toggle('active', t==='B');
-}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.dropdown') && !e.target.closest('.export-btn')) {
+    document.querySelectorAll('.dd-menu').forEach(el => el.classList.remove('open'));
+  }
+});
 
-/* --- DRIVE LINK FIX --- */
-function fixDriveUrl(url) {
-    const match = url.match(/\/file\/d\/([^\/]+)\//) || url.match(/[?&]id=([^&]+)/);
-    return match ? `https://drive.google.com/file/d/${match[1]}/preview` : url;
-}
-
-function getTime(){
-    if(videoType === 'native') return document.getElementById('dv').currentTime;
-    if(videoType === 'yt' && ytPlayer?.getCurrentTime) return ytPlayer.getCurrentTime();
-    return 0;
-}
-
-function setTime(sec){
-    if(videoType === 'native') document.getElementById('dv').currentTime = sec;
-    if(videoType === 'yt' && ytPlayer) ytPlayer.seekTo(sec, true);
+/* ─── TC SYNC ─── */
+function setSync(t) {
+  syncTarget = t;
+  document.getElementById('boxA').classList.toggle('active', t === 'A');
+  document.getElementById('boxB').classList.toggle('active', t === 'B');
 }
 
 setInterval(() => {
-    const now = getTime();
-    document.getElementById('tcClock').innerText = fmt(now);
-    if(syncTarget === 'A') document.getElementById('valA').innerText = fmt(now);
-    if(syncTarget === 'B') document.getElementById('valB').innerText = fmt(now);
+  const now = getTime();
+  document.getElementById('tcClock').innerText = fmt(now);
+  if (syncTarget === 'A') document.getElementById('valA').innerText = fmt(now);
+  if (syncTarget === 'B') document.getElementById('valB').innerText = fmt(now);
 }, 200);
 
-function loadVideo(){
-    const url = document.getElementById('urlInput').value.trim();
-    if(!url) return;
-    videoUrl = url;
-    document.getElementById('urlSection').classList.add('active');
-    document.getElementById('v-msg').style.display='none';
-    document.getElementById('dv').style.display='none';
-    document.getElementById('yt-frame').style.display='none';
-    document.getElementById('drive-frame').style.display='none';
-
-    if(url.includes('youtube.com') || url.includes('youtu.be')){
-        videoType = 'yt';
-        const id = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
-        document.getElementById('yt-frame').style.display='block';
-        document.getElementById('yt-frame').innerHTML = '<div id="player"></div>';
-        ytPlayer = new YT.Player('player', { height: '100%', width: '100%', videoId: id, events: {
-            'onReady': (e) => { document.getElementById('projTitle').innerText = e.target.getVideoData().title; autoLoad(); }
-        }});
-    } else if(url.includes('drive.google.com')) {
-        videoType = 'drive';
-        document.getElementById('drive-frame').style.display='block';
-        document.getElementById('drive-frame').src = fixDriveUrl(url);
-        document.getElementById('projTitle').innerText = "Google Drive Video";
-        autoLoad();
-    } else {
-        videoType = 'native';
-        const v = document.getElementById('dv'); v.style.display='block'; v.src = url;
-        document.getElementById('projTitle').innerText = "Local Video Source";
-        autoLoad();
-    }
+/* ─── VIDEO ─── */
+function fixDriveUrl(url) {
+  const m = url.match(/\/file\/d\/([^\/]+)\//) || url.match(/[?&]id=([^&]+)/);
+  return m ? `https://drive.google.com/file/d/${m[1]}/preview` : url;
 }
 
-function autoLoad(){
-    const saved = localStorage.getItem('ag_ios_v7_' + videoUrl);
-    feedbacks = saved ? JSON.parse(saved).feedbacks : [];
-    render();
+function getTime() {
+  if (videoType === 'native') return document.getElementById('dv').currentTime || 0;
+  if (videoType === 'yt' && ytPlayer?.getCurrentTime) return ytPlayer.getCurrentTime();
+  return 0;
 }
 
-function saveFb(){
-    const note = document.getElementById('noteText').value.trim();
-    const rawLinks = document.getElementById('refLinks').value.trim();
-    if(!note && !currentImg) return;
-    
-    let tA = document.getElementById('valA').innerText, tB = document.getElementById('valB').innerText;
-    const secA = tA.split(':').reduce((acc, t) => (60 * acc) + +t, 0);
-    const secB = tB === '--:--:--' ? null : tB.split(':').reduce((acc, t) => (60 * acc) + +t, 0);
-    if(secB !== null && secB < secA) [tA, tB] = [tB, tA];
-
-    // Regex lọc nhiều links cùng lúc
-    const links = rawLinks.match(/\bhttps?:\/\/\S+/gi) || [];
-
-    feedbacks.push({ id: Date.now(), tc: (tB === '--:--:--') ? tA : `${tA} - ${tB}`, sec: secA, note, img: currentImg, links, done: false });
-    render(); resetEditor();
-    localStorage.setItem('ag_ios_v7_' + videoUrl, JSON.stringify({ feedbacks }));
-    toast("✓ Cell Saved");
+function setTime(sec) {
+  if (videoType === 'native') document.getElementById('dv').currentTime = sec;
+  if (videoType === 'yt' && ytPlayer) ytPlayer.seekTo(sec, true);
 }
 
-function resetEditor(){
-    document.getElementById('noteText').value = ''; document.getElementById('refLinks').value = '';
-    document.getElementById('valB').innerText = '--:--:--'; document.getElementById('pImg').style.display = 'none';
-    currentImg = null; setSync('A');
+function loadVideo() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) return;
+  videoUrl = url;
+
+  // Reset video elements
+  document.getElementById('v-msg').style.display = 'none';
+  document.getElementById('dv').style.display = 'none';
+  document.getElementById('dv').src = '';
+  document.getElementById('yt-frame').style.display = 'none';
+  document.getElementById('yt-frame').innerHTML = '';
+  document.getElementById('drive-frame').style.display = 'none';
+  document.getElementById('drive-frame').src = '';
+
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    videoType = 'yt';
+    const id = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop().split('?')[0];
+    document.getElementById('yt-frame').style.display = 'block';
+    document.getElementById('yt-frame').innerHTML = '<div id="player" style="width:100%;height:100%;position:absolute"></div>';
+    ytPlayer = new YT.Player('player', {
+      height: '100%', width: '100%', videoId: id,
+      playerVars: { rel: 0 },
+      events: {
+        onReady: (e) => {
+          document.getElementById('projTitle').innerText = e.target.getVideoData().title || 'YouTube Video';
+          autoLoad();
+        }
+      }
+    });
+  } else if (url.includes('drive.google.com')) {
+    videoType = 'drive';
+    document.getElementById('drive-frame').style.display = 'block';
+    document.getElementById('drive-frame').src = fixDriveUrl(url);
+    document.getElementById('projTitle').innerText = 'Google Drive Video';
+    autoLoad();
+  } else {
+    videoType = 'native';
+    const v = document.getElementById('dv');
+    v.style.display = 'block';
+    v.src = url;
+    document.getElementById('projTitle').innerText = url.split('/').pop() || 'Video';
+    autoLoad();
+  }
 }
 
-function render(){
-    const list = document.getElementById('fbList');
-    const doneCount = feedbacks.filter(f => f.done).length;
-    document.getElementById('progress-text').innerText = `${doneCount}/${feedbacks.length} DONE`;
-    list.innerHTML = feedbacks.sort((a,b)=>a.sec - b.sec).map(f => `
-        <div class="fb-card ${f.done ? 'done' : ''}">
-            <div class="fb-badge" onclick="setTime(${f.sec})">${f.tc}</div>
-            <div style="font-size: 14px; white-space: pre-wrap;">${f.note}</div>
-            ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:10px; border-radius:12px; border:0.5px solid var(--border-subtle)">` : ''}
-            <div class="fb-links">
-                ${f.links ? f.links.map(l => `<a href="${l}" target="_blank" class="link-pill">🔗 ${l.split('/')[2]}</a>`).join('') : ''}
-            </div>
-            <div style="position:absolute; top:12px; right:12px; display:flex; gap:10px;">
-                <div onclick="toggleDone(${f.id})" style="color:var(--system-green); cursor:pointer;">●</div>
-                <div onclick="delFb(${f.id})" style="color:var(--system-red); cursor:pointer;">✕</div>
-            </div>
-        </div>`).join('');
+function autoLoad() {
+  const saved = localStorage.getItem('ag_v8_' + videoUrl);
+  feedbacks = saved ? JSON.parse(saved).feedbacks : [];
+  render();
 }
 
-function toggleDone(id){ const f = feedbacks.find(x => x.id === id); f.done = !f.done; render(); localStorage.setItem('ag_ios_v7_' + videoUrl, JSON.stringify({ feedbacks })); }
-function delFb(id){ feedbacks = feedbacks.filter(f => f.id !== id); render(); localStorage.setItem('ag_ios_v7_' + videoUrl, JSON.stringify({ feedbacks })); }
-
-/* --- EXPORTS --- */
-function exportJSON(){
-    const blob = new Blob([JSON.stringify({ feedbacks })], {type: 'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = `Project_${Date.now()}.json`; a.click();
+function save() {
+  if (videoUrl) localStorage.setItem('ag_v8_' + videoUrl, JSON.stringify({ feedbacks }));
 }
 
-function importJSON(e){
-    const reader = new FileReader();
-    reader.onload = (ex) => { feedbacks = JSON.parse(ex.target.result).feedbacks || []; render(); };
-    reader.readAsText(e.target.files[0]);
+/* ─── CELLS ─── */
+function saveFb() {
+  const note = document.getElementById('noteText').value.trim();
+  const rawLinks = document.getElementById('refLinks').value.trim();
+  if (!note && !currentImg) { toast('Nhập nhận xét trước!'); return; }
+
+  let tA = document.getElementById('valA').innerText;
+  let tB = document.getElementById('valB').innerText;
+  const secA = tA.split(':').reduce((a, v) => a * 60 + +v, 0);
+  const secB = tB === '--:--:--' ? null : tB.split(':').reduce((a, v) => a * 60 + +v, 0);
+
+  if (secB !== null && secB < secA) { [tA, tB] = [tB, tA]; }
+
+  const links = rawLinks.match(/\bhttps?:\/\/\S+/gi) || [];
+
+  feedbacks.push({
+    id: Date.now(),
+    tc: secB !== null ? `${tA} → ${tB}` : tA,
+    sec: secA,
+    note, img: currentImg, links, done: false
+  });
+
+  render();
+  resetEditor();
+  save();
+  toast('✓ Đã lưu cell');
 }
 
-function exportXLSX(){
-    const ws = XLSX.utils.json_to_sheet(feedbacks.map(f => ({ Time: f.tc, Note: f.note, Links: (f.links || []).join(', ') })));
-    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Feedback");
-    XLSX.writeFile(wb, "Feedback.xlsx");
+function resetEditor() {
+  document.getElementById('noteText').value = '';
+  document.getElementById('refLinks').value = '';
+  document.getElementById('valB').innerText = '--:--:--';
+  document.getElementById('pImg').style.display = 'none';
+  currentImg = null;
+  setSync('A');
 }
 
-function exportPDF(){
-    const body = feedbacks.sort((a,b)=>a.sec-b.sec).map(f => `<div style="margin-bottom:20px; border-bottom:1px solid #ddd; padding-bottom:10px"><p><b>[${f.tc}]</b></p><p>${f.note}</p></div>`).join('');
-    const el = document.createElement('div'); el.innerHTML = `<h1>${document.getElementById('projTitle').innerText}</h1>${body}`;
-    html2pdf().from(el).set({ margin: 10, filename: 'Report.pdf' }).save();
+function toggleDone(id) {
+  const f = feedbacks.find(x => x.id === id);
+  if (f) { f.done = !f.done; render(); save(); }
 }
 
-/* --- SHORTCUTS --- */
-document.addEventListener('keydown', (e) => {
-    const typing = document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT';
-    if(!typing) {
-        if(e.code === 'Space') { e.preventDefault(); if(videoType==='native') document.getElementById('dv').paused ? document.getElementById('dv').play() : document.getElementById('dv').pause(); if(videoType==='yt') ytPlayer.getPlayerState()===1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo(); }
-        if(e.key === 'ArrowLeft') { e.preventDefault(); setTime(getTime() - 1); }
-        if(e.key === 'ArrowRight') { e.preventDefault(); setTime(getTime() + 1); }
-        if(e.key === 'ArrowUp') { e.preventDefault(); setTime(getTime() + 5); }
-        if(e.key === 'ArrowDown') { e.preventDefault(); setTime(getTime() - 5); }
-        if(e.key === 'Delete' || e.key === 'Backspace') { document.getElementById('valB').innerText = '--:--:--'; setSync('A'); }
-    }
-});
+function delFb(id) {
+  feedbacks = feedbacks.filter(f => f.id !== id);
+  render(); save();
+}
+
+function render() {
+  const list = document.getElementById('fbList');
+  const done = feedbacks.filter(f => f.done).length;
+  document.getElementById('progressBadge').innerText = `${done}/${feedbacks.length}`;
+
+  if (feedbacks.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:40px 0">Chưa có ghi chú nào</div>';
+    return;
+  }
+
+  list.innerHTML = [...feedbacks]
+    .sort((a, b) => a.sec - b.sec)
+    .map(f => `
+      <div class="fb-card ${f.done ? 'done' : ''}">
+        <div class="card-header">
+          <div class="tc-badge" onclick="setTime(${f.sec})">${f.tc}</div>
+          <div class="card-actions">
+            <div class="card-act done-btn" onclick="toggleDone(${f.id})" title="Đánh dấu xong">✓</div>
+            <div class="card-act del-btn" onclick="delFb(${f.id})" title="Xoá">✕</div>
+          </div>
+        </div>
+        <div class="card-note">${f.note}</div>
+        ${f.img ? `<img src="${f.img}" class="card-img">` : ''}
+        ${f.links?.length ? `<div class="ref-links">${f.links.map(l => `<a href="${l}" target="_blank" class="ref-link">🔗 ${new URL(l).hostname}</a>`).join('')}</div>` : ''}
+      </div>`).join('');
+}
+
+/* ─── FILE ─── */
+function handleFile(e) {
+  const reader = new FileReader();
+  reader.onload = (ex) => {
+    currentImg = ex.target.result;
+    const img = document.getElementById('pImg');
+    img.src = currentImg;
+    img.style.display = 'block';
+    setSync(null);
+  };
+  reader.readAsDataURL(e.target.files[0]);
+}
 
 document.addEventListener('paste', (e) => {
-    const item = Array.from(e.clipboardData.items).find(x => x.type.indexOf('image') !== -1);
-    if(item){
-        const reader = new FileReader();
-        reader.onload = (ex) => { currentImg = ex.target.result; document.getElementById('pImg').src = currentImg; document.getElementById('pImg').style.display='block'; setSync(null); };
-        reader.readAsDataURL(item.getAsFile());
-    }
+  const item = Array.from(e.clipboardData.items).find(x => x.type.startsWith('image/'));
+  if (item) {
+    const reader = new FileReader();
+    reader.onload = (ex) => {
+      currentImg = ex.target.result;
+      const img = document.getElementById('pImg');
+      img.src = currentImg;
+      img.style.display = 'block';
+      setSync(null);
+    };
+    reader.readAsDataURL(item.getAsFile());
+  }
 });
 
-function handleFile(e){
-    const reader = new FileReader();
-    reader.onload = (ex) => { currentImg = ex.target.result; document.getElementById('pImg').src = currentImg; document.getElementById('pImg').style.display='block'; setSync(null); };
-    reader.readAsDataURL(e.target.files[0]);
+/* ─── KEYBOARD SHORTCUTS (space fix: only trigger on keydown once, not on repeat) ─── */
+document.addEventListener('keydown', (e) => {
+  const typing = ['TEXTAREA', 'INPUT'].includes(document.activeElement.tagName);
+
+  if (e.code === 'Space' && !typing) {
+    // e.repeat prevents repeated fire when held down
+    if (e.repeat) return;
+    e.preventDefault();
+    if (videoType === 'native') {
+      const v = document.getElementById('dv');
+      v.paused ? v.play() : v.pause();
+    }
+    if (videoType === 'yt' && ytPlayer) {
+      ytPlayer.getPlayerState() === 1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+    }
+    return;
+  }
+
+  if (typing) return;
+
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); setTime(getTime() - 1); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); setTime(getTime() + 1); }
+  if (e.key === 'ArrowUp')    { e.preventDefault(); setTime(getTime() + 5); }
+  if (e.key === 'ArrowDown')  { e.preventDefault(); setTime(getTime() - 5); }
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    document.getElementById('valB').innerText = '--:--:--';
+    setSync('A');
+  }
+  if (e.key === 'Enter' && e.ctrlKey) { saveFb(); }
+});
+
+/* ─── EXPORTS ─── */
+function exportJSON() {
+  const blob = new Blob([JSON.stringify({ feedbacks }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `AG_Session_${Date.now()}.json`;
+  a.click();
 }
 
-window.onclick = function(event) { if (!event.target.closest('.dropdown') && !event.target.closest('.btn-export-main')) { document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show')); } }
+function importJSON(e) {
+  const reader = new FileReader();
+  reader.onload = (ex) => {
+    try {
+      feedbacks = JSON.parse(ex.target.result).feedbacks || [];
+      render();
+      toast('✓ Session đã được load');
+    } catch { toast('❌ File không hợp lệ'); }
+  };
+  reader.readAsText(e.target.files[0]);
+}
 
-var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+function exportXLSX() {
+  if (!window.XLSX) { toast('Đang tải XLSX...'); return; }
+  const ws = XLSX.utils.json_to_sheet(feedbacks.map(f => ({
+    Timecode: f.tc,
+    Note: f.note,
+    Links: (f.links || []).join(', '),
+    Done: f.done ? 'Yes' : 'No'
+  })));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Feedback');
+  XLSX.writeFile(wb, 'Antigravity_Feedback.xlsx');
+}
+
+function exportPDF() {
+  if (!window.html2pdf) { toast('Đang tải PDF...'); return; }
+  const body = [...feedbacks].sort((a, b) => a.sec - b.sec)
+    .map(f => `<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #eee">
+      <p style="font-weight:700;color:#3b82f6;margin-bottom:6px">[${f.tc}]</p>
+      <p style="line-height:1.6">${f.note}</p>
+      ${f.links?.length ? `<p style="margin-top:8px;font-size:12px;color:#666">${f.links.join(' | ')}</p>` : ''}
+    </div>`).join('');
+  const el = document.createElement('div');
+  el.style.fontFamily = 'sans-serif';
+  el.innerHTML = `<h1 style="margin-bottom:20px">${document.getElementById('projTitle').innerText}</h1>${body}`;
+  html2pdf().from(el).set({ margin: 15, filename: 'AG_Report.pdf' }).save();
+}
+
+/* ─── YOUTUBE API ─── */
+var tag = document.createElement('script');
+tag.src = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(tag);
 </script>
 </body>
 </html>
