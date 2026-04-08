@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Antigravity | iOS Video Notebook Pro</title>
+<title>Antigravity | Collaboration Notebook</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
@@ -21,6 +21,7 @@
   --label-primary: #FFFFFF;
   --label-secondary: #8E8E93;
   --glass: rgba(28, 28, 30, 0.85);
+  --border-subtle: rgba(255,255,255,0.1);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,121 +34,134 @@ body {
 /* --- HEADER --- */
 header {
   height: 64px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-  background: var(--glass); border-bottom: 0.5px solid rgba(255,255,255,0.1);
+  background: var(--glass); border-bottom: 0.5px solid var(--border-subtle);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 1.5rem; z-index: 2000;
 }
-.logo { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px; letter-spacing: 0.5px; }
+.logo { font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; letter-spacing: 1px; }
 
-.url-section { display: flex; align-items: center; gap: 10px; transition: 0.3s; }
+.url-section { display: flex; align-items: center; gap: 10px; transition: 0.3s; flex: 1; justify-content: center; }
 .url-input { 
     background: var(--system-tertiary-bg); border: none; color: #fff; 
-    padding: 10px 16px; border-radius: 12px; width: 320px; font-size: 13px; outline: none;
-    transition: 0.3s;
+    padding: 8px 16px; border-radius: 10px; width: 300px; font-size: 13px; outline: none; transition: 0.3s;
 }
-.url-section.active .url-input { width: 40px; padding: 10px 0; text-align: center; opacity: 0.1; }
+.url-section.active .url-input { width: 60px; opacity: 0.2; }
 
-/* --- MORE MENU (Apple Style) --- */
-.more-container { position: relative; }
-.dropdown-menu {
-    position: absolute; right: 0; top: 45px; background: rgba(44, 44, 46, 0.95);
-    backdrop-filter: blur(30px); border-radius: 14px; width: 260px;
-    padding: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    display: none; z-index: 2100; border: 0.5px solid rgba(255,255,255,0.1);
+.header-actions { display: flex; gap: 8px; }
+
+/* --- BUTTONS --- */
+.btn-round { 
+    width: 38px; height: 38px; border-radius: 50%; background: var(--system-tertiary-bg); 
+    border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; 
 }
-.dropdown-menu.show { display: block; }
-.menu-group { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
-.menu-group:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-.menu-label { font-size: 10px; font-weight: 800; color: var(--label-secondary); padding: 4px 12px; text-transform: uppercase; }
+.btn-round:hover { transform: scale(1.05); background: var(--system-blue); }
+.btn-export-main {
+    background: var(--system-blue); border-radius: 10px; padding: 0 16px; height: 38px;
+    color: #fff; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; border: none; cursor: pointer; transition: 0.2s;
+}
+.btn-export-main:hover { filter: brightness(1.1); }
+
+/* --- DROPDOWN MENU --- */
+.dropdown { position: relative; }
+.dropdown-content {
+    position: absolute; right: 0; top: 45px; background: rgba(44, 44, 46, 0.98);
+    backdrop-filter: blur(30px); border-radius: 14px; width: 220px;
+    padding: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    display: none; z-index: 2100; border: 0.5px solid var(--border-subtle);
+}
+.dropdown-content.show { display: block; }
 .menu-item {
     padding: 10px 12px; font-size: 14px; border-radius: 8px; cursor: pointer;
-    display: flex; align-items: center; justify-content: space-between; transition: 0.2s;
+    display: flex; align-items: center; justify-content: space-between; transition: 0.15s;
 }
 .menu-item:hover { background: var(--system-blue); color: #fff; }
-.menu-item span.shortcut { font-size: 11px; opacity: 0.5; font-family: 'JetBrains Mono', monospace; }
+.menu-item span.shortcut { font-size: 10px; opacity: 0.5; font-family: 'JetBrains Mono', monospace; }
 
-/* --- MAIN WORKSPACE --- */
+/* --- MAIN LAYOUT --- */
 main { display: flex; flex: 1; overflow: hidden; }
-.workspace { flex: 1; padding: 2rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.5rem; }
+.workspace { flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.2rem; }
 .v-viewport { 
     background: #000; border-radius: 20px; overflow: hidden; aspect-ratio: 16/9; 
-    position: relative; box-shadow: 0 40px 100px rgba(0,0,0,0.7); 
+    position: relative; box-shadow: 0 40px 80px rgba(0,0,0,0.7); 
 }
-#yt-frame, #drive-frame, #vimeo-frame, video#dv { width: 100%; height: 100%; position: absolute; border: none; }
+#yt-frame, #drive-frame, video#dv { width: 100%; height: 100%; position: absolute; border: none; }
 
-.tc-live { font-family: 'JetBrains Mono', monospace; font-size: 3.5rem; font-weight: 600; letter-spacing: -4px; text-align: center; }
+.tc-big { font-family: 'JetBrains Mono', monospace; font-size: 3.5rem; font-weight: 600; letter-spacing: -4px; text-align: center; color: var(--label-primary); }
 
 /* --- SIDEBAR --- */
-.sidebar { width: 440px; background: var(--system-secondary-bg); border-left: 0.5px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
-.sidebar-header { padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
-.sidebar-header h2 { font-size: 20px; font-weight: 700; }
+.sidebar { width: 440px; background: var(--system-secondary-bg); border-left: 0.5px solid var(--border-subtle); display: flex; flex-direction: column; }
+.editor-area { padding: 1.5rem; border-bottom: 0.5px solid var(--border-subtle); }
 
-.editor-area { padding: 0 1.5rem 1.5rem; }
-.pill-group { display: flex; gap: 8px; margin-bottom: 1.2rem; }
+.pill-group { display: flex; gap: 8px; margin-bottom: 1rem; }
 .pill { 
-    flex: 1; background: var(--system-tertiary-bg); padding: 12px; border-radius: 14px; 
-    text-align: center; cursor: pointer; transition: 0.3s; border: 1.5px solid transparent;
+    flex: 1; background: var(--system-tertiary-bg); padding: 10px; border-radius: 12px; 
+    text-align: center; cursor: pointer; border: 1.5px solid transparent; transition: 0.2s;
 }
 .pill.active { border-color: var(--system-blue); background: rgba(10, 132, 255, 0.1); }
-.pill .val { font-size: 18px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+.pill .val { font-size: 17px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
 
 textarea { 
     width: 100%; background: var(--system-tertiary-bg); border: none; 
-    color: #fff; padding: 14px; border-radius: 14px; font-size: 15px;
-    resize: none; outline: none; margin-bottom: 1rem; line-height: 1.5;
+    color: #fff; padding: 12px; border-radius: 12px; font-size: 14px;
+    resize: none; outline: none; margin-bottom: 8px; line-height: 1.5; font-family: inherit;
 }
+.link-box { font-size: 12px; opacity: 0.7; color: var(--system-blue); }
 
-/* --- FEEDBACK LIST --- */
-.cell-list { flex: 1; overflow-y: auto; padding: 0 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 0.8rem; }
-.fb-card { background: var(--system-tertiary-bg); border-radius: 18px; padding: 16px; position: relative; transition: 0.3s; }
-.fb-card.done { opacity: 0.4; filter: saturate(0); }
-.card-time { background: var(--system-blue); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-block; margin-bottom: 8px; }
-.card-actions { position: absolute; top: 16px; right: 16px; display: flex; gap: 12px; opacity: 0; transition: 0.2s; }
-.fb-card:hover .card-actions { opacity: 1; }
+.img-preview { 
+    background: rgba(255,255,255,0.03); border-radius: 12px; padding: 10px; 
+    text-align: center; cursor: pointer; margin-bottom: 12px; font-size: 11px; color: var(--label-secondary);
+}
+.img-preview img { max-width: 100%; border-radius: 8px; display: none; margin-top: 8px; }
 
-/* --- MISC --- */
-.btn-round { width: 40px; height: 40px; border-radius: 50%; background: var(--system-tertiary-bg); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-.btn-round:hover { transform: scale(1.1); background: var(--system-blue); }
+/* --- LIST --- */
+.cell-list { flex: 1; overflow-y: auto; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem; }
+.fb-card { background: var(--system-tertiary-bg); border-radius: 16px; padding: 14px; position: relative; }
+.fb-card.done { opacity: 0.3; filter: saturate(0.2); }
+.fb-badge { background: var(--system-blue); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-block; margin-bottom: 8px; }
+.fb-links { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.link-pill { font-size: 10px; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; color: var(--label-secondary); text-decoration: none; }
 
-.toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: #fff; color: #000; padding: 10px 24px; border-radius: 100px; font-weight: 600; opacity: 0; transition: 0.4s; z-index: 3000; }
-.toast.show { opacity: 1; top: 95px; }
-
-@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #fff; color: #000; padding: 10px 24px; border-radius: 100px; font-weight: 600; opacity: 0; transition: 0.3s; z-index: 3000; }
+.toast.show { opacity: 1; top: 40px; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
     ANTIGRAVITY
   </div>
   
   <div class="url-section" id="urlSection">
-    <input type="text" id="urlInput" class="url-input" placeholder="Dán link Video (YouTube/Drive/Vimeo)...">
-    <button class="btn-round" onclick="loadVideo()" title="Nạp video">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 7l5 5-5 5M13 7l5 5-5 5"/></svg>
+    <input type="text" id="urlInput" class="url-input" placeholder="Dán link Video...">
+    <button class="btn-round" onclick="loadVideo()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 4v7a3 3 0 0 1-3 3H4M4 14l-4-4 4-4"/></svg>
     </button>
   </div>
 
-  <div class="more-container">
-    <button class="btn-round" onclick="toggleMenu()" title="Menu chức năng">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+  <div class="header-actions">
+    <button class="btn-export-main" onclick="toggleMenu('exportMenu')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Export
     </button>
-    <div class="dropdown-menu" id="mainMenu">
-        <div class="menu-group">
-            <div class="menu-label">Dữ liệu dự án</div>
+    
+    <div class="dropdown">
+        <button class="btn-round" onclick="toggleMenu('moreMenu')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </button>
+        <div class="dropdown-content" id="moreMenu">
             <div class="menu-item" onclick="exportJSON()">💾 Save Session (JSON)</div>
             <div class="menu-item" onclick="document.getElementById('importIn').click()">📂 Open Session</div>
-            <div class="menu-item" onclick="exportPDF()">📄 Xuất PDF Report</div>
-            <div class="menu-item" onclick="exportXLSX()">📊 Xuất Excel</div>
-        </div>
-        <div class="menu-group">
-            <div class="menu-label">Phím tắt (Shortcuts)</div>
-            <div class="menu-item">Play / Pause <span class="shortcut">Space</span></div>
+            <div class="menu-item" style="border-top:0.5px solid var(--border-subtle); color:var(--label-secondary); pointer-events:none;">SHORCUTS:</div>
             <div class="menu-item">Tới/Lùi 1s <span class="shortcut">← / →</span></div>
             <div class="menu-item">Tới/Lùi 5s <span class="shortcut">↑ / ↓</span></div>
-            <div class="menu-item">Lưu Note <span class="shortcut">Ctrl+↵</span></div>
+            <div class="menu-item">Play/Pause <span class="shortcut">Space</span></div>
+            <div class="menu-item">Lưu Cell <span class="shortcut">Ctrl+↵</span></div>
+        </div>
+        <div class="dropdown-content" id="exportMenu" style="right: auto; left: -100px;">
+            <div class="menu-item" onclick="exportPDF()">📄 Export PDF Report</div>
+            <div class="menu-item" onclick="exportXLSX()">📊 Export Excel (.xlsx)</div>
         </div>
     </div>
   </div>
@@ -157,12 +171,10 @@ textarea {
 <main>
   <section class="workspace">
     <div class="v-viewport" id="vBox">
-      <div id="yt-frame"></div><iframe id="drive-frame" style="display:none"></iframe><div id="vimeo-frame"></div><video id="dv" controls></video>
-      <div id="v-msg" style="padding: 20%; text-align: center; color: var(--label-secondary);">Vui lòng nạp link để bắt đầu review.</div>
+      <div id="yt-frame"></div><iframe id="drive-frame" style="display:none"></iframe><video id="dv" controls></video>
+      <div id="v-msg" style="padding: 20%; text-align: center; color: var(--label-secondary);">Vui lòng nạp link video.</div>
     </div>
-    <div class="status-bar">
-      <div class="tc-live" id="tcClock">00:00:00</div>
-    </div>
+    <div class="tc-big" id="tcClock">00:00:00</div>
   </section>
 
   <aside class="sidebar">
@@ -173,28 +185,20 @@ textarea {
 
     <div class="editor-area">
       <div class="pill-group">
-        <div class="pill active" id="boxA" onclick="setSync('A')">
-          <div class="val" id="valA">00:00:00</div>
-        </div>
-        <div class="pill" id="boxB" onclick="setSync('B')">
-          <div class="val" id="valB">--:--:--</div>
-          <span style="position:absolute; top:4px; right:8px; opacity:0.3; font-size:10px" onclick="clearB(event)">✕</span>
-        </div>
+        <div class="pill active" id="boxA" onclick="setSync('A')"><div class="val" id="valA">00:00:00</div></div>
+        <div class="pill" id="boxB" onclick="setSync('B')"><div class="val" id="valB">--:--:--</div></div>
       </div>
 
-      <textarea id="noteText" placeholder="Nhập nhận xét của bạn..." rows="5" onfocus="setSync(null)"></textarea>
+      <textarea id="noteText" placeholder="Nhập nhận xét của bạn..." rows="3" onfocus="setSync(null)"></textarea>
       
-      <div style="display:flex; gap:10px;">
-          <button class="btn-round" onclick="document.getElementById('fileIn').click()" style="width:100%; border-radius:14px; font-size:13px; font-weight:600; gap:8px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-              Ảnh minh họa
-          </button>
-          <button class="btn-round" onclick="saveFb()" style="width:100%; border-radius:14px; background:var(--system-blue); font-size:13px; font-weight:600;">
-              Lưu Cell
-          </button>
+      <textarea id="refLinks" class="link-box" placeholder="Dán các link tham chiếu (Figma, Notion, Drive...)" rows="2"></textarea>
+      
+      <div style="display:flex; gap:8px;">
+          <button class="btn-round" onclick="document.getElementById('fileIn').click()" style="width:auto; border-radius:12px; flex:1; font-size:12px;">🖼️ Ảnh</button>
+          <button class="btn-round" onclick="saveFb()" style="width:auto; border-radius:12px; flex:2; background:var(--system-blue); font-size:13px; font-weight:700;">Lưu Cell</button>
       </div>
       <input type="file" id="fileIn" hidden onchange="handleFile(event)">
-      <img id="pImg" style="max-width:100%; border-radius:12px; display:none; margin-top:15px; border:0.5px solid rgba(255,255,255,0.1)"/>
+      <img id="pImg" style="max-width:100%; border-radius:10px; display:none; margin-top:10px; border:0.5px solid var(--border-subtle)"/>
     </div>
 
     <div class="cell-list" id="fbList"></div>
@@ -204,19 +208,21 @@ textarea {
 <div class="toast" id="toast"></div>
 
 <script>
-let feedbacks = [], videoType = '', videoId = '', videoUrl = '', syncTarget = 'A', currentImg = null;
-let ytPlayer = null, vimeoPlayer = null, vimeoTime = 0;
+let feedbacks = [], videoType = '', videoId = '', videoUrl = '', syncTarget = 'A', currentImg = null, ytPlayer = null;
 
 function toast(m){ 
     const t=document.getElementById('toast'); t.innerText=m; t.classList.add('show');
     setTimeout(()=>t.classList.remove('show'), 2000);
 }
 
-function toggleMenu() { document.getElementById('mainMenu').classList.toggle('show'); }
-
 function fmt(s){
     s=Math.floor(s||0);
     return [Math.floor(s/3600), Math.floor((s%3600)/60), s%60].map(v=>String(v).padStart(2,'0')).join(':');
+}
+
+function toggleMenu(id) { 
+    document.querySelectorAll('.dropdown-content').forEach(el => { if(el.id !== id) el.classList.remove('show'); });
+    document.getElementById(id).classList.toggle('show'); 
 }
 
 function setSync(t){
@@ -225,32 +231,21 @@ function setSync(t){
     document.getElementById('boxB').classList.toggle('active', t==='B');
 }
 
-function clearB(e){
-    if(e) e.stopPropagation();
-    document.getElementById('valB').innerText = '--:--:--';
-    setSync('A');
-}
-
-/* --- DRIVE LINK FIXER --- */
+/* --- DRIVE LINK FIX --- */
 function fixDriveUrl(url) {
     const match = url.match(/\/file\/d\/([^\/]+)\//) || url.match(/[?&]id=([^&]+)/);
-    if (match && match[1]) {
-        return `https://drive.google.com/file/d/${match[1]}/preview`;
-    }
-    return url;
+    return match ? `https://drive.google.com/file/d/${match[1]}/preview` : url;
 }
 
 function getTime(){
     if(videoType === 'native') return document.getElementById('dv').currentTime;
     if(videoType === 'yt' && ytPlayer?.getCurrentTime) return ytPlayer.getCurrentTime();
-    if(videoType === 'vimeo') return vimeoTime;
     return 0;
 }
 
 function setTime(sec){
     if(videoType === 'native') document.getElementById('dv').currentTime = sec;
     if(videoType === 'yt' && ytPlayer) ytPlayer.seekTo(sec, true);
-    if(videoType === 'vimeo' && vimeoPlayer) vimeoPlayer.setCurrentTime(sec);
 }
 
 setInterval(() => {
@@ -261,75 +256,66 @@ setInterval(() => {
 }, 200);
 
 function loadVideo(){
-    const urlInput = document.getElementById('urlInput').value.trim();
-    if(!urlInput) return;
-    videoUrl = urlInput;
+    const url = document.getElementById('urlInput').value.trim();
+    if(!url) return;
+    videoUrl = url;
     document.getElementById('urlSection').classList.add('active');
-    
     document.getElementById('v-msg').style.display='none';
     document.getElementById('dv').style.display='none';
     document.getElementById('yt-frame').style.display='none';
     document.getElementById('drive-frame').style.display='none';
-    document.getElementById('vimeo-frame').style.display='none';
 
-    if(urlInput.includes('youtube.com') || urlInput.includes('youtu.be')){
+    if(url.includes('youtube.com') || url.includes('youtu.be')){
         videoType = 'yt';
-        videoId = urlInput.includes('v=') ? urlInput.split('v=')[1].split('&')[0] : urlInput.split('/').pop();
+        const id = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
         document.getElementById('yt-frame').style.display='block';
         document.getElementById('yt-frame').innerHTML = '<div id="player"></div>';
-        ytPlayer = new YT.Player('player', { height: '100%', width: '100%', videoId: videoId, playerVars: { 'origin': window.location.origin },
-            events: { 'onReady': (e) => { document.getElementById('projTitle').innerText = e.target.getVideoData().title; autoLoad(); }}
-        });
-    } else if(urlInput.includes('drive.google.com')) {
+        ytPlayer = new YT.Player('player', { height: '100%', width: '100%', videoId: id, events: {
+            'onReady': (e) => { document.getElementById('projTitle').innerText = e.target.getVideoData().title; autoLoad(); }
+        }});
+    } else if(url.includes('drive.google.com')) {
         videoType = 'drive';
         document.getElementById('drive-frame').style.display='block';
-        document.getElementById('drive-frame').src = fixDriveUrl(urlInput);
+        document.getElementById('drive-frame').src = fixDriveUrl(url);
         document.getElementById('projTitle').innerText = "Google Drive Video";
         autoLoad();
-    } else if(urlInput.includes('vimeo')) {
-        videoType = 'vimeo';
-        const id = urlInput.split('/').pop();
-        document.getElementById('vimeo-frame').style.display='block';
-        document.getElementById('vimeo-frame').innerHTML = `<iframe id="v-frame" src="https://player.vimeo.com/video/${id}?api=1" width="100%" height="100%" frameborder="0"></iframe>`;
-        vimeoPlayer = new Vimeo.Player(document.getElementById('v-frame'));
-        vimeoPlayer.on('timeupdate', (data) => { vimeoTime = data.seconds; });
-        vimeoPlayer.getVideoTitle().then(t => { document.getElementById('projTitle').innerText = t; autoLoad(); });
     } else {
         videoType = 'native';
-        const v = document.getElementById('dv'); v.style.display='block'; v.src = urlInput;
+        const v = document.getElementById('dv'); v.style.display='block'; v.src = url;
         document.getElementById('projTitle').innerText = "Local Video Source";
         autoLoad();
     }
 }
 
 function autoLoad(){
-    const saved = localStorage.getItem('ag_ios_v5_' + videoUrl);
+    const saved = localStorage.getItem('ag_ios_v7_' + videoUrl);
     feedbacks = saved ? JSON.parse(saved).feedbacks : [];
     render();
 }
 
 function saveFb(){
     const note = document.getElementById('noteText').value.trim();
+    const rawLinks = document.getElementById('refLinks').value.trim();
     if(!note && !currentImg) return;
+    
     let tA = document.getElementById('valA').innerText, tB = document.getElementById('valB').innerText;
     const secA = tA.split(':').reduce((acc, t) => (60 * acc) + +t, 0);
     const secB = tB === '--:--:--' ? null : tB.split(':').reduce((acc, t) => (60 * acc) + +t, 0);
     if(secB !== null && secB < secA) [tA, tB] = [tB, tA];
 
-    feedbacks.push({ id: Date.now(), tc: (tB === '--:--:--') ? tA : `${tA} - ${tB}`, sec: secA, note, img: currentImg, done: false });
+    // Regex lọc nhiều links cùng lúc
+    const links = rawLinks.match(/\bhttps?:\/\/\S+/gi) || [];
+
+    feedbacks.push({ id: Date.now(), tc: (tB === '--:--:--') ? tA : `${tA} - ${tB}`, sec: secA, note, img: currentImg, links, done: false });
     render(); resetEditor();
-    localStorage.setItem('ag_ios_v5_' + videoUrl, JSON.stringify({ feedbacks }));
-    toast("✓ Cell Recorded");
+    localStorage.setItem('ag_ios_v7_' + videoUrl, JSON.stringify({ feedbacks }));
+    toast("✓ Cell Saved");
 }
 
 function resetEditor(){
-    document.getElementById('noteText').value = ''; document.getElementById('valB').innerText = '--:--:--';
-    document.getElementById('pImg').style.display = 'none'; currentImg = null; setSync('A');
-}
-
-function toggleDone(id){
-    const fb = feedbacks.find(f => f.id === id); if(fb) fb.done = !fb.done;
-    render(); localStorage.setItem('ag_ios_v5_' + videoUrl, JSON.stringify({ feedbacks }));
+    document.getElementById('noteText').value = ''; document.getElementById('refLinks').value = '';
+    document.getElementById('valB').innerText = '--:--:--'; document.getElementById('pImg').style.display = 'none';
+    currentImg = null; setSync('A');
 }
 
 function render(){
@@ -338,17 +324,21 @@ function render(){
     document.getElementById('progress-text').innerText = `${doneCount}/${feedbacks.length} DONE`;
     list.innerHTML = feedbacks.sort((a,b)=>a.sec - b.sec).map(f => `
         <div class="fb-card ${f.done ? 'done' : ''}">
-            <div class="card-time" onclick="setTime(${f.sec})">${f.tc}</div>
-            <div class="card-actions">
-                <div class="icon-btn" onclick="toggleDone(${f.id})" style="color:var(--system-green)">●</div>
-                <div class="icon-btn" onclick="delFb(${f.id})" style="color:var(--system-red)">✕</div>
-            </div>
+            <div class="fb-badge" onclick="setTime(${f.sec})">${f.tc}</div>
             <div style="font-size: 14px; white-space: pre-wrap;">${f.note}</div>
-            ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:10px; border-radius:12px; border:0.5px solid rgba(255,255,255,0.1)">` : ''}
+            ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:10px; border-radius:12px; border:0.5px solid var(--border-subtle)">` : ''}
+            <div class="fb-links">
+                ${f.links ? f.links.map(l => `<a href="${l}" target="_blank" class="link-pill">🔗 ${l.split('/')[2]}</a>`).join('') : ''}
+            </div>
+            <div style="position:absolute; top:12px; right:12px; display:flex; gap:10px;">
+                <div onclick="toggleDone(${f.id})" style="color:var(--system-green); cursor:pointer;">●</div>
+                <div onclick="delFb(${f.id})" style="color:var(--system-red); cursor:pointer;">✕</div>
+            </div>
         </div>`).join('');
 }
 
-function delFb(id){ feedbacks = feedbacks.filter(f => f.id !== id); render(); localStorage.setItem('ag_ios_v5_' + videoUrl, JSON.stringify({ feedbacks })); }
+function toggleDone(id){ const f = feedbacks.find(x => x.id === id); f.done = !f.done; render(); localStorage.setItem('ag_ios_v7_' + videoUrl, JSON.stringify({ feedbacks })); }
+function delFb(id){ feedbacks = feedbacks.filter(f => f.id !== id); render(); localStorage.setItem('ag_ios_v7_' + videoUrl, JSON.stringify({ feedbacks })); }
 
 /* --- EXPORTS --- */
 function exportJSON(){
@@ -364,7 +354,7 @@ function importJSON(e){
 }
 
 function exportXLSX(){
-    const ws = XLSX.utils.json_to_sheet(feedbacks.map(f => ({ Time: f.tc, Note: f.note, Status: f.done ? "Fixed" : "Pending" })));
+    const ws = XLSX.utils.json_to_sheet(feedbacks.map(f => ({ Time: f.tc, Note: f.note, Links: (f.links || []).join(', ') })));
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Feedback");
     XLSX.writeFile(wb, "Feedback.xlsx");
 }
@@ -378,18 +368,13 @@ function exportPDF(){
 /* --- SHORTCUTS --- */
 document.addEventListener('keydown', (e) => {
     const typing = document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT';
-    if(e.key === 'Enter' && e.ctrlKey) saveFb();
     if(!typing) {
-        if(e.code === 'Space') { 
-            e.preventDefault(); 
-            if(videoType==='native') document.getElementById('dv').paused ? document.getElementById('dv').play() : document.getElementById('dv').pause(); 
-            if(videoType==='yt') ytPlayer.getPlayerState()===1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo(); 
-        }
+        if(e.code === 'Space') { e.preventDefault(); if(videoType==='native') document.getElementById('dv').paused ? document.getElementById('dv').play() : document.getElementById('dv').pause(); if(videoType==='yt') ytPlayer.getPlayerState()===1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo(); }
         if(e.key === 'ArrowLeft') { e.preventDefault(); setTime(getTime() - 1); }
         if(e.key === 'ArrowRight') { e.preventDefault(); setTime(getTime() + 1); }
         if(e.key === 'ArrowUp') { e.preventDefault(); setTime(getTime() + 5); }
         if(e.key === 'ArrowDown') { e.preventDefault(); setTime(getTime() - 5); }
-        if(e.key === 'Delete' || e.key === 'Backspace') clearB();
+        if(e.key === 'Delete' || e.key === 'Backspace') { document.getElementById('valB').innerText = '--:--:--'; setSync('A'); }
     }
 });
 
@@ -408,7 +393,7 @@ function handleFile(e){
     reader.readAsDataURL(e.target.files[0]);
 }
 
-window.onclick = function(event) { if (!event.target.closest('.more-container')) { document.getElementById('mainMenu').classList.remove('show'); } }
+window.onclick = function(event) { if (!event.target.closest('.dropdown') && !event.target.closest('.btn-export-main')) { document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show')); } }
 
 var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
 var firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
