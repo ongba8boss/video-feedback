@@ -1,118 +1,219 @@
+Chào Anh Tài, triết lý **Notebook LLM** (giống giao diện Claude, ChatGPT hoặc Google Colab) cực kỳ hợp với công việc review video: nó biến mỗi nhận xét thành một "Cell" (ô dữ liệu) sạch sẽ, tập trung vào luồng suy nghĩ và nội dung.
+
+Mình đã thiết kế lại toàn bộ giao diện theo phong cách **Minimalist Notebook**: 
+* **Layout Card-based:** Các thành phần được tách bạch trong các khung tối giản, bo góc mềm mại.
+* **Sidebar Navigation:** Phía bên phải là luồng feedback giống như một cuộc hội thoại LLM.
+* **Typography:** Sử dụng font Inter và mã hóa thời gian dạng Tabular (cố định độ rộng) để không bị nhảy chữ.
+* **Smarter but Simple:** Giữ nguyên phím tắt Editor, bộ đôi Export và cơ chế dán ảnh thần tốc.
+
+Dưới đây là bản "Notebook Edition" hoàn chỉnh cho hệ thống Antigravity của bạn:
+
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Antigravity Feedback - Pure Edition</title>
+<title>Antigravity | Video Notebook</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
 <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://player.vimeo.com/api/player.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 :root {
-  --bg-deep: #050505;
-  --accent-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-  --accent-solid: #8b5cf6;
-  --glass: rgba(255, 255, 255, 0.03);
-  --border: rgba(255, 255, 255, 0.1);
-  --text-sec: #a1a1aa;
+  --bg: #0d1117;
+  --card: #161b22;
+  --border: #30363d;
+  --accent: #58a6ff;
+  --accent-soft: rgba(88, 166, 255, 0.1);
+  --text: #c9d1d9;
+  --text-dim: #8b949e;
+  --white: #ffffff;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', sans-serif; background: var(--bg-deep); color: #fff; line-height: 1.5; overflow-x: hidden; }
+body { 
+  font-family: 'Inter', sans-serif; 
+  background: var(--bg); 
+  color: var(--text); 
+  height: 100vh; 
+  overflow: hidden; 
+  display: flex; 
+  flex-direction: column;
+}
 
-.app { max-width: 1600px; margin: 0 auto; padding: 2rem; display: grid; grid-template-columns: 1fr 420px; gap: 2rem; }
-@media(max-width: 1100px) { .app { grid-template-columns: 1fr; } }
+/* Header - Notebook Navigation */
+header {
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+  background: var(--card);
+}
+.logo { font-weight: 800; font-size: 1.2rem; color: var(--white); }
+.logo span { color: var(--accent); }
 
-.bento { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; overflow: hidden; }
+.url-bar { display: flex; gap: 8px; flex: 1; max-width: 600px; margin: 0 2rem; }
+.url-bar input { 
+  background: var(--bg); border: 1px solid var(--border); 
+  color: var(--white); padding: 8px 12px; border-radius: 6px; 
+  width: 100%; font-size: 13px; outline: none;
+}
+.url-bar input:focus { border-color: var(--accent); }
 
-.v-container { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; border-radius: 24px; overflow: hidden; }
-#yt-frame, video#dv { width: 100%; height: 100%; position: absolute; top:0; left:0; display: none; }
+/* Main Layout */
+main { display: flex; flex: 1; overflow: hidden; }
 
-.tc-bar { margin-top: 1rem; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; }
-.tc-clock { font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -2px; }
+/* Left - Workspace */
+.workspace { flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.5rem; }
+.v-card { background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16/9; position: relative; border: 1px solid var(--border); }
+#yt-frame, video#dv { width: 100%; height: 100%; position: absolute; top:0; left:0; }
 
-.panel { display: flex; flex-direction: column; gap: 1.5rem; }
-input, textarea { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; padding: 14px; border-radius: 12px; outline: none; transition: 0.2s; }
-input:focus, textarea:focus { border-color: var(--accent-solid); }
+.status-bar { display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 1rem 1.5rem; border-radius: 12px; border: 1px solid var(--border); }
+.tc-clock { font-family: 'JetBrains Mono', monospace; font-size: 2.5rem; color: var(--white); font-weight: 500; }
 
-.time-row { display: flex; gap: 10px; margin-bottom: 12px; }
-.tc-box { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 12px; text-align: center; cursor: pointer; position: relative; }
-.tc-box.active { border-color: var(--accent-solid); background: rgba(139, 92, 246, 0.1); }
-.tc-label { display: block; font-size: 10px; font-weight: 800; color: var(--text-sec); margin-bottom: 4px; text-transform: uppercase; }
-.tc-val { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.btn-clear-b { position: absolute; top: 8px; right: 8px; font-size: 10px; opacity: 0.5; cursor: pointer; }
+.guide-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.guide-item { font-size: 12px; color: var(--text-dim); }
+.guide-item kbd { background: #21262d; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); color: var(--white); font-family: inherit; }
 
-.upload-zone { margin-top: 10px; border: 1px dashed var(--border); border-radius: 12px; min-height: 50px; text-align: center; padding: 10px; cursor: pointer; }
-.upload-zone img { max-width: 100%; border-radius: 8px; display: none; margin: 10px auto; }
+/* Right - Sidebar Notebook */
+.sidebar { width: 420px; border-left: 1px solid var(--border); background: var(--card); display: flex; flex-direction: column; }
+.sidebar-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.sidebar-header h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
 
-.btn { padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.btn-primary { background: var(--accent-grad); color: #fff; width: 100%; }
+.editor-cell { padding: 1.5rem; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2); }
+.time-pill-group { display: flex; gap: 8px; margin-bottom: 1rem; }
+.tc-pill { 
+  flex: 1; background: var(--bg); border: 1px solid var(--border); 
+  padding: 10px; border-radius: 8px; text-align: center; cursor: pointer; transition: 0.2s;
+}
+.tc-pill.active { border-color: var(--accent); background: var(--accent-soft); }
+.tc-pill label { display: block; font-size: 9px; font-weight: 700; color: var(--text-dim); margin-bottom: 2px; }
+.tc-pill .val { font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--white); }
 
-.fb-list { overflow-y: auto; max-height: 500px; padding-right: 5px; }
-.fb-item { padding: 1.5rem; border-bottom: 1px solid var(--border); position: relative; }
-.fb-tc { display: inline-block; padding: 4px 12px; background: var(--accent-solid); border-radius: 100px; font-size: 12px; font-weight: 800; margin-bottom: 10px; cursor: pointer; }
+textarea { 
+  width: 100%; background: var(--bg); border: 1px solid var(--border); 
+  color: var(--white); padding: 12px; border-radius: 8px; 
+  resize: vertical; font-family: inherit; outline: none; margin-bottom: 10px;
+}
+.img-prev-cell { border: 1px dashed var(--border); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; margin-bottom: 10px; position: relative; }
+.img-prev-cell img { max-width: 100%; border-radius: 4px; display: none; margin-top: 5px; }
 
-.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #18181b; padding: 12px 24px; border-radius: 100px; border: 1px solid #3f3f46; opacity: 0; transition: 0.3s; z-index: 10000; }
-.toast.show { opacity: 1; }
+/* Feedback List - Chat Style */
+.notebook-list { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+.fb-cell { position: relative; animation: fadeIn 0.3s ease; }
+.fb-cell-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.fb-badge { background: var(--accent-soft); color: var(--accent); padding: 2px 10px; border-radius: 4px; font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; cursor: pointer; }
+.fb-content { background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.5; position: relative;}
+.fb-content:hover .del-btn { opacity: 1; }
+.del-btn { position: absolute; top: 10px; right: 10px; opacity: 0; cursor: pointer; color: var(--text-dim); font-size: 12px; transition: 0.2s; }
+
+/* Actions */
+.footer-actions { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+.btn { 
+  padding: 8px 16px; border-radius: 6px; border: none; 
+  font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary { background: var(--accent); color: #000; width: 100%; justify-content: center; height: 40px;}
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); flex: 1; }
+.btn-ghost:hover { background: var(--border); }
+
+.toast { position: fixed; bottom: 20px; left: 20px; background: var(--accent); color: #000; padding: 10px 20px; border-radius: 6px; font-weight: 700; opacity: 0; transform: translateY(20px); transition: 0.3s; z-index: 10000; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* PDF Template */
+#pdf-tpl { display:none; padding: 40px; background: #fff; color: #000; }
 </style>
 </head>
 <body>
 
-<div class="app">
-  <div class="video-main">
-    <div class="v-container bento">
-        <div id="v-msg" style="padding: 20%; text-align: center; color: var(--text-sec)">Dán link Video & Load</div>
-        <div id="yt-frame"></div><video id="dv" controls></video>
+<header>
+  <div class="logo">🚀 <span>Antigravity</span> Notebook</div>
+  <div class="url-bar">
+    <input type="text" id="urlInput" placeholder="Dán link Video (YouTube/Drive)...">
+    <button class="btn btn-ghost" onclick="loadVideo()">Load</button>
+  </div>
+  <input type="text" id="reportName" placeholder="Tên báo cáo..." style="background:transparent; border:none; color:var(--text-dim); text-align:right; font-size:12px; width:200px; outline:none">
+</header>
+
+<main>
+  <section class="workspace">
+    <div class="v-card" id="vBox">
+      <div id="yt-frame"></div><video id="dv" controls></video>
+      <div id="v-msg" style="padding: 20%; text-align: center; color: var(--text-dim)">Trình phát video sẽ hiển thị tại đây</div>
     </div>
-    <div class="tc-bar bento">
+
+    <div class="status-bar">
       <div class="tc-clock" id="tcClock">00:00:00</div>
       <div style="text-align: right">
-          <div style="color: var(--accent-solid); font-weight: 800; font-size: 11px;">SYNC LIVE</div>
-          <div style="color: var(--text-sec); font-size: 13px;">Arrows: Control | Space: Toggle</div>
+        <div style="color: var(--accent); font-weight: 800; font-size: 10px; letter-spacing: 2px;">NOTEBOOK SYNC ACTIVE</div>
+        <div style="color: var(--text-dim); font-size: 12px;">Smarter but Simple Workflow</div>
       </div>
     </div>
-  </div>
 
-  <div class="panel">
-    <div class="bento" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; gap: 8px;">
-            <input type="text" id="urlInput" placeholder="Dán link YouTube/Drive...">
-            <button class="btn" style="background: #333; padding: 0 20px;" onclick="loadVideo()">Load</button>
-        </div>
-        <input type="text" id="reportName" placeholder="Tên báo cáo..." style="font-weight:700">
+    <div class="guide-grid">
+      <div class="guide-item"><kbd>Space</kbd> Play/Pause</div>
+      <div class="guide-item"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> Lưu Cell</div>
+      <div class="guide-item"><kbd>←</kbd> <kbd>→</kbd> Từng Frame</div>
+      <div class="guide-item"><kbd>↑</kbd> <kbd>↓</kbd> +/- 5 giây</div>
+      <div class="guide-item"><kbd>Del</kbd> Xóa mốc B</div>
+      <div class="guide-item"><kbd>Ctrl</kbd> + <kbd>V</kbd> Dán ảnh</div>
+    </div>
+  </section>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>Editor</h2>
+      <span id="fbCount" style="font-size: 11px; font-weight: 700;">0 NODES</span>
     </div>
 
-    <div class="fb-editor bento">
-      <div style="padding: 1.5rem;">
-        <div class="time-row">
-          <div class="tc-box active" id="boxA" onclick="setSync('A')">
-            <span class="tc-label">Từ (A)</span>
-            <div class="tc-val" id="valA">00:00:00</div>
-          </div>
-          <div class="tc-box" id="boxB" onclick="setSync('B')">
-            <span class="tc-label">Đến (B)</span>
-            <div class="tc-val" id="valB">--:--:--</div>
-            <span class="btn-clear-b" onclick="clearB(event)">✕</span>
-          </div>
+    <div class="editor-cell">
+      <div class="time-pill-group">
+        <div class="tc-pill active" id="boxA" onclick="setSync('A')">
+          <label>START (A)</label>
+          <div class="val" id="valA">00:00:00</div>
         </div>
-        <textarea id="noteText" placeholder="Nhận xét..." rows="4" onfocus="setSync(null)"></textarea>
-        <div class="upload-zone" onclick="document.getElementById('fileIn').click()">
-            <span id="hint" style="font-size: 11px; opacity: 0.5;">Dán ảnh (Ctrl+V) hoặc click Up ảnh</span>
-            <img id="pImg"/>
+        <div class="tc-pill" id="boxB" onclick="setSync('B')">
+          <label>END (B)</label>
+          <div class="val" id="valB">--:--:--</div>
+          <span style="position:absolute; top:4px; right:8px; font-size:10px; opacity:0.3" onclick="clearB(event)">✕</span>
         </div>
-        <input type="file" id="fileIn" hidden onchange="handleFile(event)">
-        <button class="btn btn-primary" style="margin-top:1rem" onclick="saveFb()">Lưu Feedback (Ctrl + Enter)</button>
       </div>
-      <div class="fb-list" id="fbList"></div>
+
+      <textarea id="noteText" placeholder="Nhập nhận xét của bạn vào cell này..." rows="4" onfocus="setSync(null)"></textarea>
+      
+      <div class="img-prev-cell" onclick="document.getElementById('fileIn').click()">
+        <span id="hint" style="font-size: 11px; opacity: 0.5;">Paste ảnh hoặc Click để Upload</span>
+        <img id="pImg"/>
+      </div>
+      <input type="file" id="fileIn" hidden onchange="handleFile(event)">
+
+      <button class="btn btn-primary" onclick="saveFb()">Lưu nhận xét (Cell)</button>
     </div>
-    <button class="btn" style="background: var(--glass)" onclick="exportPDF()">Export PDF Report</button>
-  </div>
+
+    <div class="notebook-list" id="fbList">
+      <div style="text-align: center; color: var(--text-dim); margin-top: 2rem; font-size: 13px;">Chưa có dữ liệu notebook.</div>
+    </div>
+
+    <div class="footer-actions">
+      <button class="btn btn-ghost" onclick="exportXLSX()">Excel</button>
+      <button class="btn btn-ghost" onclick="exportPDF()">PDF Report</button>
+    </div>
+  </aside>
+</main>
+
+<div id="pdf-tpl">
+    <h1 id="pdf-t-out"></h1>
+    <p id="pdf-m-out"></p>
+    <div id="pdf-b"></div>
 </div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -151,7 +252,6 @@ function setTime(sec){
     if(videoType === 'yt' && ytPlayer) ytPlayer.seekTo(sec, true);
 }
 
-// Global Sync
 setInterval(() => {
     const now = getTime();
     document.getElementById('tcClock').innerText = fmt(now);
@@ -178,11 +278,10 @@ function loadVideo(){
     } else {
         videoType = 'native';
         const v = document.getElementById('dv'); v.style.display='block'; v.src = url;
-        document.getElementById('reportName').value = "Video Local Report";
+        document.getElementById('reportName').value = "Local Video Notebook";
     }
-    // Auto-load from local storage
-    const saved = localStorage.getItem('antigravity_' + url);
-    if(saved) { feedbacks = JSON.parse(saved); render(); toast("🔄 Đã nạp lại session cũ"); }
+    const saved = localStorage.getItem('ag_nb_' + url);
+    if(saved) { feedbacks = JSON.parse(saved); render(); toast("🔄 Restored session"); }
 }
 
 function saveFb(){
@@ -195,8 +294,8 @@ function saveFb(){
 
     feedbacks.push({ id: Date.now(), tc: (tB === '--:--:--') ? tA : `${tA} - ${tB}`, sec: secA, note, img: currentImg });
     render(); resetEditor();
-    localStorage.setItem('antigravity_' + videoUrl, JSON.stringify(feedbacks));
-    toast("💾 Auto-saved");
+    localStorage.setItem('ag_nb_' + videoUrl, JSON.stringify(feedbacks));
+    toast("💾 Saved Cell");
 }
 
 function resetEditor(){
@@ -208,37 +307,60 @@ function resetEditor(){
 }
 
 function render(){
-    document.getElementById('fbList').innerHTML = feedbacks.sort((a,b)=>a.sec - b.sec).map(f => `
-        <div class="fb-item">
-            <div class="fb-tc" onclick="setTime(${f.sec})">▶ ${f.tc}</div>
-            <div style="font-size:14px">${f.note}</div>
-            ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:10px; border-radius:8px">` : ''}
-            <div style="position:absolute; top:1.5rem; right:1rem; opacity:0.1; cursor:pointer" onclick="delFb(${f.id})">✕</div>
+    const list = document.getElementById('fbList');
+    document.getElementById('fbCount').innerText = feedbacks.length + ' NODES';
+    if(feedbacks.length === 0) { list.innerHTML = '<div style="text-align: center; color: var(--text-dim); margin-top: 2rem; font-size: 13px;">Chưa có dữ liệu notebook.</div>'; return; }
+    
+    list.innerHTML = feedbacks.sort((a,b)=>a.sec - b.sec).map(f => `
+        <div class="fb-cell">
+            <div class="fb-cell-meta">
+                <div class="fb-badge" onclick="setTime(${f.sec})">${f.tc}</div>
+            </div>
+            <div class="fb-content">
+                ${f.note}
+                ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:10px; border-radius:6px; border:1px solid var(--border)">` : ''}
+                <div class="del-btn" onclick="delFb(${f.id})">Delete</div>
+            </div>
         </div>`).join('');
 }
 
 function delFb(id){ 
     feedbacks = feedbacks.filter(f => f.id !== id); 
     render(); 
-    localStorage.setItem('antigravity_' + videoUrl, JSON.stringify(feedbacks));
+    localStorage.setItem('ag_nb_' + videoUrl, JSON.stringify(feedbacks));
 }
 
-// --- SHORTCUTS LOGIC ---
+function exportXLSX(){
+    const rows = feedbacks.map(f => ({ Time: f.tc, Note: f.note }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Notebook");
+    XLSX.writeFile(wb, (document.getElementById('reportName').value || "Notebook") + ".xlsx");
+}
+
+function exportPDF(){
+    const title = document.getElementById('reportName').value || "Video Notebook Report";
+    document.getElementById('pdf-t-out').innerText = title;
+    document.getElementById('pdf-m-out').innerText = `Date: ${new Date().toLocaleString()} | Nodes: ${feedbacks.length}`;
+    document.getElementById('pdf-b').innerHTML = feedbacks.sort((a,b)=>a.sec-b.sec).map(f => `
+        <div style="margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+            <p style="font-weight:bold; color:#58a6ff;">${f.tc}</p>
+            <p>${f.note}</p>
+            ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:10px;">` : ''}
+        </div>`).join('');
+    const el = document.getElementById('pdf-tpl'); el.style.display = 'block';
+    html2pdf().from(el).set({ margin: 10, filename: title+'.pdf' }).save().then(()=>el.style.display='none');
+}
+
 document.addEventListener('keydown', (e) => {
     const typing = document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT';
-    
     if(e.key === 'Enter' && e.ctrlKey) saveFb();
-
     if(!typing) {
-        if(e.code === 'Space') { 
-            e.preventDefault();
-            if(videoType==='native') { const v=document.getElementById('dv'); v.paused ? v.play() : v.pause(); }
-            if(videoType==='yt' && ytPlayer) { ytPlayer.getPlayerState()===1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo(); }
-        }
-        if(e.key === 'ArrowLeft') { e.preventDefault(); setTime(getTime() - 0.05); } // Frame lùi
-        if(e.key === 'ArrowRight') { e.preventDefault(); setTime(getTime() + 0.05); } // Frame tới
-        if(e.key === 'ArrowUp') { e.preventDefault(); setTime(getTime() + 5); } // 5s tới
-        if(e.key === 'ArrowDown') { e.preventDefault(); setTime(getTime() - 5); } // 5s lùi
+        if(e.code === 'Space') { e.preventDefault(); if(videoType==='native') { const v=document.getElementById('dv'); v.paused ? v.play() : v.pause(); } if(videoType==='yt' && ytPlayer) { ytPlayer.getPlayerState()===1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo(); } }
+        if(e.key === 'ArrowLeft') { e.preventDefault(); setTime(getTime() - 0.05); }
+        if(e.key === 'ArrowRight') { e.preventDefault(); setTime(getTime() + 0.05); }
+        if(e.key === 'ArrowUp') { e.preventDefault(); setTime(getTime() + 5); }
+        if(e.key === 'ArrowDown') { e.preventDefault(); setTime(getTime() - 5); }
         if(e.key === 'Delete' || e.key === 'Backspace') clearB();
     }
 });
@@ -263,3 +385,12 @@ var firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.
 </script>
 </body>
 </html>
+```
+
+### Tại sao Layout Notebook này tốt hơn?
+1.  **Sidebar Tập trung:** Bạn có một cột Feedback riêng biệt bên phải, giống như đang chat với Editor. Khi nhấn vào mốc thời gian, video sẽ "nhảy" đến đoạn đó ngay lập tức.
+2.  **Mã nguồn tinh gọn:** Mình dọn dẹp CSS để đạt độ tương phản cao, chữ trắng trên nền xám đậm giúp bạn xem video lâu mà không bị mỏi mắt.
+3.  **Hệ thống Cell:** Mỗi feedback là một "Cell" riêng biệt, có thể xóa nhanh hoặc xem ảnh đính kèm mà không làm rối các note khác.
+4.  **Header URL:** Thanh dán link được đưa lên Header để giải phóng không gian cho màn hình video to nhất có thể.
+
+Anh Tài dùng thử bản "Notebook" này xem có thấy luồng làm việc mượt mà hơn không nhé!
