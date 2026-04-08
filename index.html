@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Antigravity Feedback Pro - Fixed</title>
+<title>Antigravity Feedback - Pure Edition</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
@@ -20,7 +20,6 @@
   --glass: rgba(255, 255, 255, 0.03);
   --border: rgba(255, 255, 255, 0.1);
   --text-sec: #a1a1aa;
-  --red: #ef4444;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,62 +30,50 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-deep); color: #fff
 
 .bento { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; overflow: hidden; }
 
-/* Video Area */
-.video-main { position: sticky; top: 2rem; }
 .v-container { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; border-radius: 24px; overflow: hidden; }
-#yt-frame, #vimeo-frame, video#dv { width: 100%; height: 100%; position: absolute; top:0; left:0; display: none; }
+#yt-frame, video#dv { width: 100%; height: 100%; position: absolute; top:0; left:0; display: none; }
 
 .tc-bar { margin-top: 1rem; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; }
 .tc-clock { font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -2px; }
 
-/* Right Panel */
 .panel { display: flex; flex-direction: column; gap: 1.5rem; }
-input, textarea { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; padding: 14px; border-radius: 12px; font-family: inherit; outline: none; transition: 0.2s; }
+input, textarea { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; padding: 14px; border-radius: 12px; outline: none; transition: 0.2s; }
 input:focus, textarea:focus { border-color: var(--accent-solid); }
 
 .time-row { display: flex; gap: 10px; margin-bottom: 12px; }
-.tc-box { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 12px; text-align: center; cursor: pointer; position: relative; transition: 0.2s; }
-.tc-box.active { border-color: var(--accent-solid); background: rgba(139, 92, 246, 0.1); transform: scale(1.02); }
-.tc-label { display: block; font-size: 10px; font-weight: 800; color: var(--text-sec); margin-bottom: 4px; text-transform: uppercase; pointer-events: none; }
-.tc-box.active .tc-label { color: var(--accent-solid); }
-.tc-val { font-size: 22px; font-weight: 800; pointer-events: none; font-variant-numeric: tabular-nums; }
-.btn-clear-b { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; cursor: pointer; }
+.tc-box { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 12px; text-align: center; cursor: pointer; position: relative; }
+.tc-box.active { border-color: var(--accent-solid); background: rgba(139, 92, 246, 0.1); }
+.tc-label { display: block; font-size: 10px; font-weight: 800; color: var(--text-sec); margin-bottom: 4px; text-transform: uppercase; }
+.tc-val { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.btn-clear-b { position: absolute; top: 8px; right: 8px; font-size: 10px; opacity: 0.5; cursor: pointer; }
 
-.snip-preview { margin-top: 10px; border: 1px dashed var(--border); border-radius: 12px; min-height: 50px; position: relative; cursor: pointer; text-align: center; padding: 10px; }
-.snip-preview img { max-width: 100%; border-radius: 8px; display: none; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.upload-zone { margin-top: 10px; border: 1px dashed var(--border); border-radius: 12px; min-height: 50px; text-align: center; padding: 10px; cursor: pointer; }
+.upload-zone img { max-width: 100%; border-radius: 8px; display: none; margin: 10px auto; }
 
 .btn { padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-primary { background: var(--accent-grad); color: #fff; width: 100%; }
-.btn-load { background: #333; color: #fff; width: auto; font-size: 13px; padding: 0 20px; }
 
 .fb-list { overflow-y: auto; max-height: 500px; padding-right: 5px; }
 .fb-item { padding: 1.5rem; border-bottom: 1px solid var(--border); position: relative; }
 .fb-tc { display: inline-block; padding: 4px 12px; background: var(--accent-solid); border-radius: 100px; font-size: 12px; font-weight: 800; margin-bottom: 10px; cursor: pointer; }
 
-/* CROP OVERLAY */
-#crop-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; cursor: crosshair; }
-#crop-canvas { max-width: 100%; max-height: 100%; margin: auto; display: block; }
-
-.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #18181b; padding: 12px 24px; border-radius: 100px; border: 1px solid #3f3f46; opacity: 0; transition: 0.3s; z-index: 10000; pointer-events: none; }
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #18181b; padding: 12px 24px; border-radius: 100px; border: 1px solid #3f3f46; opacity: 0; transition: 0.3s; z-index: 10000; }
 .toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
-<div id="crop-overlay"><canvas id="crop-canvas"></canvas></div>
-
 <div class="app">
   <div class="video-main">
-    <div class="v-container bento" id="vBox">
-        <div id="v-msg" style="padding: 20%; text-align: center; color: var(--text-sec)">Nhập link và nhấn Load Video</div>
-        <div id="yt-frame"></div><div id="vimeo-frame"></div><video id="dv" controls></video>
+    <div class="v-container bento">
+        <div id="v-msg" style="padding: 20%; text-align: center; color: var(--text-sec)">Dán link Video & Load</div>
+        <div id="yt-frame"></div><video id="dv" controls></video>
     </div>
-    
     <div class="tc-bar bento">
       <div class="tc-clock" id="tcClock">00:00:00</div>
       <div style="text-align: right">
-          <div style="color: var(--accent-solid); font-weight: 800; font-size: 11px;">SYNC STATUS: LIVE</div>
-          <div style="color: var(--text-sec); font-size: 13px;">Antigravity System</div>
+          <div style="color: var(--accent-solid); font-weight: 800; font-size: 11px;">SYNC LIVE</div>
+          <div style="color: var(--text-sec); font-size: 13px;">Arrows: Control | Space: Toggle</div>
       </div>
     </div>
   </div>
@@ -94,10 +81,10 @@ input:focus, textarea:focus { border-color: var(--accent-solid); }
   <div class="panel">
     <div class="bento" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 10px;">
         <div style="display: flex; gap: 8px;">
-            <input type="text" id="urlInput" placeholder="Dán link Video (YouTube/Drive/Vimeo)...">
-            <button class="btn btn-load" onclick="loadVideo()">Load</button>
+            <input type="text" id="urlInput" placeholder="Dán link YouTube/Drive...">
+            <button class="btn" style="background: #333; padding: 0 20px;" onclick="loadVideo()">Load</button>
         </div>
-        <input type="text" id="reportName" placeholder="Tên báo cáo (Tự động lấy)..." style="border-color: rgba(139, 92, 246, 0.3); font-weight: 700;">
+        <input type="text" id="reportName" placeholder="Tên báo cáo..." style="font-weight:700">
     </div>
 
     <div class="fb-editor bento">
@@ -113,29 +100,23 @@ input:focus, textarea:focus { border-color: var(--accent-solid); }
             <span class="btn-clear-b" onclick="clearB(event)">✕</span>
           </div>
         </div>
-
-        <textarea id="noteText" placeholder="Nội dung nhận xét..." rows="4" onfocus="setSync(null)"></textarea>
-        <textarea id="sourceLinks" placeholder="Dán các link tham chiếu (Figma, Notion...)" rows="2" style="margin-top:10px; font-size: 12px;"></textarea>
-
-        <button class="btn" style="background:#3b82f6; width:100%; margin-top:10px;" onclick="initSnip()">📸 Snip Vùng Ảnh</button>
-        <div class="snip-preview" id="snipZone" onclick="document.getElementById('fileIn').click()">
-            <span id="snipHint" style="font-size: 12px; color: var(--text-sec)">Hoặc Ctrl+V để dán ảnh</span>
-            <img src="" id="pImg"/>
+        <textarea id="noteText" placeholder="Nhận xét..." rows="4" onfocus="setSync(null)"></textarea>
+        <div class="upload-zone" onclick="document.getElementById('fileIn').click()">
+            <span id="hint" style="font-size: 11px; opacity: 0.5;">Dán ảnh (Ctrl+V) hoặc click Up ảnh</span>
+            <img id="pImg"/>
         </div>
         <input type="file" id="fileIn" hidden onchange="handleFile(event)">
-
         <button class="btn btn-primary" style="margin-top:1rem" onclick="saveFb()">Lưu Feedback (Ctrl + Enter)</button>
       </div>
       <div class="fb-list" id="fbList"></div>
     </div>
+    <button class="btn" style="background: var(--glass)" onclick="exportPDF()">Export PDF Report</button>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-let feedbacks = [], videoType = '', videoId = '', videoUrl = '', syncTarget = 'A', currentImg = null;
-let ytPlayer = null, vimeoPlayer = null;
+let feedbacks = [], videoType = '', videoId = '', videoUrl = '', syncTarget = 'A', currentImg = null, ytPlayer = null;
 
 function toast(m){ 
     const t=document.getElementById('toast'); t.innerText=m; t.classList.add('show');
@@ -161,11 +142,16 @@ function clearB(e){
 
 function getTime(){
     if(videoType === 'native') return document.getElementById('dv').currentTime;
-    if(videoType === 'yt' && ytPlayer && typeof ytPlayer.getCurrentTime === 'function') return ytPlayer.getCurrentTime();
+    if(videoType === 'yt' && ytPlayer?.getCurrentTime) return ytPlayer.getCurrentTime();
     return 0;
 }
 
-// Sync Clock
+function setTime(sec){
+    if(videoType === 'native') document.getElementById('dv').currentTime = sec;
+    if(videoType === 'yt' && ytPlayer) ytPlayer.seekTo(sec, true);
+}
+
+// Global Sync
 setInterval(() => {
     const now = getTime();
     document.getElementById('tcClock').innerText = fmt(now);
@@ -173,165 +159,107 @@ setInterval(() => {
     if(syncTarget === 'B') document.getElementById('valB').innerText = fmt(now);
 }, 200);
 
-// LOAD VIDEO LOGIC
 function loadVideo(){
-    const urlInput = document.getElementById('urlInput').value.trim();
-    if(!urlInput) return;
-    videoUrl = urlInput;
-    
-    // Reset Views
+    const url = document.getElementById('urlInput').value.trim();
+    if(!url) return;
+    videoUrl = url;
     document.getElementById('v-msg').style.display='none';
     document.getElementById('dv').style.display='none';
     document.getElementById('yt-frame').style.display='none';
-    document.getElementById('vimeo-frame').style.display='none';
-
-    if(urlInput.includes('youtube.com') || urlInput.includes('youtu.be')){
+    
+    if(url.includes('youtube.com') || url.includes('youtu.be')){
         videoType = 'yt';
-        const id = urlInput.includes('v=') ? urlInput.split('v=')[1].split('&')[0] : urlInput.split('/').pop();
-        videoId = id;
+        videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
         document.getElementById('yt-frame').style.display='block';
-        
-        if(!ytPlayer) {
-            document.getElementById('yt-frame').innerHTML = '<div id="player"></div>';
-            ytPlayer = new YT.Player('player', {
-                height: '100%', width: '100%', videoId: videoId,
-                playerVars: { 'origin': window.location.origin },
-                events: { 'onReady': onPlayerReady }
-            });
-        } else {
-            ytPlayer.loadVideoById(videoId);
-        }
+        document.getElementById('yt-frame').innerHTML = '<div id="player"></div>';
+        ytPlayer = new YT.Player('player', { height: '100%', width: '100%', videoId: videoId, events: {
+            'onReady': (e) => { document.getElementById('reportName').value = e.target.getVideoData().title; }
+        }});
     } else {
         videoType = 'native';
-        const v = document.getElementById('dv'); 
-        v.style.display='block'; v.src = urlInput;
-        document.getElementById('reportName').value = "Báo cáo video Local";
+        const v = document.getElementById('dv'); v.style.display='block'; v.src = url;
+        document.getElementById('reportName').value = "Video Local Report";
     }
-    toast("🚀 Đã tải video!");
-}
-
-function onPlayerReady(event) {
-    const title = event.target.getVideoData().title;
-    if(title) document.getElementById('reportName').value = title;
-}
-
-// CROP TOOL
-async function initSnip() {
-    try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        const video = document.createElement("video");
-        video.srcObject = stream; video.play();
-        video.onloadedmetadata = () => {
-            const canvas = document.createElement("canvas");
-            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-            canvas.getContext("2d").drawImage(video, 0, 0);
-            stream.getTracks().forEach(t => t.stop());
-            startCrop(canvas);
-        };
-    } catch (e) { toast("Hủy chụp"); }
-}
-
-function startCrop(fullCanvas) {
-    const overlay = document.getElementById('crop-overlay');
-    const canvas = document.getElementById('crop-canvas');
-    const ctx = canvas.getContext('2d');
-    overlay.style.display = 'flex';
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    ctx.drawImage(fullCanvas, 0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0,0, canvas.width, canvas.height);
-
-    let startX, startY, isDrawing = false;
-    canvas.onmousedown = (e) => { startX = e.clientX; startY = e.clientY; isDrawing = true; };
-    canvas.onmousemove = (e) => {
-        if(!isDrawing) return;
-        ctx.clearRect(0,0, canvas.width, canvas.height);
-        ctx.drawImage(fullCanvas, 0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0,0, canvas.width, canvas.height);
-        ctx.clearRect(startX, startY, e.clientX - startX, e.clientY - startY);
-        ctx.drawImage(fullCanvas, 
-            (startX/canvas.width)*fullCanvas.width, (startY/canvas.height)*fullCanvas.height, 
-            ((e.clientX-startX)/canvas.width)*fullCanvas.width, ((e.clientY-startY)/canvas.height)*fullCanvas.height,
-            startX, startY, e.clientX - startX, e.clientY - startY
-        );
-    };
-    canvas.onmouseup = (e) => {
-        isDrawing = false;
-        const cropCanvas = document.createElement('canvas');
-        const w = e.clientX - startX, h = e.clientY - startY;
-        if(Math.abs(w) < 5) { overlay.style.display='none'; return; }
-        cropCanvas.width = Math.abs(w); cropCanvas.height = Math.abs(h);
-        cropCanvas.getContext('2d').drawImage(fullCanvas, 
-            (startX/canvas.width)*fullCanvas.width, (startY/canvas.height)*fullCanvas.height, 
-            (w/canvas.width)*fullCanvas.width, (h/canvas.height)*fullCanvas.height,
-            0, 0, cropCanvas.width, cropCanvas.height
-        );
-        currentImg = cropCanvas.toDataURL();
-        document.getElementById('pImg').src = currentImg;
-        document.getElementById('pImg').style.display = 'block';
-        document.getElementById('snipHint').style.display = 'none';
-        overlay.style.display = 'none';
-        setSync(null); document.getElementById('noteText').focus();
-    };
+    // Auto-load from local storage
+    const saved = localStorage.getItem('antigravity_' + url);
+    if(saved) { feedbacks = JSON.parse(saved); render(); toast("🔄 Đã nạp lại session cũ"); }
 }
 
 function saveFb(){
     const note = document.getElementById('noteText').value.trim();
-    if(!note && !currentImg) return toast("⚠️ Nhập nội dung!");
-    let tA = document.getElementById('valA').innerText;
-    let tB = document.getElementById('valB').innerText;
+    if(!note && !currentImg) return;
+    let tA = document.getElementById('valA').innerText, tB = document.getElementById('valB').innerText;
     const secA = tA.split(':').reduce((acc, t) => (60 * acc) + +t, 0);
     const secB = tB === '--:--:--' ? null : tB.split(':').reduce((acc, t) => (60 * acc) + +t, 0);
-    
     if(secB !== null && secB < secA) [tA, tB] = [tB, tA];
-    const timeDisplay = (tB === '--:--:--') ? tA : `${tA} - ${tB}`;
-    const links = document.getElementById('sourceLinks').value.match(/\bhttps?:\/\/\S+/gi) || [];
 
-    feedbacks.push({ id: Date.now(), tc: timeDisplay, sec: secA, note, img: currentImg, links });
-    render();
-    resetEditor();
+    feedbacks.push({ id: Date.now(), tc: (tB === '--:--:--') ? tA : `${tA} - ${tB}`, sec: secA, note, img: currentImg });
+    render(); resetEditor();
+    localStorage.setItem('antigravity_' + videoUrl, JSON.stringify(feedbacks));
+    toast("💾 Auto-saved");
 }
 
 function resetEditor(){
     document.getElementById('noteText').value = '';
-    document.getElementById('sourceLinks').value = '';
     document.getElementById('valB').innerText = '--:--:--';
     document.getElementById('pImg').style.display = 'none';
-    document.getElementById('snipHint').style.display = 'block';
+    document.getElementById('hint').style.display = 'block';
     currentImg = null; setSync('A');
 }
 
 function render(){
-    const list = document.getElementById('fbList');
-    list.innerHTML = feedbacks.sort((a,b)=>a.sec - b.sec).map(f => `
+    document.getElementById('fbList').innerHTML = feedbacks.sort((a,b)=>a.sec - b.sec).map(f => `
         <div class="fb-item">
-            <div class="fb-tc">▶ ${f.tc}</div>
+            <div class="fb-tc" onclick="setTime(${f.sec})">▶ ${f.tc}</div>
             <div style="font-size:14px">${f.note}</div>
             ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:10px; border-radius:8px">` : ''}
-        </div>
-    `).join('');
+            <div style="position:absolute; top:1.5rem; right:1rem; opacity:0.1; cursor:pointer" onclick="delFb(${f.id})">✕</div>
+        </div>`).join('');
 }
 
+function delFb(id){ 
+    feedbacks = feedbacks.filter(f => f.id !== id); 
+    render(); 
+    localStorage.setItem('antigravity_' + videoUrl, JSON.stringify(feedbacks));
+}
+
+// --- SHORTCUTS LOGIC ---
 document.addEventListener('keydown', (e) => {
+    const typing = document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT';
+    
     if(e.key === 'Enter' && e.ctrlKey) saveFb();
-    if(document.activeElement.tagName !== 'TEXTAREA' && (e.key === 'Delete' || e.key === 'Backspace')) clearB();
+
+    if(!typing) {
+        if(e.code === 'Space') { 
+            e.preventDefault();
+            if(videoType==='native') { const v=document.getElementById('dv'); v.paused ? v.play() : v.pause(); }
+            if(videoType==='yt' && ytPlayer) { ytPlayer.getPlayerState()===1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo(); }
+        }
+        if(e.key === 'ArrowLeft') { e.preventDefault(); setTime(getTime() - 0.05); } // Frame lùi
+        if(e.key === 'ArrowRight') { e.preventDefault(); setTime(getTime() + 0.05); } // Frame tới
+        if(e.key === 'ArrowUp') { e.preventDefault(); setTime(getTime() + 5); } // 5s tới
+        if(e.key === 'ArrowDown') { e.preventDefault(); setTime(getTime() - 5); } // 5s lùi
+        if(e.key === 'Delete' || e.key === 'Backspace') clearB();
+    }
 });
 
 document.addEventListener('paste', (e) => {
     const item = Array.from(e.clipboardData.items).find(x => x.type.indexOf('image') !== -1);
     if(item){
         const reader = new FileReader();
-        reader.onload = (ex) => { currentImg = ex.target.result; document.getElementById('pImg').src = currentImg; document.getElementById('pImg').style.display='block'; document.getElementById('snipHint').style.display='none'; setSync(null); };
+        reader.onload = (ex) => { currentImg = ex.target.result; document.getElementById('pImg').src = currentImg; document.getElementById('pImg').style.display='block'; document.getElementById('hint').style.display='none'; setSync(null); };
         reader.readAsDataURL(item.getAsFile());
     }
 });
 
-// YOUTUBE API LOAD
-var tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+function handleFile(e){
+    const reader = new FileReader();
+    reader.onload = (ex) => { currentImg = ex.target.result; document.getElementById('pImg').src = currentImg; document.getElementById('pImg').style.display='block'; document.getElementById('hint').style.display='none'; setSync(null); };
+    reader.readAsDataURL(e.target.files[0]);
+}
 
-function onYouTubeIframeAPIReady() { console.log("YT API Ready"); }
+var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 </script>
 </body>
 </html>
