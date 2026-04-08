@@ -3,128 +3,139 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Antigravity | iOS Minimalist Pro</title>
+<title>Antigravity | Clarity Video Notebook</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
 <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://player.vimeo.com/api/player.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 :root {
-  --system-bg: #000000;
-  --system-secondary-bg: #1C1C1E;
-  --system-tertiary-bg: #2C2C2E;
-  --system-blue: #0A84FF;
-  --system-green: #30D158;
-  --system-red: #FF453A;
-  --label-primary: #FFFFFF;
-  --label-secondary: #8E8E93;
+  --bg: #0a0a0a;
+  --card: #141414;
+  --border: #262626;
+  --accent: #3b82f6;
+  --accent-soft: rgba(59, 130, 246, 0.1);
+  --text: #e5e5e5;
+  --text-dim: #737373;
+  --white: #ffffff;
+  --red: #ef4444;
+  --green: #22c55e;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { 
   font-family: 'Inter', -apple-system, sans-serif; 
-  background-color: var(--system-bg); color: var(--label-primary); 
+  background-color: var(--bg); color: var(--text); 
   height: 100vh; overflow: hidden; display: flex; flex-direction: column;
 }
 
-/* --- HEADER: Tối giản tối đa --- */
+/* --- HEADER --- */
 header {
-  height: 64px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-  background: rgba(0,0,0,0.8); border-bottom: 0.5px solid rgba(255,255,255,0.1);
+  height: 60px; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 1.5rem; z-index: 1000;
+  padding: 0 1.5rem; background: var(--card);
 }
-.logo { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px; letter-spacing: 0.5px; }
+.logo { font-weight: 800; font-size: 1rem; color: var(--white); display: flex; align-items: center; gap: 8px; letter-spacing: 1px; }
 
-.url-box { display: flex; gap: 10px; align-items: center; transition: 0.3s; }
-.url-box.minimized input { width: 0; padding: 0; opacity: 0; pointer-events: none; }
-.url-box input { 
-  background: var(--system-tertiary-bg); border: none; color: #fff; 
-  padding: 8px 14px; border-radius: 10px; width: 350px; font-size: 13px; outline: none; transition: 0.3s;
+.url-input-group { display: flex; gap: 8px; flex: 1; max-width: 500px; margin: 0 2rem; }
+.url-input-group input { 
+  background: var(--bg); border: 1px solid var(--border); 
+  color: var(--white); padding: 8px 12px; border-radius: 8px; 
+  width: 100%; font-size: 13px; outline: none;
+}
+.btn-load { 
+    background: var(--accent); color: #fff; padding: 0 15px; border-radius: 8px; 
+    font-size: 12px; font-weight: 700; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; height: 36px;
 }
 
-/* --- LAYOUT --- */
+/* --- MAIN LAYOUT --- */
 main { display: flex; flex: 1; overflow: hidden; }
-.workspace { flex: 1; padding: 2.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.5rem; position: relative; }
 
-.v-container { 
-    background: #000; border-radius: 24px; overflow: hidden; aspect-ratio: 16/9; 
-    position: relative; box-shadow: 0 40px 100px rgba(0,0,0,0.8); 
-}
+.workspace { flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.2rem; }
+.v-player { background: #000; border-radius: 16px; overflow: hidden; aspect-ratio: 16/9; position: relative; border: 1px solid var(--border); }
 #yt-frame, #vimeo-frame, video#dv { width: 100%; height: 100%; position: absolute; top:0; left:0; }
 
-.status-bar { display: flex; align-items: center; justify-content: center; margin-top: 1rem; }
-.tc-display { font-size: 3rem; font-weight: 600; letter-spacing: -3px; font-variant-numeric: tabular-nums; }
-
-/* --- SIDEBAR: Pure Deference --- */
-.sidebar { width: 420px; background: var(--system-secondary-bg); display: flex; flex-direction: column; border-left: 0.5px solid rgba(255,255,255,0.1); }
-.sidebar-header { padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
-.sidebar-header h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
-
-/* Share Menu (Gom nhóm chức năng) */
-.action-menu { position: relative; }
-.dropdown-content {
-    position: absolute; right: 0; top: 40px; background: rgba(44, 44, 46, 0.95);
-    backdrop-filter: blur(20px); border-radius: 14px; width: 220px;
-    padding: 6px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    display: none; z-index: 100; border: 0.5px solid rgba(255,255,255,0.1);
+.info-panel { 
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; 
+    background: var(--card); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border);
 }
-.dropdown-content.show { display: block; }
-.menu-item {
-    padding: 10px 12px; font-size: 14px; border-radius: 8px; cursor: pointer;
-    display: flex; align-items: center; gap: 10px; transition: 0.2s;
-}
-.menu-item:hover { background: var(--system-blue); color: #fff; }
+.tc-main { font-family: 'JetBrains Mono', monospace; font-size: 3rem; color: var(--white); font-weight: 600; letter-spacing: -2px; }
 
-/* Notebook Cards */
-.cell-list { flex: 1; overflow-y: auto; padding: 0 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 0.8rem; }
-.fb-card { 
-    background: var(--system-tertiary-bg); border-radius: 16px; padding: 16px; 
-    position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-}
-.fb-card.done { opacity: 0.4; }
+.shortcuts-table { font-size: 11px; color: var(--text-dim); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-left: 1px solid var(--border); padding-left: 1.5rem;}
+.shortcuts-table b { color: var(--accent); margin-right: 4px; }
 
-.card-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 10px; opacity: 0; transition: 0.2s; }
-.fb-card:hover .card-actions { opacity: 1; }
+/* --- SIDEBAR --- */
+.sidebar { width: 420px; border-left: 1px solid var(--border); background: var(--card); display: flex; flex-direction: column; }
 
-.badge-time { 
-    background: var(--system-blue); padding: 4px 10px; 
-    border-radius: 8px; font-size: 11px; font-weight: 700; margin-bottom: 8px; 
-    display: inline-block; cursor: pointer;
-}
-
-/* Editor Floating Style */
-.editor-cell { padding: 1.5rem; background: rgba(255,255,255,0.02); border-bottom: 0.5px solid rgba(255,255,255,0.1); }
-.pill-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+.editor-zone { padding: 1.2rem; border-bottom: 1px solid var(--border); }
+.time-pills { display: flex; gap: 10px; margin-bottom: 12px; }
 .pill { 
-    flex: 1; background: var(--system-tertiary-bg); padding: 10px; border-radius: 12px; 
-    text-align: center; cursor: pointer; transition: 0.2s; border: 1px solid transparent;
+    flex: 1; background: var(--bg); border: 1px solid var(--border); 
+    padding: 10px; border-radius: 10px; text-align: center; cursor: pointer; transition: 0.2s; position: relative;
 }
-.pill.active { border-color: var(--system-blue); background: rgba(10, 132, 255, 0.15); }
-.pill .val { font-size: 16px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+.pill.active { border-color: var(--accent); background: var(--accent-soft); }
+.pill label { display: block; font-size: 9px; font-weight: 800; color: var(--text-dim); margin-bottom: 2px; }
+.pill .val { font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--white); }
 
 textarea { 
-    width: 100%; background: var(--system-tertiary-bg); border: none; 
-    color: #fff; padding: 12px; border-radius: 12px; font-size: 14px;
+    width: 100%; background: var(--bg); border: 1px solid var(--border); 
+    color: var(--white); padding: 12px; border-radius: 10px; font-size: 14px;
     resize: none; outline: none; margin-bottom: 10px;
 }
 
-/* Icons & Buttons */
-.btn-circle {
-    width: 36px; height: 36px; border-radius: 50%; background: var(--system-tertiary-bg);
-    display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; border: none; color: #fff;
+.upload-box { 
+    border: 1px dashed var(--border); border-radius: 10px; padding: 15px; 
+    text-align: center; cursor: pointer; font-size: 11px; color: var(--text-dim); margin-bottom: 10px;
 }
-.btn-circle:hover { background: var(--system-tertiary-bg); transform: scale(1.1); }
+.upload-box:hover { border-color: var(--accent); color: var(--accent); }
+.upload-box img { max-width: 100%; border-radius: 6px; display: none; margin-top: 8px; }
+
+/* --- BUTTONS --- */
+.btn { 
+    padding: 10px 16px; border-radius: 8px; border: none; 
+    font-weight: 600; font-size: 12px; cursor: pointer; transition: 0.2s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-primary { background: var(--accent); color: #fff; width: 100%; height: 42px; }
+.btn-ghost { background: var(--bg); border: 1px solid var(--border); color: var(--text); flex: 1; }
+.btn-ghost:hover { border-color: var(--accent); color: var(--white); }
+
+/* --- NOTEBOOK LIST --- */
+.cell-list { flex: 1; overflow-y: auto; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem; }
+.fb-card { 
+    background: var(--bg); border: 1px solid var(--border); 
+    padding: 14px; border-radius: 12px; position: relative; transition: 0.2s;
+}
+.fb-card.done { opacity: 0.4; }
+.fb-card.done .fb-text { text-decoration: line-through; }
+
+.badge-time { 
+    background: var(--accent); color: #fff; padding: 4px 10px; 
+    border-radius: 6px; font-size: 11px; font-weight: 700; 
+    cursor: pointer; margin-bottom: 8px; display: inline-flex; align-items: center; gap: 6px;
+}
+.fb-text { font-size: 13.5px; line-height: 1.6; }
+
+.card-ctrls { position: absolute; top: 12px; right: 12px; display: flex; gap: 12px; }
+.icon-action { cursor: pointer; opacity: 0.4; transition: 0.2s; }
+.icon-action:hover { opacity: 1; }
+.icon-action.check:hover { color: var(--green); }
+.icon-action.del:hover { color: var(--red); }
+
+/* --- FOOTER ACTIONS --- */
+.sidebar-footer { padding: 1.2rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+.action-row { display: flex; gap: 8px; }
 
 .toast { 
-    position: fixed; top: 30px; left: 50%; transform: translateX(-50%); 
-    background: rgba(255,255,255,0.9); color: #000; padding: 10px 20px; 
-    border-radius: 100px; font-weight: 600; font-size: 13px; opacity: 0; transition: 0.3s; z-index: 9999;
+    position: fixed; bottom: 24px; right: 24px; background: var(--white); color: #000; 
+    padding: 12px 20px; border-radius: 8px; font-weight: 700; font-size: 13px; 
+    opacity: 0; transition: 0.3s; z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
-.toast.show { opacity: 1; top: 40px; }
+.toast.show { opacity: 1; }
 </style>
 </head>
 <body>
@@ -134,72 +145,91 @@ textarea {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
     ANTIGRAVITY
   </div>
-  
-  <div class="url-box" id="urlBox">
-    <input type="text" id="urlInput" placeholder="Dán link Video...">
-    <button class="btn-circle" onclick="loadVideo()" id="loadBtn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  <div class="url-input-group">
+    <input type="text" id="urlInput" placeholder="Dán link Video (YouTube/Drive/Vimeo)...">
+    <button class="btn-load" onclick="loadVideo()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 7l5 5-5 5M13 7l5 5-5 5"/></svg>
+        Load
     </button>
   </div>
-
-  <div class="action-menu">
-    <button class="btn-circle" onclick="toggleMenu()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
-    </button>
-    <div class="dropdown-content" id="exportMenu">
-        <div class="menu-item" onclick="exportJSON()">💾 Save Session (JSON)</div>
-        <div class="menu-item" onclick="document.getElementById('importIn').click()">📂 Open Session</div>
-        <div class="menu-item" onclick="exportPDF()">📄 Export PDF Report</div>
-        <div class="menu-item" onclick="exportXLSX()">📊 Export Excel</div>
-    </div>
-  </div>
-  <input type="file" id="importIn" hidden accept=".json" onchange="importJSON(event)">
+  <input type="text" id="reportName" placeholder="Tên dự án..." style="background:transparent; border:none; color:var(--text-dim); text-align:right; font-size:11px; width:220px; outline:none; font-weight: 700;">
 </header>
 
 <main>
   <section class="workspace">
-    <div class="v-container" id="vBox">
+    <div class="v-player" id="vBox">
       <div id="yt-frame"></div><div id="vimeo-frame"></div><video id="dv" controls></video>
+      <div id="v-msg" style="padding: 20%; text-align: center; color: var(--text-dim); font-size: 14px;">Nạp video để bắt đầu review.</div>
     </div>
-    <div class="status-bar">
-      <div class="tc-display" id="tcClock">00:00:00</div>
+
+    <div class="info-panel">
+      <div>
+        <div style="font-size: 10px; font-weight: 800; color: var(--accent); letter-spacing: 1px; margin-bottom: 5px;">CURRENT TIMECODE</div>
+        <div class="tc-main" id="tcClock">00:00:00</div>
+      </div>
+      <div class="shortcuts-table">
+        <div><b>Space</b> Play/Pause</div>
+        <div><b>← / →</b> Frame +/-</div>
+        <div><b>↑ / ↓</b> 5s +/-</div>
+        <div><b>Del</b> Reset EndPoint</div>
+        <div><b>Ctrl+Enter</b> Save Note</div>
+        <div><b>Ctrl+V</b> Paste Image</div>
+      </div>
     </div>
   </section>
 
   <aside class="sidebar">
-    <div class="editor-cell">
-      <div class="pill-row">
+    <div class="editor-zone">
+      <div class="time-pills">
         <div class="pill active" id="boxA" onclick="setSync('A')">
+          <label>START</label>
           <div class="val" id="valA">00:00:00</div>
         </div>
         <div class="pill" id="boxB" onclick="setSync('B')">
+          <label>END (OPTIONAL)</label>
           <div class="val" id="valB">--:--:--</div>
+          <span style="position:absolute; top:4px; right:8px; opacity:0.3; font-size:10px" onclick="clearB(event)">✕</span>
         </div>
       </div>
 
-      <textarea id="noteText" placeholder="Nhận xét..." rows="3" onfocus="setSync(null)"></textarea>
+      <textarea id="noteText" placeholder="Gõ nhận xét của bạn tại đây..." rows="4" onfocus="setSync(null)"></textarea>
       
-      <div style="display:flex; gap:10px;">
-          <button class="btn-circle" onclick="document.getElementById('fileIn').click()" style="width:100%; border-radius:12px; font-size:12px; font-weight:600; gap:8px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-              Đính kèm ảnh
-          </button>
-          <button class="btn-circle" onclick="saveFb()" style="width:100%; border-radius:12px; background:var(--system-blue); font-size:12px; font-weight:600;">
-              Lưu Cell
-          </button>
+      <div class="upload-box" onclick="document.getElementById('fileIn').click()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:5px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+        <div id="hint">Dán ảnh màn hình hoặc Click để chọn file</div>
+        <img id="pImg"/>
       </div>
       <input type="file" id="fileIn" hidden onchange="handleFile(event)">
-      <img id="pImg" style="max-width:100%; border-radius:10px; display:none; margin-top:10px;"/>
-    </div>
 
-    <div class="sidebar-header">
-      <h2 id="reportTitle">Notebook</h2>
-      <span id="progress-text" style="font-size: 11px; font-weight: 700; color: var(--system-blue);">0/0 DONE</span>
+      <button class="btn btn-primary" onclick="saveFb()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Lưu Nhận Xét
+      </button>
     </div>
 
     <div class="cell-list" id="fbList"></div>
+
+    <div class="sidebar-footer">
+      <div style="font-size: 10px; color: var(--text-dim); font-weight: 800; text-transform: uppercase; margin-bottom: 5px;">Session Management</div>
+      <div class="action-row">
+        <button class="btn btn-ghost" onclick="exportJSON()">💾 Save JSON</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('importIn').click()">📂 Open JSON</button>
+      </div>
+      <input type="file" id="importIn" hidden accept=".json" onchange="importJSON(event)">
+      
+      <div style="font-size: 10px; color: var(--text-dim); font-weight: 800; text-transform: uppercase; margin: 5px 0;">Reporting</div>
+      <div class="action-row">
+        <button class="btn btn-ghost" onclick="exportXLSX()">📊 Excel</button>
+        <button class="btn btn-ghost" onclick="exportPDF()">📄 PDF Report</button>
+      </div>
+    </div>
   </aside>
 </main>
+
+<div id="pdf-tpl" style="display:none; padding:40px; font-family:sans-serif; color:#000;">
+    <h1 id="pdf-t-out"></h1>
+    <div id="pdf-b"></div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -217,12 +247,16 @@ function fmt(s){
     return [Math.floor(s/3600), Math.floor((s%3600)/60), s%60].map(v=>String(v).padStart(2,'0')).join(':');
 }
 
-function toggleMenu() { document.getElementById('exportMenu').classList.toggle('show'); }
-
 function setSync(t){
     syncTarget = t;
     document.getElementById('boxA').classList.toggle('active', t==='A');
     document.getElementById('boxB').classList.toggle('active', t==='B');
+}
+
+function clearB(e){
+    if(e) e.stopPropagation();
+    document.getElementById('valB').innerText = '--:--:--';
+    setSync('A');
 }
 
 function getTime(){
@@ -251,8 +285,8 @@ function loadVideo(){
     const url = document.getElementById('urlInput').value.trim();
     if(!url) return;
     videoUrl = url;
-    document.getElementById('urlBox').classList.add('minimized');
     
+    document.getElementById('v-msg').style.display='none';
     document.getElementById('dv').style.display='none';
     document.getElementById('yt-frame').style.display='none';
     document.getElementById('vimeo-frame').style.display='none';
@@ -262,11 +296,10 @@ function loadVideo(){
         videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
         document.getElementById('yt-frame').style.display='block';
         document.getElementById('yt-frame').innerHTML = '<div id="player"></div>';
-        ytPlayer = new YT.Player('player', { height: '100%', width: '100%', videoId: videoId, playerVars: { 'origin': window.location.origin },
-            events: { 'onReady': (e) => { 
-                document.getElementById('reportTitle').innerText = e.target.getVideoData().title; 
-                autoLoadStorage(); 
-            }}
+        ytPlayer = new YT.Player('player', { 
+            height: '100%', width: '100%', videoId: videoId,
+            playerVars: { 'origin': window.location.origin },
+            events: { 'onReady': (e) => { document.getElementById('reportName').value = e.target.getVideoData().title; autoLoadStorage(); }}
         });
     } else if(url.includes('vimeo')) {
         videoType = 'vimeo';
@@ -275,25 +308,27 @@ function loadVideo(){
         document.getElementById('vimeo-frame').innerHTML = `<iframe id="v-frame" src="https://player.vimeo.com/video/${id}?api=1" width="100%" height="100%" frameborder="0"></iframe>`;
         vimeoPlayer = new Vimeo.Player(document.getElementById('v-frame'));
         vimeoPlayer.on('timeupdate', (data) => { vimeoTime = data.seconds; });
-        vimeoPlayer.getVideoTitle().then(title => { document.getElementById('reportTitle').innerText = title; autoLoadStorage(); });
+        vimeoPlayer.getVideoTitle().then(title => { document.getElementById('reportName').value = title; autoLoadStorage(); });
     } else {
         videoType = 'native';
         const v = document.getElementById('dv'); v.style.display='block'; v.src = url;
-        document.getElementById('reportTitle').innerText = "Local Video";
+        document.getElementById('reportName').value = "Local Video Project";
         autoLoadStorage();
     }
 }
 
 function updateAutoSave(){
     if(!videoUrl) return;
-    localStorage.setItem('ag_ios_v1_' + videoUrl, JSON.stringify({ feedbacks }));
+    localStorage.setItem('clarity_nb_v1_' + videoUrl, JSON.stringify({ project: document.getElementById('reportName').value, feedbacks }));
 }
 
 function autoLoadStorage(){
-    const saved = localStorage.getItem('ag_ios_v1_' + videoUrl);
+    const saved = localStorage.getItem('clarity_nb_v1_' + videoUrl);
     if(saved){
-        feedbacks = JSON.parse(saved).feedbacks || [];
-        render(); toast(" Restored");
+        const parsed = JSON.parse(saved);
+        feedbacks = parsed.feedbacks || [];
+        document.getElementById('reportName').value = parsed.project || document.getElementById('reportName').value;
+        render(); toast("🔄 Dữ liệu cũ đã khôi phục");
     } else { feedbacks = []; render(); }
 }
 
@@ -307,12 +342,14 @@ function saveFb(){
 
     feedbacks.push({ id: Date.now(), tc: (tB === '--:--:--') ? tA : `${tA} - ${tB}`, sec: secA, note, img: currentImg, done: false });
     render(); resetEditor(); updateAutoSave();
+    toast("✨ Đã lưu");
 }
 
 function resetEditor(){
     document.getElementById('noteText').value = '';
     document.getElementById('valB').innerText = '--:--:--';
     document.getElementById('pImg').style.display = 'none';
+    document.getElementById('hint').style.display = 'block';
     currentImg = null; setSync('A');
 }
 
@@ -324,56 +361,72 @@ function toggleDone(id){
 
 function render(){
     const list = document.getElementById('fbList');
-    const doneCount = feedbacks.filter(f => f.done).length;
-    document.getElementById('progress-text').innerText = `${doneCount}/${feedbacks.length} DONE`;
-    
-    list.innerHTML = feedbacks.sort((a,b)=>a.sec - b.sec).map(f => `
+    list.innerHTML = feedbacks.length === 0 ? '<div style="text-align:center; color:var(--text-dim); margin-top:2rem; font-size:12px">Notebook trống</div>' : 
+    feedbacks.sort((a,b)=>a.sec - b.sec).map(f => `
         <div class="fb-card ${f.done ? 'done' : ''}">
-            <div class="badge-time" onclick="setTime(${f.sec})">${f.tc}</div>
-            <div class="card-actions">
-                <div onclick="toggleDone(${f.id})" style="color:var(--system-green)">●</div>
-                <div onclick="delFb(${f.id})" style="color:var(--system-red)">✕</div>
+            <div class="badge-time" onclick="setTime(${f.sec})">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+                ${f.tc}
             </div>
-            <div style="font-size: 14px; white-space: pre-wrap;">${f.note}</div>
-            ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:10px; border-radius:10px; border:0.5px solid rgba(255,255,255,0.1)">` : ''}
+            <div class="card-ctrls">
+                <div class="icon-action check" onclick="toggleDone(${f.id})" title="Đánh dấu đã sửa">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="icon-action del" onclick="delFb(${f.id})" title="Xoá">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </div>
+            </div>
+            <div class="fb-text" style="white-space: pre-wrap;">${f.note}</div>
+            ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:10px; border-radius:8px; border:1px solid var(--border)">` : ''}
         </div>`).join('');
 }
 
 function delFb(id){ feedbacks = feedbacks.filter(f => f.id !== id); render(); updateAutoSave(); }
 
 function exportJSON(){
-    const data = JSON.stringify({ feedbacks });
+    const data = JSON.stringify({ project: document.getElementById('reportName').value, url: videoUrl, feedbacks });
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
-    a.download = `Project_${Date.now()}.json`; a.click();
+    a.download = `Feedback_${document.getElementById('reportName').value || 'export'}.json`; a.click();
 }
 
 function importJSON(e){
     const reader = new FileReader();
-    reader.onload = (ex) => { feedbacks = JSON.parse(ex.target.result).feedbacks || []; render(); updateAutoSave(); };
+    reader.onload = (ex) => {
+        const imported = JSON.parse(ex.target.result);
+        feedbacks = imported.feedbacks || [];
+        document.getElementById('reportName').value = imported.project || '';
+        if(imported.url) { document.getElementById('urlInput').value = imported.url; loadVideo(); }
+        render(); updateAutoSave();
+    };
     reader.readAsText(e.target.files[0]);
 }
 
-function exportPDF(){
-    const title = document.getElementById('reportTitle').innerText;
-    const body = feedbacks.sort((a,b)=>a.sec-b.sec).map(f => `<div style="margin-bottom:20px; border-bottom:1px solid #ddd; padding-bottom:10px"><p><b>[${f.tc}] ${f.done ? 'FIXED' : ''}</b></p><p>${f.note}</p></div>`).join('');
-    const el = document.createElement('div'); el.innerHTML = `<h1>${title}</h1>${body}`;
-    html2pdf().from(el).set({ margin: 10, filename: 'Feedback.pdf' }).save();
-}
-
 function exportXLSX(){
-    const ws = XLSX.utils.json_to_sheet(feedbacks.map(f => ({ Time: f.tc, Note: f.note, Status: f.done ? "Fixed" : "Pending" })));
+    const rows = feedbacks.map(f => ({ Time: f.tc, Note: f.note, Status: f.done ? "FIXED" : "PENDING" }));
+    const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Feedback");
-    XLSX.writeFile(wb, "Feedback.xlsx");
+    XLSX.writeFile(wb, (document.getElementById('reportName').value || "Feedback") + ".xlsx");
 }
 
+function exportPDF(){
+    const title = document.getElementById('reportName').value || "Báo cáo";
+    document.getElementById('pdf-t-out').innerText = title;
+    document.getElementById('pdf-b').innerHTML = feedbacks.sort((a,b)=>a.sec-b.sec).map(f => `<div style="margin-bottom:20px; border-bottom:1px solid #ddd; padding-bottom:10px"><p><b>[${f.tc}] ${f.done ? '- FIXED' : ''}</b></p><p>${f.note}</p></div>`).join('');
+    const el = document.getElementById('pdf-tpl'); el.style.display = 'block';
+    html2pdf().from(el).set({ margin: 10, filename: title+'.pdf' }).save().then(()=>el.style.display='none');
+}
+
+/* --- SHORTCUTS --- */
 document.addEventListener('keydown', (e) => {
     const typing = document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT';
+    if(e.key === 'Enter' && e.ctrlKey) saveFb();
     if(!typing) {
-        if(e.code === 'Space') { e.preventDefault(); if(videoType==='native') document.getElementById('dv').paused ? document.getElementById('dv').play() : document.getElementById('dv').pause(); if(videoType==='yt') ytPlayer.getPlayerState()===1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo(); }
+        if(e.code === 'Space') { e.preventDefault(); if(videoType==='native') { const v=document.getElementById('dv'); v.paused ? v.play() : v.pause(); } if(videoType==='yt' && ytPlayer) { ytPlayer.getPlayerState()===1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo(); } }
         if(e.key === 'ArrowLeft') { e.preventDefault(); setTime(getTime() - 0.05); }
         if(e.key === 'ArrowRight') { e.preventDefault(); setTime(getTime() + 0.05); }
         if(e.key === 'ArrowUp') { e.preventDefault(); setTime(getTime() + 5); }
         if(e.key === 'ArrowDown') { e.preventDefault(); setTime(getTime() - 5); }
+        if(e.key === 'Delete' || e.key === 'Backspace') clearB();
     }
 });
 
@@ -381,14 +434,14 @@ document.addEventListener('paste', (e) => {
     const item = Array.from(e.clipboardData.items).find(x => x.type.indexOf('image') !== -1);
     if(item){
         const reader = new FileReader();
-        reader.onload = (ex) => { currentImg = ex.target.result; document.getElementById('pImg').src = currentImg; document.getElementById('pImg').style.display='block'; setSync(null); };
+        reader.onload = (ex) => { currentImg = ex.target.result; document.getElementById('pImg').src = currentImg; document.getElementById('pImg').style.display='block'; document.getElementById('hint').style.display='none'; setSync(null); };
         reader.readAsDataURL(item.getAsFile());
     }
 });
 
 function handleFile(e){
     const reader = new FileReader();
-    reader.onload = (ex) => { currentImg = ex.target.result; document.getElementById('pImg').src = currentImg; document.getElementById('pImg').style.display='block'; setSync(null); };
+    reader.onload = (ex) => { currentImg = ex.target.result; document.getElementById('pImg').src = currentImg; document.getElementById('pImg').style.display='block'; document.getElementById('hint').style.display='none'; setSync(null); };
     reader.readAsDataURL(e.target.files[0]);
 }
 
