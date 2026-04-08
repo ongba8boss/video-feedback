@@ -3,228 +3,209 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Antigravity | Video Notebook Pro</title>
+<title>Antigravity | iOS Minimalist Pro</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://player.vimeo.com/api/player.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 :root {
-  --bg: #0d1117;
-  --card: #161b22;
-  --border: #30363d;
-  --accent: #58a6ff;
-  --accent-soft: rgba(88, 166, 255, 0.1);
-  --text: #c9d1d9;
-  --text-dim: #8b949e;
-  --white: #ffffff;
-  --red: #f85149;
+  --system-bg: #000000;
+  --system-secondary-bg: #1C1C1E;
+  --system-tertiary-bg: #2C2C2E;
+  --system-blue: #0A84FF;
+  --system-green: #30D158;
+  --system-red: #FF453A;
+  --label-primary: #FFFFFF;
+  --label-secondary: #8E8E93;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { 
-  font-family: 'Inter', sans-serif; 
-  background: var(--bg); 
-  color: var(--text); 
-  height: 100vh; 
-  overflow: hidden; 
-  display: flex; 
-  flex-direction: column;
+  font-family: 'Inter', -apple-system, sans-serif; 
+  background-color: var(--system-bg); color: var(--label-primary); 
+  height: 100vh; overflow: hidden; display: flex; flex-direction: column;
 }
 
-/* Header */
+/* --- HEADER: Tối giản tối đa --- */
 header {
-  height: 60px;
-  border-bottom: 1px solid var(--border);
+  height: 64px; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+  background: rgba(0,0,0,0.8); border-bottom: 0.5px solid rgba(255,255,255,0.1);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 1.5rem;
-  background: var(--card);
+  padding: 0 1.5rem; z-index: 1000;
 }
-.logo { font-weight: 800; font-size: 1.1rem; color: var(--white); display: flex; align-items: center; gap: 8px; }
-.logo svg { color: var(--accent); }
+.logo { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px; letter-spacing: 0.5px; }
 
-.url-bar { display: flex; gap: 8px; flex: 1; max-width: 600px; margin: 0 2rem; }
-.url-bar input { 
-  background: var(--bg); border: 1px solid var(--border); 
-  color: var(--white); padding: 8px 12px; border-radius: 6px; 
-  width: 100%; font-size: 13px; outline: none;
+.url-box { display: flex; gap: 10px; align-items: center; transition: 0.3s; }
+.url-box.minimized input { width: 0; padding: 0; opacity: 0; pointer-events: none; }
+.url-box input { 
+  background: var(--system-tertiary-bg); border: none; color: #fff; 
+  padding: 8px 14px; border-radius: 10px; width: 350px; font-size: 13px; outline: none; transition: 0.3s;
 }
 
-/* Main Layout */
+/* --- LAYOUT --- */
 main { display: flex; flex: 1; overflow: hidden; }
+.workspace { flex: 1; padding: 2.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.5rem; position: relative; }
 
-/* Left - Workspace */
-.workspace { flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
-.v-card { background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16/9; position: relative; border: 1px solid var(--border); }
-#yt-frame, video#dv { width: 100%; height: 100%; position: absolute; top:0; left:0; }
-
-.status-bar { display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 1rem 1.5rem; border-radius: 12px; border: 1px solid var(--border); }
-.tc-clock { font-family: 'JetBrains Mono', monospace; font-size: 2.2rem; color: var(--white); font-weight: 500; }
-
-.guide-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.guide-item { font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 5px; }
-.guide-item kbd { background: #21262d; padding: 1px 5px; border-radius: 4px; border: 1px solid var(--border); color: var(--white); }
-
-/* Sidebar */
-.sidebar { width: 420px; border-left: 1px solid var(--border); background: var(--card); display: flex; flex-direction: column; }
-.sidebar-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-.sidebar-header h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); font-weight: 700; }
-
-.editor-cell { padding: 1.2rem; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.15); }
-.time-pill-group { display: flex; gap: 8px; margin-bottom: 12px; }
-.tc-pill { 
-  flex: 1; background: var(--bg); border: 1px solid var(--border); 
-  padding: 8px; border-radius: 8px; text-align: center; cursor: pointer; transition: 0.2s; position: relative;
+.v-container { 
+    background: #000; border-radius: 24px; overflow: hidden; aspect-ratio: 16/9; 
+    position: relative; box-shadow: 0 40px 100px rgba(0,0,0,0.8); 
 }
-.tc-pill.active { border-color: var(--accent); background: var(--accent-soft); }
-.tc-pill label { display: block; font-size: 9px; font-weight: 700; color: var(--text-dim); margin-bottom: 2px; }
-.tc-pill .val { font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--white); }
+#yt-frame, #vimeo-frame, video#dv { width: 100%; height: 100%; position: absolute; top:0; left:0; }
 
-.img-prev-cell { border: 1px dashed var(--border); border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; margin-bottom: 10px; color: var(--text-dim); font-size: 11px; }
-.img-prev-cell img { max-width: 100%; border-radius: 6px; display: none; margin-top: 8px; }
+.status-bar { display: flex; align-items: center; justify-content: center; margin-top: 1rem; }
+.tc-display { font-size: 3rem; font-weight: 600; letter-spacing: -3px; font-variant-numeric: tabular-nums; }
 
-/* Notebook List */
-.notebook-list { flex: 1; overflow-y: auto; padding: 1.2rem; display: flex; flex-direction: column; gap: 1rem; }
-.fb-cell { position: relative; animation: slideIn 0.3s ease; }
-.fb-badge { 
-  background: var(--accent-soft); color: var(--accent); 
-  padding: 3px 8px; border-radius: 4px; font-size: 11px; 
-  font-family: 'JetBrains Mono', monospace; font-weight: 700; 
-  cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
-  margin-bottom: 6px;
+/* --- SIDEBAR: Pure Deference --- */
+.sidebar { width: 420px; background: var(--system-secondary-bg); display: flex; flex-direction: column; border-left: 0.5px solid rgba(255,255,255,0.1); }
+.sidebar-header { padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+.sidebar-header h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+
+/* Share Menu (Gom nhóm chức năng) */
+.action-menu { position: relative; }
+.dropdown-content {
+    position: absolute; right: 0; top: 40px; background: rgba(44, 44, 46, 0.95);
+    backdrop-filter: blur(20px); border-radius: 14px; width: 220px;
+    padding: 6px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    display: none; z-index: 100; border: 0.5px solid rgba(255,255,255,0.1);
 }
-.fb-badge:hover { background: var(--accent); color: #000; }
-.fb-content { background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-size: 13.5px; line-height: 1.6; position: relative; }
-.del-btn { position: absolute; top: 10px; right: 10px; color: var(--text-dim); cursor: pointer; opacity: 0; transition: 0.2s; }
-.fb-content:hover .del-btn { opacity: 1; }
-.del-btn:hover { color: var(--red); }
-
-/* Buttons */
-.btn { 
-  padding: 8px 14px; border-radius: 6px; border: none; 
-  font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s;
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+.dropdown-content.show { display: block; }
+.menu-item {
+    padding: 10px 12px; font-size: 14px; border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; gap: 10px; transition: 0.2s;
 }
-.btn svg { width: 16px; height: 16px; }
-.btn-primary { background: var(--accent); color: #0d1117; width: 100%; height: 40px; }
-.btn-primary:hover { filter: brightness(1.1); }
-.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
-.btn-ghost:hover { border-color: var(--text-dim); background: var(--border); }
-.btn-load { background: #21262d; border: 1px solid var(--border); color: var(--white); }
+.menu-item:hover { background: var(--system-blue); color: #fff; }
 
-.footer-actions { padding: 1rem; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+/* Notebook Cards */
+.cell-list { flex: 1; overflow-y: auto; padding: 0 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 0.8rem; }
+.fb-card { 
+    background: var(--system-tertiary-bg); border-radius: 16px; padding: 16px; 
+    position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+.fb-card.done { opacity: 0.4; }
 
-.toast { position: fixed; bottom: 20px; left: 20px; background: var(--white); color: #000; padding: 10px 18px; border-radius: 6px; font-weight: 700; font-size: 13px; opacity: 0; transform: translateY(10px); transition: 0.3s; z-index: 10000; }
-.toast.show { opacity: 1; transform: translateY(0); }
+.card-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 10px; opacity: 0; transition: 0.2s; }
+.fb-card:hover .card-actions { opacity: 1; }
 
-@keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+.badge-time { 
+    background: var(--system-blue); padding: 4px 10px; 
+    border-radius: 8px; font-size: 11px; font-weight: 700; margin-bottom: 8px; 
+    display: inline-block; cursor: pointer;
+}
+
+/* Editor Floating Style */
+.editor-cell { padding: 1.5rem; background: rgba(255,255,255,0.02); border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+.pill-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+.pill { 
+    flex: 1; background: var(--system-tertiary-bg); padding: 10px; border-radius: 12px; 
+    text-align: center; cursor: pointer; transition: 0.2s; border: 1px solid transparent;
+}
+.pill.active { border-color: var(--system-blue); background: rgba(10, 132, 255, 0.15); }
+.pill .val { font-size: 16px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+textarea { 
+    width: 100%; background: var(--system-tertiary-bg); border: none; 
+    color: #fff; padding: 12px; border-radius: 12px; font-size: 14px;
+    resize: none; outline: none; margin-bottom: 10px;
+}
+
+/* Icons & Buttons */
+.btn-circle {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--system-tertiary-bg);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; border: none; color: #fff;
+}
+.btn-circle:hover { background: var(--system-tertiary-bg); transform: scale(1.1); }
+
+.toast { 
+    position: fixed; top: 30px; left: 50%; transform: translateX(-50%); 
+    background: rgba(255,255,255,0.9); color: #000; padding: 10px 20px; 
+    border-radius: 100px; font-weight: 600; font-size: 13px; opacity: 0; transition: 0.3s; z-index: 9999;
+}
+.toast.show { opacity: 1; top: 40px; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3z"></path></svg>
-    <span>ANTIGRAVITY</span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    ANTIGRAVITY
   </div>
-  <div class="url-bar">
-    <input type="text" id="urlInput" placeholder="Dán link Video (YouTube/Drive)...">
-    <button class="btn btn-load" onclick="loadVideo()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
-      Load
+  
+  <div class="url-box" id="urlBox">
+    <input type="text" id="urlInput" placeholder="Dán link Video...">
+    <button class="btn-circle" onclick="loadVideo()" id="loadBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
     </button>
   </div>
-  <input type="text" id="reportName" placeholder="Tên báo cáo..." style="background:transparent; border:none; color:var(--text-dim); text-align:right; font-size:11px; width:220px; outline:none">
+
+  <div class="action-menu">
+    <button class="btn-circle" onclick="toggleMenu()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+    </button>
+    <div class="dropdown-content" id="exportMenu">
+        <div class="menu-item" onclick="exportJSON()">💾 Save Session (JSON)</div>
+        <div class="menu-item" onclick="document.getElementById('importIn').click()">📂 Open Session</div>
+        <div class="menu-item" onclick="exportPDF()">📄 Export PDF Report</div>
+        <div class="menu-item" onclick="exportXLSX()">📊 Export Excel</div>
+    </div>
+  </div>
+  <input type="file" id="importIn" hidden accept=".json" onchange="importJSON(event)">
 </header>
 
 <main>
   <section class="workspace">
-    <div class="v-card" id="vBox">
-      <div id="yt-frame"></div><video id="dv" controls></video>
-      <div id="v-msg" style="padding: 20%; text-align: center; color: var(--text-dim); font-size: 14px;">
-        Hệ thống sẵn sàng. Vui lòng nạp link video.
-      </div>
+    <div class="v-container" id="vBox">
+      <div id="yt-frame"></div><div id="vimeo-frame"></div><video id="dv" controls></video>
     </div>
-
     <div class="status-bar">
-      <div class="tc-clock" id="tcClock">00:00:00</div>
-      <div style="text-align: right">
-        <div style="color: var(--accent); font-weight: 800; font-size: 10px; letter-spacing: 1px;">SENSORS ACTIVE</div>
-        <div style="color: var(--text-dim); font-size: 11px;">Intelligent Video Analysis</div>
-      </div>
-    </div>
-
-    <div class="guide-grid">
-      <div class="guide-item"><kbd>Space</kbd> Play/Pause</div>
-      <div class="guide-item"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> Lưu Cell</div>
-      <div class="guide-item"><kbd>←</kbd><kbd>→</kbd> Frame-by-frame</div>
-      <div class="guide-item"><kbd>↑</kbd><kbd>↓</kbd> +/- 5 giây</div>
-      <div class="guide-item"><kbd>Del</kbd> Xóa mốc B</div>
-      <div class="guide-item"><kbd>Ctrl</kbd>+<kbd>V</kbd> Dán ảnh</div>
+      <div class="tc-display" id="tcClock">00:00:00</div>
     </div>
   </section>
 
   <aside class="sidebar">
-    <div class="sidebar-header">
-      <h2>Notebook Editor</h2>
-      <span id="fbCount" style="font-size: 10px; font-weight: 800; opacity: 0.6;">0 CELLS</span>
-    </div>
-
     <div class="editor-cell">
-      <div class="time-pill-group">
-        <div class="tc-pill active" id="boxA" onclick="setSync('A')">
-          <label>START POINT</label>
+      <div class="pill-row">
+        <div class="pill active" id="boxA" onclick="setSync('A')">
           <div class="val" id="valA">00:00:00</div>
         </div>
-        <div class="tc-pill" id="boxB" onclick="setSync('B')">
-          <label>END POINT</label>
+        <div class="pill" id="boxB" onclick="setSync('B')">
           <div class="val" id="valB">--:--:--</div>
-          <span style="position:absolute; top:4px; right:6px; opacity:0.3; font-size:10px" onclick="clearB(event)">✕</span>
         </div>
       </div>
 
-      <textarea id="noteText" placeholder="Nhận xét của bạn..." rows="4" onfocus="setSync(null)"></textarea>
+      <textarea id="noteText" placeholder="Nhận xét..." rows="3" onfocus="setSync(null)"></textarea>
       
-      <div class="img-prev-cell" id="dropArea" onclick="document.getElementById('fileIn').click()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:5px; opacity:0.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-        <div id="hint">Dán ảnh hoặc Click để chọn</div>
-        <img id="pImg"/>
+      <div style="display:flex; gap:10px;">
+          <button class="btn-circle" onclick="document.getElementById('fileIn').click()" style="width:100%; border-radius:12px; font-size:12px; font-weight:600; gap:8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              Đính kèm ảnh
+          </button>
+          <button class="btn-circle" onclick="saveFb()" style="width:100%; border-radius:12px; background:var(--system-blue); font-size:12px; font-weight:600;">
+              Lưu Cell
+          </button>
       </div>
       <input type="file" id="fileIn" hidden onchange="handleFile(event)">
-
-      <button class="btn btn-primary" onclick="saveFb()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        Lưu Feedback
-      </button>
+      <img id="pImg" style="max-width:100%; border-radius:10px; display:none; margin-top:10px;"/>
     </div>
 
-    <div class="notebook-list" id="fbList"></div>
-
-    <div class="footer-actions">
-      <button class="btn btn-ghost" onclick="exportXLSX()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>
-        Excel
-      </button>
-      <button class="btn btn-ghost" onclick="exportPDF()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15v-4"></path><path d="M12 15v-4"></path><path d="M15 15v-4"></path></svg>
-        PDF
-      </button>
+    <div class="sidebar-header">
+      <h2 id="reportTitle">Notebook</h2>
+      <span id="progress-text" style="font-size: 11px; font-weight: 700; color: var(--system-blue);">0/0 DONE</span>
     </div>
+
+    <div class="cell-list" id="fbList"></div>
   </aside>
 </main>
-
-<div id="pdf-tpl" style="display:none; padding:40px; font-family:sans-serif;">
-    <h1 id="pdf-t-out" style="border-bottom:2px solid #000; padding-bottom:10px"></h1>
-    <div id="pdf-b" style="margin-top:20px"></div>
-</div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-let feedbacks = [], videoType = '', videoId = '', videoUrl = '', syncTarget = 'A', currentImg = null, ytPlayer = null;
+let feedbacks = [], videoType = '', videoId = '', videoUrl = '', syncTarget = 'A', currentImg = null;
+let ytPlayer = null, vimeoPlayer = null, vimeoTime = 0;
 
 function toast(m){ 
     const t=document.getElementById('toast'); t.innerText=m; t.classList.add('show');
@@ -236,27 +217,27 @@ function fmt(s){
     return [Math.floor(s/3600), Math.floor((s%3600)/60), s%60].map(v=>String(v).padStart(2,'0')).join(':');
 }
 
+function toggleMenu() { document.getElementById('exportMenu').classList.toggle('show'); }
+
 function setSync(t){
     syncTarget = t;
     document.getElementById('boxA').classList.toggle('active', t==='A');
     document.getElementById('boxB').classList.toggle('active', t==='B');
 }
 
-function clearB(e){
-    if(e) e.stopPropagation();
-    document.getElementById('valB').innerText = '--:--:--';
-    setSync('A');
-}
-
 function getTime(){
     if(videoType === 'native') return document.getElementById('dv').currentTime;
-    if(videoType === 'yt' && ytPlayer?.getCurrentTime) return ytPlayer.getCurrentTime();
+    if(videoType === 'yt' && ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+        try { return ytPlayer.getCurrentTime(); } catch(e) { return 0; }
+    }
+    if(videoType === 'vimeo') return vimeoTime;
     return 0;
 }
 
 function setTime(sec){
     if(videoType === 'native') document.getElementById('dv').currentTime = sec;
     if(videoType === 'yt' && ytPlayer) ytPlayer.seekTo(sec, true);
+    if(videoType === 'vimeo' && vimeoPlayer) vimeoPlayer.setCurrentTime(sec);
 }
 
 setInterval(() => {
@@ -270,25 +251,50 @@ function loadVideo(){
     const url = document.getElementById('urlInput').value.trim();
     if(!url) return;
     videoUrl = url;
-    document.getElementById('v-msg').style.display='none';
+    document.getElementById('urlBox').classList.add('minimized');
+    
     document.getElementById('dv').style.display='none';
     document.getElementById('yt-frame').style.display='none';
-    
+    document.getElementById('vimeo-frame').style.display='none';
+
     if(url.includes('youtube.com') || url.includes('youtu.be')){
         videoType = 'yt';
         videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
         document.getElementById('yt-frame').style.display='block';
         document.getElementById('yt-frame').innerHTML = '<div id="player"></div>';
-        ytPlayer = new YT.Player('player', { height: '100%', width: '100%', videoId: videoId, events: {
-            'onReady': (e) => { document.getElementById('reportName').value = e.target.getVideoData().title; }
-        }});
+        ytPlayer = new YT.Player('player', { height: '100%', width: '100%', videoId: videoId, playerVars: { 'origin': window.location.origin },
+            events: { 'onReady': (e) => { 
+                document.getElementById('reportTitle').innerText = e.target.getVideoData().title; 
+                autoLoadStorage(); 
+            }}
+        });
+    } else if(url.includes('vimeo')) {
+        videoType = 'vimeo';
+        const id = url.split('/').pop();
+        document.getElementById('vimeo-frame').style.display='block';
+        document.getElementById('vimeo-frame').innerHTML = `<iframe id="v-frame" src="https://player.vimeo.com/video/${id}?api=1" width="100%" height="100%" frameborder="0"></iframe>`;
+        vimeoPlayer = new Vimeo.Player(document.getElementById('v-frame'));
+        vimeoPlayer.on('timeupdate', (data) => { vimeoTime = data.seconds; });
+        vimeoPlayer.getVideoTitle().then(title => { document.getElementById('reportTitle').innerText = title; autoLoadStorage(); });
     } else {
         videoType = 'native';
         const v = document.getElementById('dv'); v.style.display='block'; v.src = url;
-        document.getElementById('reportName').value = "Local Notebook Session";
+        document.getElementById('reportTitle').innerText = "Local Video";
+        autoLoadStorage();
     }
-    const saved = localStorage.getItem('ag_v3_' + url);
-    if(saved) { feedbacks = JSON.parse(saved); render(); toast("🔄 Nạp lại dữ liệu cũ"); }
+}
+
+function updateAutoSave(){
+    if(!videoUrl) return;
+    localStorage.setItem('ag_ios_v1_' + videoUrl, JSON.stringify({ feedbacks }));
+}
+
+function autoLoadStorage(){
+    const saved = localStorage.getItem('ag_ios_v1_' + videoUrl);
+    if(saved){
+        feedbacks = JSON.parse(saved).feedbacks || [];
+        render(); toast(" Restored");
+    } else { feedbacks = []; render(); }
 }
 
 function saveFb(){
@@ -299,77 +305,75 @@ function saveFb(){
     const secB = tB === '--:--:--' ? null : tB.split(':').reduce((acc, t) => (60 * acc) + +t, 0);
     if(secB !== null && secB < secA) [tA, tB] = [tB, tA];
 
-    feedbacks.push({ id: Date.now(), tc: (tB === '--:--:--') ? tA : `${tA} - ${tB}`, sec: secA, note, img: currentImg });
-    render(); resetEditor();
-    localStorage.setItem('ag_v3_' + videoUrl, JSON.stringify(feedbacks));
-    toast("✨ Đã lưu Cell");
+    feedbacks.push({ id: Date.now(), tc: (tB === '--:--:--') ? tA : `${tA} - ${tB}`, sec: secA, note, img: currentImg, done: false });
+    render(); resetEditor(); updateAutoSave();
 }
 
 function resetEditor(){
     document.getElementById('noteText').value = '';
     document.getElementById('valB').innerText = '--:--:--';
     document.getElementById('pImg').style.display = 'none';
-    document.getElementById('hint').style.display = 'block';
     currentImg = null; setSync('A');
+}
+
+function toggleDone(id){
+    const fb = feedbacks.find(f => f.id === id);
+    if(fb) fb.done = !fb.done;
+    render(); updateAutoSave();
 }
 
 function render(){
     const list = document.getElementById('fbList');
-    document.getElementById('fbCount').innerText = feedbacks.length + ' CELLS';
-    if(feedbacks.length === 0) { list.innerHTML = '<div style="text-align:center; color:var(--text-dim); margin-top:2rem; font-size:12px">Danh sách trống</div>'; return; }
+    const doneCount = feedbacks.filter(f => f.done).length;
+    document.getElementById('progress-text').innerText = `${doneCount}/${feedbacks.length} DONE`;
     
     list.innerHTML = feedbacks.sort((a,b)=>a.sec - b.sec).map(f => `
-        <div class="fb-cell">
-            <div class="fb-badge" onclick="setTime(${f.sec})">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
-                ${f.tc}
+        <div class="fb-card ${f.done ? 'done' : ''}">
+            <div class="badge-time" onclick="setTime(${f.sec})">${f.tc}</div>
+            <div class="card-actions">
+                <div onclick="toggleDone(${f.id})" style="color:var(--system-green)">●</div>
+                <div onclick="delFb(${f.id})" style="color:var(--system-red)">✕</div>
             </div>
-            <div class="fb-content">
-                ${f.note}
-                ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:10px; border-radius:4px; border:1px solid var(--border)">` : ''}
-                <div class="del-btn" onclick="delFb(${f.id})">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </div>
-            </div>
+            <div style="font-size: 14px; white-space: pre-wrap;">${f.note}</div>
+            ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:10px; border-radius:10px; border:0.5px solid rgba(255,255,255,0.1)">` : ''}
         </div>`).join('');
 }
 
-function delFb(id){ 
-    feedbacks = feedbacks.filter(f => f.id !== id); render(); 
-    localStorage.setItem('ag_v3_' + videoUrl, JSON.stringify(feedbacks));
+function delFb(id){ feedbacks = feedbacks.filter(f => f.id !== id); render(); updateAutoSave(); }
+
+function exportJSON(){
+    const data = JSON.stringify({ feedbacks });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
+    a.download = `Project_${Date.now()}.json`; a.click();
 }
 
-function exportXLSX(){
-    const rows = feedbacks.map(f => ({ Time: f.tc, Note: f.note }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Feedback");
-    XLSX.writeFile(wb, (document.getElementById('reportName').value || "Notebook") + ".xlsx");
+function importJSON(e){
+    const reader = new FileReader();
+    reader.onload = (ex) => { feedbacks = JSON.parse(ex.target.result).feedbacks || []; render(); updateAutoSave(); };
+    reader.readAsText(e.target.files[0]);
 }
 
 function exportPDF(){
-    const title = document.getElementById('reportName').value || "Video Notebook Report";
-    document.getElementById('pdf-t-out').innerText = title;
-    document.getElementById('pdf-b').innerHTML = feedbacks.sort((a,b)=>a.sec-b.sec).map(f => `
-        <div style="margin-bottom:20px; border-bottom:1px solid #ddd; padding-bottom:10px">
-            <p style="font-weight:bold; color:#58a6ff;">[${f.tc}]</p>
-            <p>${f.note}</p>
-            ${f.img ? `<img src="${f.img}" style="max-width:100%; margin-top:10px;">` : ''}
-        </div>`).join('');
-    const el = document.getElementById('pdf-tpl'); el.style.display = 'block';
-    html2pdf().from(el).set({ margin: 10, filename: title+'.pdf' }).save().then(()=>el.style.display='none');
+    const title = document.getElementById('reportTitle').innerText;
+    const body = feedbacks.sort((a,b)=>a.sec-b.sec).map(f => `<div style="margin-bottom:20px; border-bottom:1px solid #ddd; padding-bottom:10px"><p><b>[${f.tc}] ${f.done ? 'FIXED' : ''}</b></p><p>${f.note}</p></div>`).join('');
+    const el = document.createElement('div'); el.innerHTML = `<h1>${title}</h1>${body}`;
+    html2pdf().from(el).set({ margin: 10, filename: 'Feedback.pdf' }).save();
+}
+
+function exportXLSX(){
+    const ws = XLSX.utils.json_to_sheet(feedbacks.map(f => ({ Time: f.tc, Note: f.note, Status: f.done ? "Fixed" : "Pending" })));
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Feedback");
+    XLSX.writeFile(wb, "Feedback.xlsx");
 }
 
 document.addEventListener('keydown', (e) => {
     const typing = document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT';
-    if(e.key === 'Enter' && e.ctrlKey) saveFb();
     if(!typing) {
-        if(e.code === 'Space') { e.preventDefault(); if(videoType==='native') { const v=document.getElementById('dv'); v.paused ? v.play() : v.pause(); } if(videoType==='yt' && ytPlayer) { ytPlayer.getPlayerState()===1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo(); } }
+        if(e.code === 'Space') { e.preventDefault(); if(videoType==='native') document.getElementById('dv').paused ? document.getElementById('dv').play() : document.getElementById('dv').pause(); if(videoType==='yt') ytPlayer.getPlayerState()===1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo(); }
         if(e.key === 'ArrowLeft') { e.preventDefault(); setTime(getTime() - 0.05); }
         if(e.key === 'ArrowRight') { e.preventDefault(); setTime(getTime() + 0.05); }
         if(e.key === 'ArrowUp') { e.preventDefault(); setTime(getTime() + 5); }
         if(e.key === 'ArrowDown') { e.preventDefault(); setTime(getTime() - 5); }
-        if(e.key === 'Delete' || e.key === 'Backspace') clearB();
     }
 });
 
@@ -377,14 +381,14 @@ document.addEventListener('paste', (e) => {
     const item = Array.from(e.clipboardData.items).find(x => x.type.indexOf('image') !== -1);
     if(item){
         const reader = new FileReader();
-        reader.onload = (ex) => { currentImg = ex.target.result; document.getElementById('pImg').src = currentImg; document.getElementById('pImg').style.display='block'; document.getElementById('hint').style.display='none'; setSync(null); };
+        reader.onload = (ex) => { currentImg = ex.target.result; document.getElementById('pImg').src = currentImg; document.getElementById('pImg').style.display='block'; setSync(null); };
         reader.readAsDataURL(item.getAsFile());
     }
 });
 
 function handleFile(e){
     const reader = new FileReader();
-    reader.onload = (ex) => { currentImg = ex.target.result; document.getElementById('pImg').src = currentImg; document.getElementById('pImg').style.display='block'; document.getElementById('hint').style.display='none'; setSync(null); };
+    reader.onload = (ex) => { currentImg = ex.target.result; document.getElementById('pImg').src = currentImg; document.getElementById('pImg').style.display='block'; setSync(null); };
     reader.readAsDataURL(e.target.files[0]);
 }
 
