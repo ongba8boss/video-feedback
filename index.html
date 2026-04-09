@@ -6,9 +6,9 @@
 <title>Antigravity — MinXLabs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://player.vimeo.com/api/player.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root {
   --bg:       #080809;
@@ -708,13 +708,20 @@ function importJSON(e) {
   reader.readAsText(e.target.files[0]);
 }
 function exportXLSX() {
-  if (!window.XLSX) { toast('Đang tải...'); return; }
-  const ws = XLSX.utils.json_to_sheet(feedbacks.map(f=>({Timecode:f.tc,Note:f.note,Links:(f.links||[]).join(', '),Done:f.done?'Yes':'No'})));
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Feedback');
-  XLSX.writeFile(wb, `${document.getElementById('reportName').value||'Antigravity'}_Feedback.xlsx`);
+  if (!window.XLSX) { toast('Thư viện XLSX chưa tải xong, thử lại!'); return; }
+  const name = document.getElementById('reportName').value || 'Antigravity';
+  const ws = XLSX.utils.json_to_sheet(feedbacks.map(f=>({
+    Timecode: f.tc, Note: f.note,
+    Links: (f.links||[]).join(', '),
+    Done: f.done ? 'Yes' : 'No'
+  })));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Feedback');
+  XLSX.writeFile(wb, `${name}_Feedback.xlsx`);
+  toast('✓ Đã xuất Excel');
 }
 function exportPDF() {
-  if (!window.html2pdf) { toast('Đang tải...'); return; }
+  if (!window.html2pdf) { toast('Thư viện PDF chưa tải xong, thử lại!'); return; }
   const title = document.getElementById('reportName').value || document.getElementById('projTitle').innerText;
   const body = [...feedbacks].sort((a,b)=>a.sec-b.sec).map(f=>`
     <div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #eee">
@@ -724,7 +731,8 @@ function exportPDF() {
     </div>`).join('');
   const el = document.createElement('div'); el.style.fontFamily = 'sans-serif';
   el.innerHTML = `<h1 style="margin-bottom:6px;font-size:20px">${title}</h1><p style="color:#aaa;font-size:11px;margin-bottom:24px">Antigravity — MinXLabs</p>${body}`;
-  html2pdf().from(el).set({margin:15, filename:`${title}_Report.pdf`}).save();
+  html2pdf().from(el).set({ margin: 15, filename: `${title}_Report.pdf` }).save();
+  toast('✓ Đang xuất PDF...');
 }
 
 var tag = document.createElement('script');
