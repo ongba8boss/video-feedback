@@ -88,37 +88,46 @@ header {
 }
 #reportName::placeholder { color: var(--ink3); font-weight: 300; font-size: 12px; }
 
+/* URL ROW LÀM NỔI BẬT */
 .url-row { 
     display: flex; 
     align-items: center; 
     gap: 10px; 
-    background: rgba(255,255,255,0.03);
-    padding: 4px 8px;
-    border-radius: 6px;
-    border: 1px solid var(--line);
+    background: var(--panel);
+    padding: 6px 6px 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--line2);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.url-row svg { color: var(--ink3); flex-shrink: 0; }
+.url-row:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79, 127, 255, 0.15), inset 0 2px 4px rgba(0,0,0,0.2);
+    background: var(--card);
+}
+.url-row svg { color: var(--ink2); flex-shrink: 0; transition: color .2s; }
+.url-row:focus-within svg { color: var(--accent); }
+
 #urlInput {
   font-family: var(--mono);
-  font-size: 11px; color: var(--ink2);
+  font-size: 11.5px; color: var(--ink);
   background: none; border: none; outline: none;
   flex: 1; min-width: 0;
-  transition: color .15s;
 }
-#urlInput:focus { color: var(--ink); }
-#urlInput::placeholder { color: var(--ink3); }
+#urlInput::placeholder { color: var(--ink3); font-style: italic; }
 
 .btn-load {
-  font-family: var(--mono);
-  font-size: 9px; font-weight: 600; letter-spacing: 1px;
-  color: var(--accent);
-  background: var(--accent-d);
-  border: 1px solid rgba(79,127,255,0.2);
-  padding: 4px 12px; border-radius: 4px;
+  font-family: var(--sans);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  padding: 6px 16px; border-radius: 6px;
   cursor: pointer; flex-shrink: 0;
   transition: all .15s;
 }
-.btn-load:hover { background: var(--accent); color: white; border-color: var(--accent); }
+.btn-load:hover { background: #3b66e5; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(79,127,255,0.3); }
+.btn-load:active { transform: translateY(0); }
 
 .header-right { 
     display: flex; 
@@ -313,10 +322,10 @@ footer { height: 34px; background: var(--surface); border-top: 1px solid var(--l
       <input id="reportName" type="text" placeholder="Tên báo cáo..." spellcheck="false" oninput="autoSizeInput(this)">
     </div>
     <div class="url-row">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
       </svg>
-      <input type="text" id="urlInput" placeholder="Dán link YouTube / Google Drive / video URL…">
+      <input type="text" id="urlInput" placeholder="Dán link YouTube / Vimeo / Dropbox / MP4…">
       <button class="btn-load" onclick="loadVideo()">LOAD</button>
     </div>
   </div>
@@ -368,6 +377,7 @@ footer { height: 34px; background: var(--surface); border-top: 1px solid var(--l
   <section class="workspace">
     <div class="video-wrap" id="vBox">
       <div id="yt-frame"></div>
+      <div id="vimeo-frame" style="display:none; width:100%; height:100%; position:absolute;"></div>
       <iframe id="drive-frame" style="display:none" allowfullscreen></iframe>
       <video id="dv" controls style="display:none"></video>
       <div class="video-placeholder" id="v-msg">
@@ -456,7 +466,7 @@ footer { height: 34px; background: var(--surface); border-top: 1px solid var(--l
 <script>
 document.getElementById('footerYear').innerText = new Date().getFullYear();
 
-let feedbacks = [], videoType = '', videoUrl = '', syncTarget = 'A', currentImg = null, ytPlayer = null;
+let feedbacks = [], videoType = '', videoUrl = '', syncTarget = 'A', currentImg = null, ytPlayer = null, vimeoPlayer = null, currentVimeoTime = 0;
 
 function toast(m) {
   const t = document.getElementById('toast');
@@ -505,11 +515,13 @@ function fixDriveUrl(url) {
 function getTime() {
   if (videoType === 'native') return document.getElementById('dv').currentTime || 0;
   if (videoType === 'yt' && ytPlayer?.getCurrentTime) return ytPlayer.getCurrentTime();
+  if (videoType === 'vimeo') return currentVimeoTime;
   return 0;
 }
 function setTime(sec) {
   if (videoType === 'native') document.getElementById('dv').currentTime = sec;
   if (videoType === 'yt' && ytPlayer) ytPlayer.seekTo(sec, true);
+  if (videoType === 'vimeo' && vimeoPlayer) vimeoPlayer.setCurrentTime(sec);
 }
 function setTitle(title) {
   document.getElementById('projTitle').innerText = title;
@@ -518,20 +530,33 @@ function setTitle(title) {
 }
 
 function loadVideo() {
-  const url = document.getElementById('urlInput').value.trim();
+  let url = document.getElementById('urlInput').value.trim();
   if (!url) return;
+  
+  // Tự động hack link Dropbox thành link file gốc (Native) để bắt Timecode
+  if (url.includes('dropbox.com')) {
+      url = url.replace(/dl=[01]/, 'raw=1');
+      if (!url.includes('raw=1')) url += (url.includes('?') ? '&' : '?') + 'raw=1';
+      document.getElementById('urlInput').value = url;
+  }
+  
   videoUrl = url;
   
   if (videoType === 'yt' && ytPlayer && typeof ytPlayer.destroy === 'function') {
       ytPlayer.destroy();
       ytPlayer = null;
   }
+  if (videoType === 'vimeo' && vimeoPlayer && typeof vimeoPlayer.destroy === 'function') {
+      vimeoPlayer.destroy();
+      vimeoPlayer = null;
+      currentVimeoTime = 0;
+  }
 
-  ['v-msg','dv','yt-frame','drive-frame'].forEach(id => {
+  ['v-msg','dv','yt-frame','vimeo-frame','drive-frame'].forEach(id => {
     const el = document.getElementById(id);
     if(el) {
         el.style.display = 'none';
-        if (id === 'yt-frame') el.innerHTML = '';
+        if (id === 'yt-frame' || id === 'vimeo-frame') el.innerHTML = '';
         if (id === 'dv' || id === 'drive-frame') el.src = '';
     }
   });
@@ -545,11 +570,25 @@ function loadVideo() {
       height: '100%', width: '100%', videoId: id, playerVars: { rel: 0, autoplay: 1 },
       events: { onReady: e => { setTitle(e.target.getVideoData().title || 'YouTube Video'); autoLoad(); } }
     });
+  } else if (url.includes('vimeo.com')) {
+    videoType = 'vimeo';
+    const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    const vimeoId = m ? m[1] : '';
+    document.getElementById('vimeo-frame').style.display = 'block';
+    document.getElementById('vimeo-frame').innerHTML = '<div id="vimeoPlayer" style="width:100%;height:100%;position:absolute;"></div>';
+    
+    vimeoPlayer = new Vimeo.Player('vimeoPlayer', { id: vimeoId, responsive: true });
+    vimeoPlayer.on('timeupdate', (data) => { currentVimeoTime = data.seconds; });
+    vimeoPlayer.on('loaded', () => {
+        vimeoPlayer.getVideoTitle().then(t => setTitle(t || 'Vimeo Video'));
+        autoLoad();
+    });
   } else if (url.includes('drive.google.com')) {
     videoType = 'drive';
     document.getElementById('drive-frame').style.display = 'block';
     document.getElementById('drive-frame').src = fixDriveUrl(url);
     setTitle('Google Drive Video'); autoLoad();
+    toast('⚠️ Cảnh báo: Google Drive chặn auto-timecode. Vui lòng nhập tay.');
   } else {
     videoType = 'native';
     const v = document.getElementById('dv');
@@ -743,7 +782,7 @@ document.addEventListener('paste', e => {
   // 2. Nếu dán Text / Link Video
   const text = e.clipboardData?.getData('text') || '';
   if (text) {
-      const isVideoLink = text.includes('youtube.com') || text.includes('youtu.be') || text.includes('drive.google.com') || text.match(/\.(mp4|webm|mov)$/i);
+      const isVideoLink = text.includes('youtube.com') || text.includes('youtu.be') || text.includes('vimeo.com') || text.includes('dropbox.com') || text.includes('drive.google.com') || text.match(/\.(mp4|webm|mov)$/i);
       
       // Nếu không gõ trong ô Textarea HOẶC đang click thẳng vào ô urlInput => Tải Auto
       if (isVideoLink && (!typing || document.activeElement.id === 'urlInput')) {
@@ -779,6 +818,16 @@ document.addEventListener('keydown', e => {
     if (videoType==='yt'&&ytPlayer) { 
         if (ytPlayer.getPlayerState()===1) { ytPlayer.pauseVideo(); willPause = true; }
         else ytPlayer.playVideo(); 
+    }
+    if (videoType==='vimeo'&&vimeoPlayer) {
+        vimeoPlayer.getPaused().then(paused => {
+            if (paused) vimeoPlayer.play();
+            else { 
+                vimeoPlayer.pause(); 
+                setTimeout(() => document.getElementById('noteText').focus(), 50); 
+            }
+        });
+        return; // Đã xử lý focus bên trong promise, kết thúc sớm
     }
     
     // Nếu vừa bấm Space để pause video => Ném con trỏ thẳng vào khung note để gõ luôn
@@ -830,40 +879,67 @@ function exportXLSX() {
   } catch (err) { toast('❌ Lỗi xuất Excel'); }
 }
 
+/* ── XUẤT PDF CHUẨN AGENCY ── */
 function exportPDF() {
   if (feedbacks.length === 0) { toast('❌ Không có dữ liệu để xuất!'); return; }
-  const title = document.getElementById('reportName').value || document.getElementById('projTitle').innerText;
+  const title = document.getElementById('reportName').value || document.getElementById('projTitle').innerText || 'Antigravity Report';
+  const exportDate = new Date().toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
   
   const element = document.createElement('div');
-  element.style.padding = '30px';
-  element.style.background = '#fff';
-  element.style.color = '#000';
+  // Styling được thiết kế chuyên biệt để html2pdf in ra trang giấy đẹp nhất
+  element.style.fontFamily = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+  element.style.color = "#111827";
+  element.style.padding = "20px";
+  element.style.backgroundColor = "#ffffff";
 
-  const bodyContent = [...feedbacks].sort((a,b)=>a.sec-b.sec).map(f=>`
-    <div style="margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px; page-break-inside: avoid;">
-      <p style="font-family:monospace; font-weight:bold; color:#4f7fff; margin-bottom:5px;">[${f.tc}]</p>
-      <p style="font-size:13px; line-height:1.6; margin-bottom:8px;">${f.note.replace(/\n/g, '<br>')}</p>
-      ${f.img ? `<img src="${f.img}" style="max-width:100%; height:auto; border-radius:4px; margin-bottom:8px;">` : ''}
-      ${f.links?.length ? `<p style="font-size:10px; color:#888;">Links: ${f.links.join(' | ')}</p>` : ''}
-    </div>`).join('');
+  const bodyContent = [...feedbacks].sort((a,b)=>a.sec-b.sec).map(f => `
+    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 20px; page-break-inside: avoid; background-color: #f9fafb;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 100px; vertical-align: top; padding-right: 15px;">
+                    <span style="display: inline-block; background: #4f7fff; color: white; font-family: monospace; font-size: 13px; font-weight: bold; padding: 4px 8px; border-radius: 4px; white-space: nowrap;">
+                        ${f.tc}
+                    </span>
+                </td>
+                <td style="vertical-align: top;">
+                    <p style="font-size: 14.5px; line-height: 1.6; margin: 0 0 10px 0; color: #1f2937;">${f.note.replace(/\n/g, '<br>')}</p>
+                    ${f.links?.length ? `<div style="font-size: 12px; color: #4f7fff; margin-bottom: 12px;">📎 Links: ${f.links.join(', ')}</div>` : ''}
+                    ${f.img ? `<img src="${f.img}" style="max-width: 100%; max-height: 350px; border-radius: 6px; border: 1px solid #d1d5db; margin-top: 5px;">` : ''}
+                </td>
+            </tr>
+        </table>
+    </div>
+  `).join('');
 
   element.innerHTML = `
-    <div style="text-align:center; margin-bottom:30px;">
-      <h1 style="font-size:20px; margin-bottom:5px;">${title}</h1>
-      <p style="font-size:11px; color:#666;">Antigravity Report — Powered by MinXLabs</p>
+    <!-- PDF Header -->
+    <div style="border-bottom: 2px solid #111827; padding-bottom: 15px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h1 style="font-size: 26px; font-weight: 800; margin: 0 0 8px 0; color: #111827; text-transform: uppercase; letter-spacing: 1px;">VIDEO REVIEW REPORT</h1>
+            <p style="font-size: 15px; color: #4b5563; margin: 0;">Project: <strong style="color: #111827;">${title}</strong></p>
+        </div>
+        <div style="text-align: right; font-size: 12px; color: #6b7280; line-height: 1.6;">
+            <p style="margin: 0;">Date: ${exportDate}</p>
+            <p style="margin: 0;">Total Feedbacks: <strong style="color: #111827;">${feedbacks.length}</strong></p>
+            <p style="margin: 0; margin-top: 4px; font-family: monospace; font-size: 10px;">Generated by Antigravity System</p>
+        </div>
     </div>
-    ${bodyContent}
+    
+    <!-- Feedbacks List -->
+    <div>
+        ${bodyContent}
+    </div>
   `;
 
   const opt = {
     margin: [15, 15],
     filename: `${title}_Report.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
-  toast('⏳ Đang xử lý PDF...');
+  toast('⏳ Đang xử lý PDF (Chuẩn Agency)...');
   html2pdf().set(opt).from(element).save().then(() => toast('✓ Đã tải xuống PDF'));
 }
 
