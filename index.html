@@ -136,6 +136,8 @@ header {
 }
 .h-btn-ghost { background: none; border: 1px solid var(--line2); color: var(--ink2); }
 .h-btn-ghost:hover { background: var(--card); color: var(--ink); }
+.h-btn-export { background: var(--accent-d); border: 1px solid rgba(79,127,255,0.3); color: var(--accent); transition: all .2s ease; }
+.h-btn-export:hover { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 4px 15px rgba(79,127,255,0.35); transform: translateY(-1px); }
 .icon-btn {
   width: 32px; height: 32px; border-radius: 8px;
   background: none; border: 1px solid var(--line2); color: var(--ink2);
@@ -320,8 +322,15 @@ footer { height: 34px; background: var(--surface); border-top: 1px solid var(--l
   </div>
 
   <div class="header-right">
+    <button class="h-btn h-btn-ghost" onclick="copyShareLink()" title="Copy link chia sẻ dự án">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        Share
+    </button>
+
     <div class="dropdown">
-        <button class="h-btn h-btn-ghost" onclick="toggleMenu('exportMenu')">
+        <button class="h-btn h-btn-export" onclick="toggleMenu('exportMenu')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
@@ -370,7 +379,7 @@ footer { height: 34px; background: var(--surface); border-top: 1px solid var(--l
     <div class="help-bar">
       <div class="help-items">
         <div class="help-item"><span>Snipping Tool →</span><kbd>Ctrl+V</kbd><span>đính ảnh</span></div>
-        <div class="help-item"><kbd>Space</kbd><span>Play/Pause</span></div>
+        <div class="help-item"><kbd>Space</kbd><span>Play/Pause & Focus</span></div>
         <div class="help-item"><kbd>← →</kbd><span>±1 giây</span></div>
         <div class="help-item"><kbd>↑ ↓</kbd><span>±5 giây</span></div>
         <div class="help-item"><kbd>Ctrl+↵</kbd><span>Lưu nhanh</span></div>
@@ -712,30 +721,44 @@ function handleFile(e) {
 
 /* GLOBAL PASTE - Zero Click Flow */
 document.addEventListener('paste', e => {
-  const typing = ['TEXTAREA','INPUT'].includes(document.activeElement.tagName);
+  const activeTag = document.activeElement ? document.activeElement.tagName : '';
+  const typing = ['TEXTAREA','INPUT'].includes(activeTag);
   
-  // 1. Nếu là Ảnh
-  const item = Array.from(e.clipboardData.items).find(x=>x.type.startsWith('image/'));
-  if (item) {
-    const reader = new FileReader();
-    reader.onload = ex => compressImageAndSet(ex.target.result);
-    reader.readAsDataURL(item.getAsFile());
-    return;
+  // 1. Nếu dán Ảnh
+  const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+  let hasImage = false;
+  if (items) {
+      for (let i = 0; i < items.length; i++) {
+          if (items[i].type.startsWith('image/')) {
+              const reader = new FileReader();
+              reader.onload = ex => compressImageAndSet(ex.target.result);
+              reader.readAsDataURL(items[i].getAsFile());
+              hasImage = true;
+              break;
+          }
+      }
   }
+  if (hasImage) return; // Nếu dán ảnh rồi thì thôi không phân tích link nữa
 
-  // 2. Nếu là Link Video (Global Paste)
-  if (!typing) {
-      const text = e.clipboardData.getData('text');
-      if (text && (text.includes('youtube.com') || text.includes('youtu.be') || text.includes('drive.google.com') || text.match(/\.(mp4|webm|mov)$/i))) {
+  // 2. Nếu dán Text / Link Video
+  const text = e.clipboardData?.getData('text') || '';
+  if (text) {
+      const isVideoLink = text.includes('youtube.com') || text.includes('youtu.be') || text.includes('drive.google.com') || text.match(/\.(mp4|webm|mov)$/i);
+      
+      // Nếu không gõ trong ô Textarea HOẶC đang click thẳng vào ô urlInput => Tải Auto
+      if (isVideoLink && (!typing || document.activeElement.id === 'urlInput')) {
+          e.preventDefault();
           document.getElementById('urlInput').value = text;
           loadVideo();
-          toast('Đã dán và tải video tự động');
+          toast('🎬 Đã dán và tải video tự động');
       }
   }
 });
 
+/* LUỒNG PHÍM TẮT & AUTO-FOCUS */
 document.addEventListener('keydown', e => {
-  const typing = ['TEXTAREA','INPUT'].includes(document.activeElement.tagName);
+  const activeTag = document.activeElement ? document.activeElement.tagName : '';
+  const typing = ['TEXTAREA','INPUT'].includes(activeTag);
   
   if (e.key === 'Escape') { 
       e.preventDefault(); 
@@ -744,10 +767,24 @@ document.addEventListener('keydown', e => {
       return; 
   }
   
+  // Chìa khóa Antigravity: Spacebar -> Pause -> Tự động focus vào khung Note
   if (e.code === 'Space' && !typing) {
     if (e.repeat) return; e.preventDefault();
-    if (videoType==='native') { const v=document.getElementById('dv'); v.paused?v.play():v.pause(); }
-    if (videoType==='yt'&&ytPlayer) { ytPlayer.getPlayerState()===1?ytPlayer.pauseVideo():ytPlayer.playVideo(); }
+    let willPause = false;
+
+    if (videoType==='native') { 
+        const v=document.getElementById('dv'); 
+        if (v.paused) v.play(); else { v.pause(); willPause = true; }
+    }
+    if (videoType==='yt'&&ytPlayer) { 
+        if (ytPlayer.getPlayerState()===1) { ytPlayer.pauseVideo(); willPause = true; }
+        else ytPlayer.playVideo(); 
+    }
+    
+    // Nếu vừa bấm Space để pause video => Ném con trỏ thẳng vào khung note để gõ luôn
+    if (willPause) {
+        setTimeout(() => document.getElementById('noteText').focus(), 50);
+    }
     return;
   }
   
@@ -873,6 +910,53 @@ function exportMarkers() {
   
   toast('✓ Đã xuất Markers cho phần mềm dựng phim');
 }
+
+/* ── CHỨC NĂNG SHARE LINK (ZERO CLICK LOAD) ── */
+function copyShareLink() {
+  const urlInput = document.getElementById('urlInput').value.trim() || videoUrl;
+  if (!urlInput) {
+    toast('❌ Chưa có video để share!');
+    return;
+  }
+  
+  const title = document.getElementById('reportName').value.trim();
+  const url = new URL(window.location.href);
+  url.searchParams.set('v', urlInput);
+  if (title) url.searchParams.set('title', title);
+  else url.searchParams.delete('title');
+  
+  // Dùng execCommand để vượt rào iFrame
+  const tempInput = document.createElement('input');
+  tempInput.value = url.toString();
+  document.body.appendChild(tempInput);
+  tempInput.select();
+  try {
+      document.execCommand('copy');
+      toast('🔗 Đã copy link chia sẻ làm việc!');
+  } catch (err) {
+      toast('❌ Lỗi copy link!');
+  }
+  document.body.removeChild(tempInput);
+}
+
+// Auto-load từ URL Params khi vừa mở trang (Gửi link cho người khác)
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const v = params.get('v');
+  const t = params.get('title');
+  
+  if (t) {
+      const rn = document.getElementById('reportName');
+      rn.value = t;
+      autoSizeInput(rn);
+      document.getElementById('projTitle').innerText = t;
+  }
+  if (v) {
+      document.getElementById('urlInput').value = v;
+      // Trì hoãn một chút để đảm bảo DOM sẵn sàng
+      setTimeout(() => loadVideo(), 300);
+  }
+});
 
 var tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/iframe_api';
