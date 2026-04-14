@@ -319,7 +319,8 @@ footer { height: 34px; background: var(--surface); border-top: 1px solid var(--l
       <svg class="report-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
       </svg>
-      <input id="reportName" type="text" placeholder="Tên báo cáo..." spellcheck="false" oninput="autoSizeInput(this)">
+      <!-- Tự động lưu Title khi người dùng chỉnh sửa -->
+      <input id="reportName" type="text" placeholder="Tên báo cáo..." spellcheck="false" oninput="autoSizeInput(this); document.getElementById('projTitle').innerText = this.value || '—'; save();">
     </div>
     <div class="url-row">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -467,13 +468,17 @@ document.getElementById('footerYear').innerText = new Date().getFullYear();
 
 let feedbacks = [], videoType = '', videoUrl = '', syncTarget = 'A', currentImg = null, ytPlayer = null, vimeoPlayer = null, currentVimeoTime = 0, ytSyncInterval = null;
 
+// Biến quản lý Virtual Time (chống lỗi spam phím tắt & nạp link mới)
+let lastSetTime = null;
+let setTimeTimeout = null;
+
 function toast(m) {
   const t = document.getElementById('toast');
   t.innerText = m; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 function fmt(s) {
-  s = Math.floor(s || 0);
+  s = Math.floor(Number(s) || 0);
   return [Math.floor(s/3600), Math.floor((s%3600)/60), s%60].map(v => String(v).padStart(2,'0')).join(':');
 }
 function autoSizeInput(el) {
@@ -495,12 +500,9 @@ function setSync(t) {
   syncTarget = t;
   document.getElementById('boxA').classList.toggle('active', t === 'A');
   document.getElementById('boxB').classList.toggle('active', t === 'B');
-  
-  // Nếu bật lại Sync thì ép cập nhật ngay lập tức 1 lần
   if (t) updateTimeUI(getTime());
 }
 
-// ── CƠ CHẾ ĐỒNG BỘ THỜI GIAN (ĐÃ VÁ LỖI) ──
 function updateTimeUI(now) {
   if (!syncTarget) return;
   if (syncTarget === 'A') document.getElementById('valA').innerText = fmt(now);
@@ -510,7 +512,6 @@ function updateTimeUI(now) {
   }
 }
 
-// HTML5 Native Video Event
 document.getElementById('dv').addEventListener('timeupdate', function() {
     if (videoType === 'native') updateTimeUI(this.currentTime);
 });
@@ -521,48 +522,77 @@ function fixDriveUrl(url) {
 }
 
 function getTime() {
+  if (lastSetTime !== null) return lastSetTime; // Ưu tiên cache khi spam phím
   if (videoType === 'native') return document.getElementById('dv').currentTime || 0;
   if (videoType === 'yt' && ytPlayer && typeof ytPlayer.getCurrentTime === 'function') return ytPlayer.getCurrentTime();
   if (videoType === 'vimeo') return currentVimeoTime;
   return 0;
 }
 
+// Hàm gán thời gian được tối ưu hóa (Chống ma sát)
 function setTime(sec) {
+  sec = Math.max(0, Number(sec)); // Ép kiểu Number, ngăn chặn time âm
+  lastSetTime = sec; 
+  
+  clearTimeout(setTimeTimeout);
+  setTimeTimeout = setTimeout(() => { lastSetTime = null; }, 1000); // Kéo dài buffer tránh giật UI
+
   if (videoType === 'native') document.getElementById('dv').currentTime = sec;
   if (videoType === 'yt' && ytPlayer && typeof ytPlayer.seekTo === 'function') ytPlayer.seekTo(sec, true);
-  if (videoType === 'vimeo' && vimeoPlayer) vimeoPlayer.setCurrentTime(sec);
+  if (videoType === 'vimeo' && vimeoPlayer) {
+      vimeoPlayer.setCurrentTime(sec);
+      currentVimeoTime = sec; 
+  }
+  
+  updateTimeUI(sec); 
 }
 
+// Xử lý nạp tiêu đề thông minh kết hợp LocalStorage
 function setTitle(title) {
-  document.getElementById('projTitle').innerText = title;
+  const saved = localStorage.getItem('ag_v9_' + videoUrl);
+  let finalTitle = title;
+  
+  // Khôi phục tên cũ nếu đã từng làm việc trên link này
+  if (saved) {
+      try {
+          const data = JSON.parse(saved);
+          if (data.title) finalTitle = data.title;
+      } catch (e) {}
+  }
+  
   const rn = document.getElementById('reportName');
-  if (!rn.value) { rn.value = title; autoSizeInput(rn); }
+  // Không ghi đè tên nếu đã có sẵn nội dung (trừ khi nạp từ LocalStorage)
+  if (rn.value && !saved) {
+      finalTitle = rn.value; 
+  }
+  
+  document.getElementById('projTitle').innerText = finalTitle || '—';
+  rn.value = finalTitle || ''; 
+  autoSizeInput(rn);
+  save(); // Lưu ngay lập tức
 }
 
 function loadVideo() {
   let url = document.getElementById('urlInput').value.trim();
   if (!url) return;
   
-  // Tự động hack link Dropbox thành link file gốc (Native) để bắt Timecode
   if (url.includes('dropbox.com')) {
       url = url.replace(/dl=[01]/, 'raw=1');
       if (!url.includes('raw=1')) url += (url.includes('?') ? '&' : '?') + 'raw=1';
       document.getElementById('urlInput').value = url;
   }
   
+  // Dọn dẹp tên cũ nếu nạp Link khác hoàn toàn (không phải nạp lúc khởi động web)
+  if (videoUrl !== '' && videoUrl !== url) {
+      document.getElementById('reportName').value = '';
+      document.getElementById('projTitle').innerText = '—';
+      resetEditor();
+  }
   videoUrl = url;
   
-  // Dọn dẹp Video cũ
   if (ytSyncInterval) { clearInterval(ytSyncInterval); ytSyncInterval = null; }
-  if (videoType === 'yt' && ytPlayer && typeof ytPlayer.destroy === 'function') {
-      ytPlayer.destroy();
-      ytPlayer = null;
-  }
-  if (videoType === 'vimeo' && vimeoPlayer && typeof vimeoPlayer.destroy === 'function') {
-      vimeoPlayer.destroy();
-      vimeoPlayer = null;
-      currentVimeoTime = 0;
-  }
+  if (videoType === 'yt' && ytPlayer && typeof ytPlayer.destroy === 'function') { ytPlayer.destroy(); ytPlayer = null; }
+  if (videoType === 'vimeo' && vimeoPlayer && typeof vimeoPlayer.destroy === 'function') { vimeoPlayer.destroy(); vimeoPlayer = null; currentVimeoTime = 0; }
 
   ['v-msg','dv','yt-frame','vimeo-frame','drive-frame'].forEach(id => {
     const el = document.getElementById(id);
@@ -585,10 +615,7 @@ function loadVideo() {
           onReady: e => { 
               setTitle(e.target.getVideoData().title || 'YouTube Video'); 
               autoLoad(); 
-              // YouTube API không có sự kiện timeupdate, phải dùng Interval nhẹ
-              ytSyncInterval = setInterval(() => {
-                  if (videoType === 'yt') updateTimeUI(getTime());
-              }, 200);
+              ytSyncInterval = setInterval(() => { if (videoType === 'yt') updateTimeUI(getTime()); }, 200);
           } 
       }
     });
@@ -600,8 +627,6 @@ function loadVideo() {
     document.getElementById('vimeo-frame').innerHTML = '<div id="vimeoPlayer" style="width:100%;height:100%;position:absolute;"></div>';
     
     vimeoPlayer = new Vimeo.Player('vimeoPlayer', { id: vimeoId, responsive: true });
-    
-    // Vimeo API Event (Mượt mà, không lag)
     vimeoPlayer.on('timeupdate', (data) => { 
         currentVimeoTime = data.seconds; 
         updateTimeUI(currentVimeoTime);
@@ -628,13 +653,29 @@ function loadVideo() {
 
 function autoLoad() {
   const saved = localStorage.getItem('ag_v9_' + videoUrl);
-  feedbacks = saved ? JSON.parse(saved).feedbacks : [];
+  if (saved) {
+      try {
+          const data = JSON.parse(saved);
+          feedbacks = data.feedbacks || [];
+          if (data.title && !document.getElementById('reportName').value) {
+              document.getElementById('reportName').value = data.title;
+              document.getElementById('projTitle').innerText = data.title;
+              autoSizeInput(document.getElementById('reportName'));
+          }
+      } catch(e) {
+          feedbacks = [];
+      }
+  } else {
+      feedbacks = [];
+  }
   render();
 }
+
 function save() {
   if (videoUrl) {
       try {
-          localStorage.setItem('ag_v9_' + videoUrl, JSON.stringify({ feedbacks }));
+          const title = document.getElementById('reportName').value.trim();
+          localStorage.setItem('ag_v9_' + videoUrl, JSON.stringify({ title, feedbacks }));
       } catch (e) {
           if(e.name === 'QuotaExceededError') toast('❌ Bộ nhớ đệm đầy! Vui lòng Export và xóa bớt session cũ.');
       }
@@ -687,12 +728,10 @@ function resetEditor() {
 function toggleDone(id) { const f = feedbacks.find(x=>x.id===id); if(f){f.done=!f.done; render(); save();} }
 function delFb(id) { feedbacks = feedbacks.filter(f=>f.id!==id); render(); save(); }
 
-/* CHỨC NĂNG EDIT FEEDBACK */
 function editFb(id) {
     const f = feedbacks.find(x => x.id === id);
     if(!f) return;
     
-    // Nạp dữ liệu vào form
     document.getElementById('noteText').value = f.note;
     document.getElementById('refLinks').value = f.links ? f.links.join(' ') : '';
     
@@ -704,11 +743,10 @@ function editFb(id) {
         removeImgPreview();
     }
     
-    // Nạp Timecode (xử lý cắt string nếu là đoạn A -> B)
     const tcs = f.tc.split(' → ');
     document.getElementById('valA').innerText = tcs[0];
     
-    syncTarget = null; // Tạm dừng sync tự động
+    syncTarget = null; 
     document.getElementById('boxA').classList.add('active');
     document.getElementById('boxB').classList.remove('active');
     
@@ -717,10 +755,9 @@ function editFb(id) {
         document.getElementById('boxB').classList.add('has-b');
     } else {
         clearB();
-        syncTarget = null; // clearB tự setSync('A'), ta cần khoá nó lại
+        syncTarget = null; 
     }
 
-    // Xóa thẻ cũ (Bản chất Edit = Tải lại lên form -> Xóa thẻ cũ đi -> Lưu mới)
     delFb(id); 
     document.getElementById('noteText').focus();
     toast('✎ Đang sửa nhận xét...');
@@ -759,21 +796,12 @@ function compressImageAndSet(dataUrl) {
         const MAX_WIDTH = 1200;
         let width = img.width;
         let height = img.height;
-        
-        if (width > MAX_WIDTH) {
-            height = Math.round((height * MAX_WIDTH) / width);
-            width = MAX_WIDTH;
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
+        if (width > MAX_WIDTH) { height = Math.round((height * MAX_WIDTH) / width); width = MAX_WIDTH; }
+        canvas.width = width; canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        
         currentImg = canvas.toDataURL('image/jpeg', 0.8); 
-        
-        const previewEl = document.getElementById('pImg');
-        previewEl.src = currentImg;
+        document.getElementById('pImg').src = currentImg;
         document.getElementById('imgPreviewWrap').style.display = 'block';
         setSync(null);
     };
@@ -786,12 +814,10 @@ function handleFile(e) {
   reader.readAsDataURL(e.target.files[0]);
 }
 
-/* GLOBAL PASTE - Zero Click Flow */
 document.addEventListener('paste', e => {
   const activeTag = document.activeElement ? document.activeElement.tagName : '';
   const typing = ['TEXTAREA','INPUT'].includes(activeTag);
   
-  // 1. Nếu dán Ảnh
   const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
   let hasImage = false;
   if (items) {
@@ -805,14 +831,11 @@ document.addEventListener('paste', e => {
           }
       }
   }
-  if (hasImage) return; // Nếu dán ảnh rồi thì thôi không phân tích link nữa
+  if (hasImage) return; 
 
-  // 2. Nếu dán Text / Link Video
   const text = e.clipboardData?.getData('text') || '';
   if (text) {
       const isVideoLink = text.includes('youtube.com') || text.includes('youtu.be') || text.includes('vimeo.com') || text.includes('dropbox.com') || text.includes('drive.google.com') || text.match(/\.(mp4|webm|mov)$/i);
-      
-      // Nếu không gõ trong ô Textarea HOẶC đang click thẳng vào ô urlInput => Tải Auto
       if (isVideoLink && (!typing || document.activeElement.id === 'urlInput')) {
           e.preventDefault();
           document.getElementById('urlInput').value = text;
@@ -822,7 +845,7 @@ document.addEventListener('paste', e => {
   }
 });
 
-/* LUỒNG PHÍM TẮT & AUTO-FOCUS */
+// PHÍM TẮT ĐÃ ĐƯỢC CHUẨN HÓA (Ép kiểu Number chống lỗi string)
 document.addEventListener('keydown', e => {
   const activeTag = document.activeElement ? document.activeElement.tagName : '';
   const typing = ['TEXTAREA','INPUT'].includes(activeTag);
@@ -834,7 +857,6 @@ document.addEventListener('keydown', e => {
       return; 
   }
   
-  // Chìa khóa Antigravity: Spacebar -> Pause -> Tự động focus vào khung Note
   if (e.code === 'Space' && !typing) {
     if (e.repeat) return; e.preventDefault();
     let willPause = false;
@@ -855,35 +877,46 @@ document.addEventListener('keydown', e => {
                 setTimeout(() => document.getElementById('noteText').focus(), 50); 
             }
         });
-        return; // Đã xử lý focus bên trong promise, kết thúc sớm
+        return; 
     }
     
-    // Nếu vừa bấm Space để pause video => Ném con trỏ thẳng vào khung note để gõ luôn
-    if (willPause) {
-        setTimeout(() => document.getElementById('noteText').focus(), 50);
-    }
+    if (willPause) setTimeout(() => document.getElementById('noteText').focus(), 50);
     return;
   }
   
   if (typing) return;
   
-  if (e.key==='ArrowLeft')  { e.preventDefault(); setTime(getTime()-1); }
-  if (e.key==='ArrowRight') { e.preventDefault(); setTime(getTime()+1); }
-  if (e.key==='ArrowUp')    { e.preventDefault(); setTime(getTime()+5); }
-  if (e.key==='ArrowDown')  { e.preventDefault(); setTime(getTime()-5); }
+  // Sửa lại chuẩn Scrub: Trái/Phải ±1s (Fine Scrub), Lên/Xuống ±5s (Fast Seek)
+  if (e.key==='ArrowLeft')  { e.preventDefault(); setTime(Number(getTime()) - 1); }
+  if (e.key==='ArrowRight') { e.preventDefault(); setTime(Number(getTime()) + 1); }
+  if (e.key==='ArrowUp')    { e.preventDefault(); setTime(Number(getTime()) + 5); }
+  if (e.key==='ArrowDown')  { e.preventDefault(); setTime(Number(getTime()) - 5); }
   if (e.key==='Delete'||e.key==='Backspace') { clearB(); }
   if (e.key==='Enter'&&e.ctrlKey) { saveFb(); }
 });
 
 function exportJSON() {
+  const title = document.getElementById('reportName').value.trim();
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([JSON.stringify({feedbacks},null,2)],{type:'application/json'}));
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({title, feedbacks},null,2)],{type:'application/json'}));
   a.download = `AG_${Date.now()}.json`; a.click();
 }
+
 function importJSON(e) {
   const reader = new FileReader();
   reader.onload = ex => {
-    try { feedbacks=JSON.parse(ex.target.result).feedbacks||[]; render(); toast('✓ Session loaded'); }
+    try { 
+        const data = JSON.parse(ex.target.result);
+        feedbacks = data.feedbacks || []; 
+        if (data.title) {
+            document.getElementById('reportName').value = data.title;
+            document.getElementById('projTitle').innerText = data.title;
+            autoSizeInput(document.getElementById('reportName'));
+        }
+        render(); 
+        save();
+        toast('✓ Session loaded'); 
+    }
     catch { toast('❌ File không hợp lệ'); }
   };
   reader.readAsText(e.target.files[0]);
@@ -907,14 +940,12 @@ function exportXLSX() {
   } catch (err) { toast('❌ Lỗi xuất Excel'); }
 }
 
-/* ── XUẤT PDF CHUẨN AGENCY ── */
 function exportPDF() {
   if (feedbacks.length === 0) { toast('❌ Không có dữ liệu để xuất!'); return; }
   const title = document.getElementById('reportName').value || document.getElementById('projTitle').innerText || 'Antigravity Report';
   const exportDate = new Date().toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
   
   const element = document.createElement('div');
-  // Styling được thiết kế chuyên biệt để html2pdf in ra trang giấy đẹp nhất
   element.style.fontFamily = "'Helvetica Neue', Helvetica, Arial, sans-serif";
   element.style.color = "#111827";
   element.style.padding = "20px";
@@ -969,11 +1000,9 @@ function exportPDF() {
   html2pdf().set(opt).from(element).save().then(() => toast('✓ Đã tải xuống PDF'));
 }
 
-/* ── EXPORT CHO PREMIERE PRO / DAVINCI ── */
 function exportMarkers() {
   if (feedbacks.length === 0) { toast('❌ Không có dữ liệu để xuất!'); return; }
   
-  // Format sang timecode frame của Premiere (HH:MM:SS:FF - Giả định 00 frames)
   const fmtFrame = (sec) => {
     let h = Math.floor(sec / 3600); 
     let m = Math.floor((sec % 3600) / 60); 
@@ -981,14 +1010,12 @@ function exportMarkers() {
     return [h, m, s, 0].map(v => String(v).padStart(2, '0')).join(':');
   };
 
-  // Header chuẩn của Premiere Pro CSV Markers
   let csv = "Marker Name,Description,In,Out,Duration,Marker Type\n";
   
   [...feedbacks].sort((a,b) => a.sec - b.sec).forEach((f, i) => {
     const name = `Lỗi ${i+1}`;
-    const desc = (f.note || '').replace(/"/g, '""').replace(/\n/g, ' '); // Xóa dấu nháy kép, xuống dòng
+    const desc = (f.note || '').replace(/"/g, '""').replace(/\n/g, ' '); 
     
-    // Tính toán Duration nếu có điểm B (A -> B)
     let outSec = f.sec;
     if (f.tc.includes('→')) {
         const parts = f.tc.split(' → ')[1].split(':');
@@ -1002,7 +1029,6 @@ function exportMarkers() {
     csv += `"${name}","${desc}",${inTc},${outTc},${durTc},Comment\n`;
   });
 
-  // Gắn BOM để không lỗi font tiếng Việt khi import
   const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1013,7 +1039,6 @@ function exportMarkers() {
   toast('✓ Đã xuất Markers cho phần mềm dựng phim');
 }
 
-/* ── CHỨC NĂNG SHARE LINK (ZERO CLICK LOAD) ── */
 function copyShareLink() {
   const urlInput = document.getElementById('urlInput').value.trim() || videoUrl;
   if (!urlInput) {
@@ -1027,7 +1052,6 @@ function copyShareLink() {
   if (title) url.searchParams.set('title', title);
   else url.searchParams.delete('title');
   
-  // Dùng execCommand để vượt rào iFrame
   const tempInput = document.createElement('input');
   tempInput.value = url.toString();
   document.body.appendChild(tempInput);
@@ -1041,7 +1065,6 @@ function copyShareLink() {
   document.body.removeChild(tempInput);
 }
 
-// Auto-load từ URL Params khi vừa mở trang (Gửi link cho người khác)
 window.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
   const v = params.get('v');
@@ -1055,7 +1078,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   if (v) {
       document.getElementById('urlInput').value = v;
-      // Trì hoãn một chút để đảm bảo DOM sẵn sàng
       setTimeout(() => loadVideo(), 300);
   }
 });
