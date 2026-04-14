@@ -193,6 +193,15 @@ main { display: flex; flex: 1; overflow: hidden; }
 .video-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--ink3); font-size: 13px; }
 .video-placeholder .big-icon { font-size: 32px; opacity: .2; }
 
+/* CHỐNG CƯỚP BÀN PHÍM: Lớp khiên Focus Defender */
+.focus-defender {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 60px; /* Chừa 60px bên dưới cho thanh điều khiển của Video */
+    z-index: 10;
+    cursor: pointer;
+    display: none;
+}
+
 /* ── HELP BAR ── */
 .help-bar { 
     background: var(--panel); 
@@ -321,7 +330,6 @@ footer { height: 34px; background: var(--surface); border-top: 1px solid var(--l
       <svg class="report-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
       </svg>
-      <!-- Tự động lưu Title khi người dùng chỉnh sửa -->
       <input id="reportName" type="text" placeholder="Tên báo cáo..." spellcheck="false" oninput="autoSizeInput(this); document.getElementById('projTitle').innerText = this.value || '—'; save();">
     </div>
     <div class="url-row">
@@ -383,6 +391,10 @@ footer { height: 34px; background: var(--surface); border-top: 1px solid var(--l
       <div id="vimeo-frame" style="display:none; width:100%; height:100%; position:absolute;"></div>
       <iframe id="drive-frame" style="display:none" allowfullscreen></iframe>
       <video id="dv" controls style="display:none"></video>
+      
+      <!-- KHIÊN VÔ HÌNH: CHỐNG CƯỚP BÀN PHÍM TỪ IFRAME -->
+      <div id="focusDefender" class="focus-defender" title="Click để Play/Pause và gõ nhận xét"></div>
+      
       <div class="video-placeholder" id="v-msg">
         <div class="big-icon">▶</div>
         <span>Dán link video vào thanh trên (Hoặc nhấn Ctrl+V ở bất kỳ đâu)</span>
@@ -470,11 +482,8 @@ document.getElementById('footerYear').innerText = new Date().getFullYear();
 
 let feedbacks = [], videoType = '', videoUrl = '', syncTarget = 'A', currentImg = null, ytPlayer = null, vimeoPlayer = null, currentVimeoTime = 0, ytSyncInterval = null;
 
-// Biến quản lý Virtual Time (chống lỗi spam phím tắt & nạp link mới)
 let lastSetTime = null;
 let setTimeTimeout = null;
-
-// Biến quản lý Luồng Sửa Chữa (Safe Edit State)
 let editingId = null;
 
 function toast(m) {
@@ -601,11 +610,14 @@ function loadVideo() {
     }
   });
 
+  document.getElementById('focusDefender').style.display = 'none'; // reset layer
+
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
     videoType = 'yt';
     const id = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop().split('?')[0];
     document.getElementById('yt-frame').style.display = 'block';
     document.getElementById('yt-frame').innerHTML = '<div id="player" style="width:100%;height:100%;position:absolute"></div>';
+    document.getElementById('focusDefender').style.display = 'block'; // Kích hoạt khiên
     
     ytPlayer = new YT.Player('player', {
       height: '100%', width: '100%', videoId: id, playerVars: { rel: 0, autoplay: 1 },
@@ -623,6 +635,7 @@ function loadVideo() {
     const vimeoId = m ? m[1] : '';
     document.getElementById('vimeo-frame').style.display = 'block';
     document.getElementById('vimeo-frame').innerHTML = '<div id="vimeoPlayer" style="width:100%;height:100%;position:absolute;"></div>';
+    document.getElementById('focusDefender').style.display = 'block'; // Kích hoạt khiên
     
     vimeoPlayer = new Vimeo.Player('vimeoPlayer', { id: vimeoId, responsive: true });
     vimeoPlayer.on('timeupdate', (data) => { 
@@ -644,6 +657,7 @@ function loadVideo() {
     videoType = 'native';
     const v = document.getElementById('dv');
     v.style.display = 'block'; v.src = url;
+    document.getElementById('focusDefender').style.display = 'block'; // Kích hoạt khiên
     v.play().catch(e => console.log("Auto-play prevented"));
     setTitle(url.split('/').pop() || 'Video'); autoLoad();
   }
@@ -680,7 +694,6 @@ function save() {
   }
 }
 
-// ── SAFE EDIT SYSTEM ──
 function saveFb() {
   const note = document.getElementById('noteText').value.trim();
   const rawLinks = document.getElementById('refLinks').value.trim();
@@ -696,14 +709,12 @@ function saveFb() {
   const tcFormat = secB !== null ? `${tA} → ${tB}` : tA;
   
   if (editingId !== null) {
-      // Đang trong trạng thái Sửa -> Ghi đè vào ID cũ
       const idx = feedbacks.findIndex(f => f.id === editingId);
       if (idx !== -1) {
           feedbacks[idx] = { ...feedbacks[idx], tc: tcFormat, sec: secA, note, img: currentImg, links };
       }
       toast('✓ Đã cập nhật nhận xét');
   } else {
-      // Tạo mới
       feedbacks.push({ id: Date.now(), tc: tcFormat, sec: secA, note, img: currentImg, links, done: false });
       toast('✓ Đã thêm mới nhận xét');
   }
@@ -719,14 +730,12 @@ function editFb(id) {
     const f = feedbacks.find(x => x.id === id);
     if(!f) return;
     
-    editingId = id; // Bật cờ Editing
+    editingId = id; 
     
-    // Đổi giao diện nút bấm
     const btn = document.getElementById('btnMainSave');
     btn.innerText = '✓ Cập nhật nhận xét';
     btn.classList.add('is-editing');
     
-    // Nạp dữ liệu
     document.getElementById('noteText').value = f.note;
     document.getElementById('refLinks').value = f.links ? f.links.join(' ') : '';
     
@@ -753,7 +762,7 @@ function editFb(id) {
         syncTarget = null; 
     }
 
-    render(); // Re-render để làm nổi bật thẻ đang edit
+    render(); 
     document.getElementById('noteText').focus();
     toast('✎ Đang sửa nhận xét...');
 }
@@ -765,13 +774,12 @@ function resetEditor() {
   clearB();
   setSync('A');
   
-  // Tắt cờ Editing
   editingId = null;
   const btn = document.getElementById('btnMainSave');
   btn.innerText = '+ Lưu nhận xét';
   btn.classList.remove('is-editing');
   
-  render(); // Gỡ highlight thẻ edit
+  render(); 
 }
 
 function clearB() {
@@ -790,7 +798,7 @@ function removeImgPreview() {
 function toggleDone(id) { const f = feedbacks.find(x=>x.id===id); if(f){f.done=!f.done; render(); save();} }
 function delFb(id) { 
     feedbacks = feedbacks.filter(f=>f.id!==id); 
-    if(editingId === id) resetEditor(); // Nếu đang sửa mà bấm xóa thì dọn form luôn
+    if(editingId === id) resetEditor(); 
     render(); save(); 
 }
 
@@ -874,6 +882,45 @@ document.addEventListener('paste', e => {
           toast('🎬 Đã dán và tải video tự động');
       }
   }
+});
+
+// ── CƠ CHẾ KHIÊN FOCUS DEFENDER CHỐNG CƯỚP BÀN PHÍM ──
+document.getElementById('focusDefender').addEventListener('click', (e) => {
+    e.preventDefault();
+    let willPause = false;
+
+    if (videoType==='native') { 
+        const v=document.getElementById('dv'); 
+        if (v.paused) v.play(); else { v.pause(); willPause = true; }
+    }
+    if (videoType==='yt'&&ytPlayer) { 
+        if (ytPlayer.getPlayerState()===1) { ytPlayer.pauseVideo(); willPause = true; }
+        else ytPlayer.playVideo(); 
+    }
+    if (videoType==='vimeo'&&vimeoPlayer) {
+        vimeoPlayer.getPaused().then(paused => {
+            if (paused) vimeoPlayer.play();
+            else { 
+                vimeoPlayer.pause(); 
+                setTimeout(() => document.getElementById('noteText').focus(), 50); 
+            }
+        });
+        return; 
+    }
+    
+    if (willPause) setTimeout(() => document.getElementById('noteText').focus(), 50);
+    else document.activeElement.blur(); // Đẩy focus ra ngoài body
+});
+
+// ── CƠ CHẾ THU HỒI FOCUS TỰ ĐỘNG NẾU CLICK VÀO 20% DƯỚI ĐÁY IFRAME ──
+window.addEventListener('blur', () => {
+    setTimeout(() => {
+        const ae = document.activeElement;
+        // Nếu focus bị cướp bởi Youtube/Vimeo Iframe
+        if (ae && (ae.tagName === 'IFRAME' || ae.tagName === 'EMBED')) {
+            window.focus(); // Cưỡng chế đòi lại bàn phím cho trang chủ
+        }
+    }, 150); 
 });
 
 // PHÍM TẮT ĐÃ ĐƯỢC CHUẨN HÓA CỰC MƯỢT
