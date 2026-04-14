@@ -254,9 +254,10 @@ main { display: flex; flex: 1; overflow: hidden; }
 .action-row { display: grid; grid-template-columns: auto 1fr; gap: 10px; }
 .img-btn { height: 38px; padding: 0 14px; background: var(--panel); border: 1px solid var(--line2); color: var(--ink2); font-family: var(--sans); font-size: 12.5px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: background .15s, color .15s; }
 .img-btn:hover { background: var(--card); color: var(--ink); }
-.save-btn { height: 38px; background: var(--accent); border: none; color: #fff; font-family: var(--sans); font-size: 13px; font-weight: 600; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity .15s, transform .1s; }
+.save-btn { height: 38px; background: var(--accent); border: none; color: #fff; font-family: var(--sans); font-size: 13px; font-weight: 600; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all .15s; }
 .save-btn:hover { opacity: .9; }
 .save-btn:active { transform: scale(0.98); }
+.save-btn.is-editing { background: var(--green); color: #000; box-shadow: 0 4px 12px rgba(52,211,153,.2); }
 
 /* XÓA ẢNH PREVIEW */
 .preview-wrap { position: relative; display: none; margin-top: 10px; }
@@ -275,6 +276,7 @@ main { display: flex; flex: 1; overflow: hidden; }
 .cell-list::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 4px; }
 
 .fb-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; transition: all .2s; }
+.fb-card.editing { border-color: var(--green); box-shadow: 0 0 0 1px var(--green); opacity: 0.8; }
 .fb-card:hover { border-color: rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 .fb-card.done { opacity: .3; filter: grayscale(0.5); }
 .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
@@ -394,7 +396,7 @@ footer { height: 34px; background: var(--surface); border-top: 1px solid var(--l
         <div class="help-item"><kbd>← →</kbd><span>±1 giây</span></div>
         <div class="help-item"><kbd>↑ ↓</kbd><span>±5 giây</span></div>
         <div class="help-item"><kbd>Ctrl+↵</kbd><span>Lưu nhanh</span></div>
-        <div class="help-item"><kbd>Esc</kbd><span>Reset form</span></div>
+        <div class="help-item"><kbd>Esc</kbd><span>Hủy form</span></div>
       </div>
     </div>
   </section>
@@ -430,7 +432,7 @@ footer { height: 34px; background: var(--surface); border-top: 1px solid var(--l
           </svg>
           Ảnh / Ctrl+V
         </button>
-        <button class="save-btn" onclick="saveFb()">+ Lưu nhận xét</button>
+        <button class="save-btn" id="btnMainSave" onclick="saveFb()">+ Lưu nhận xét</button>
       </div>
       <input type="file" id="fileIn" hidden accept="image/*" onchange="handleFile(event)">
       
@@ -471,6 +473,9 @@ let feedbacks = [], videoType = '', videoUrl = '', syncTarget = 'A', currentImg 
 // Biến quản lý Virtual Time (chống lỗi spam phím tắt & nạp link mới)
 let lastSetTime = null;
 let setTimeTimeout = null;
+
+// Biến quản lý Luồng Sửa Chữa (Safe Edit State)
+let editingId = null;
 
 function toast(m) {
   const t = document.getElementById('toast');
@@ -522,20 +527,19 @@ function fixDriveUrl(url) {
 }
 
 function getTime() {
-  if (lastSetTime !== null) return lastSetTime; // Ưu tiên cache khi spam phím
+  if (lastSetTime !== null) return lastSetTime; 
   if (videoType === 'native') return document.getElementById('dv').currentTime || 0;
   if (videoType === 'yt' && ytPlayer && typeof ytPlayer.getCurrentTime === 'function') return ytPlayer.getCurrentTime();
   if (videoType === 'vimeo') return currentVimeoTime;
   return 0;
 }
 
-// Hàm gán thời gian được tối ưu hóa (Chống ma sát)
 function setTime(sec) {
-  sec = Math.max(0, Number(sec)); // Ép kiểu Number, ngăn chặn time âm
+  sec = Math.max(0, Number(sec)); 
   lastSetTime = sec; 
   
   clearTimeout(setTimeTimeout);
-  setTimeTimeout = setTimeout(() => { lastSetTime = null; }, 1000); // Kéo dài buffer tránh giật UI
+  setTimeTimeout = setTimeout(() => { lastSetTime = null; }, 1000); 
 
   if (videoType === 'native') document.getElementById('dv').currentTime = sec;
   if (videoType === 'yt' && ytPlayer && typeof ytPlayer.seekTo === 'function') ytPlayer.seekTo(sec, true);
@@ -547,12 +551,10 @@ function setTime(sec) {
   updateTimeUI(sec); 
 }
 
-// Xử lý nạp tiêu đề thông minh kết hợp LocalStorage
 function setTitle(title) {
   const saved = localStorage.getItem('ag_v9_' + videoUrl);
   let finalTitle = title;
   
-  // Khôi phục tên cũ nếu đã từng làm việc trên link này
   if (saved) {
       try {
           const data = JSON.parse(saved);
@@ -561,15 +563,12 @@ function setTitle(title) {
   }
   
   const rn = document.getElementById('reportName');
-  // Không ghi đè tên nếu đã có sẵn nội dung (trừ khi nạp từ LocalStorage)
-  if (rn.value && !saved) {
-      finalTitle = rn.value; 
-  }
+  if (rn.value && !saved) finalTitle = rn.value; 
   
   document.getElementById('projTitle').innerText = finalTitle || '—';
   rn.value = finalTitle || ''; 
   autoSizeInput(rn);
-  save(); // Lưu ngay lập tức
+  save();
 }
 
 function loadVideo() {
@@ -582,7 +581,6 @@ function loadVideo() {
       document.getElementById('urlInput').value = url;
   }
   
-  // Dọn dẹp tên cũ nếu nạp Link khác hoàn toàn (không phải nạp lúc khởi động web)
   if (videoUrl !== '' && videoUrl !== url) {
       document.getElementById('reportName').value = '';
       document.getElementById('projTitle').innerText = '—';
@@ -682,6 +680,7 @@ function save() {
   }
 }
 
+// ── SAFE EDIT SYSTEM ──
 function saveFb() {
   const note = document.getElementById('noteText').value.trim();
   const rawLinks = document.getElementById('refLinks').value.trim();
@@ -694,44 +693,40 @@ function saveFb() {
   if (secB !== null && secB < secA) { [tA,tB] = [tB,tA]; }
   
   const links = rawLinks.match(/\bhttps?:\/\/\S+/gi) || [];
+  const tcFormat = secB !== null ? `${tA} → ${tB}` : tA;
   
-  feedbacks.push({ id: Date.now(), tc: secB !== null ? `${tA} → ${tB}` : tA, sec: secA, note, img: currentImg, links, done: false });
+  if (editingId !== null) {
+      // Đang trong trạng thái Sửa -> Ghi đè vào ID cũ
+      const idx = feedbacks.findIndex(f => f.id === editingId);
+      if (idx !== -1) {
+          feedbacks[idx] = { ...feedbacks[idx], tc: tcFormat, sec: secA, note, img: currentImg, links };
+      }
+      toast('✓ Đã cập nhật nhận xét');
+  } else {
+      // Tạo mới
+      feedbacks.push({ id: Date.now(), tc: tcFormat, sec: secA, note, img: currentImg, links, done: false });
+      toast('✓ Đã thêm mới nhận xét');
+  }
+  
   render(); 
   resetEditor(); 
   save(); 
-  toast('✓ Đã lưu nhận xét');
   
   if(document.activeElement) document.activeElement.blur();
 }
-
-function clearB() {
-  document.getElementById('valB').innerText = '--:--:--';
-  document.getElementById('boxB').classList.remove('has-b','active');
-  document.getElementById('boxA').classList.add('active');
-  syncTarget = 'A';
-}
-
-function removeImgPreview() {
-    currentImg = null;
-    document.getElementById('imgPreviewWrap').style.display = 'none';
-    document.getElementById('pImg').src = '';
-}
-
-function resetEditor() {
-  document.getElementById('noteText').value = '';
-  document.getElementById('refLinks').value = '';
-  removeImgPreview();
-  clearB();
-  setSync('A');
-}
-
-function toggleDone(id) { const f = feedbacks.find(x=>x.id===id); if(f){f.done=!f.done; render(); save();} }
-function delFb(id) { feedbacks = feedbacks.filter(f=>f.id!==id); render(); save(); }
 
 function editFb(id) {
     const f = feedbacks.find(x => x.id === id);
     if(!f) return;
     
+    editingId = id; // Bật cờ Editing
+    
+    // Đổi giao diện nút bấm
+    const btn = document.getElementById('btnMainSave');
+    btn.innerText = '✓ Cập nhật nhận xét';
+    btn.classList.add('is-editing');
+    
+    // Nạp dữ liệu
     document.getElementById('noteText').value = f.note;
     document.getElementById('refLinks').value = f.links ? f.links.join(' ') : '';
     
@@ -758,9 +753,45 @@ function editFb(id) {
         syncTarget = null; 
     }
 
-    delFb(id); 
+    render(); // Re-render để làm nổi bật thẻ đang edit
     document.getElementById('noteText').focus();
     toast('✎ Đang sửa nhận xét...');
+}
+
+function resetEditor() {
+  document.getElementById('noteText').value = '';
+  document.getElementById('refLinks').value = '';
+  removeImgPreview();
+  clearB();
+  setSync('A');
+  
+  // Tắt cờ Editing
+  editingId = null;
+  const btn = document.getElementById('btnMainSave');
+  btn.innerText = '+ Lưu nhận xét';
+  btn.classList.remove('is-editing');
+  
+  render(); // Gỡ highlight thẻ edit
+}
+
+function clearB() {
+  document.getElementById('valB').innerText = '--:--:--';
+  document.getElementById('boxB').classList.remove('has-b','active');
+  document.getElementById('boxA').classList.add('active');
+  syncTarget = 'A';
+}
+
+function removeImgPreview() {
+    currentImg = null;
+    document.getElementById('imgPreviewWrap').style.display = 'none';
+    document.getElementById('pImg').src = '';
+}
+
+function toggleDone(id) { const f = feedbacks.find(x=>x.id===id); if(f){f.done=!f.done; render(); save();} }
+function delFb(id) { 
+    feedbacks = feedbacks.filter(f=>f.id!==id); 
+    if(editingId === id) resetEditor(); // Nếu đang sửa mà bấm xóa thì dọn form luôn
+    render(); save(); 
 }
 
 function render() {
@@ -772,7 +803,7 @@ function render() {
     return;
   }
   list.innerHTML = [...feedbacks].sort((a,b)=>a.sec-b.sec).map(f=>`
-    <div class="fb-card ${f.done?'done':''}">
+    <div class="fb-card ${f.done?'done':''} ${f.id === editingId ? 'editing' : ''}">
       <div class="card-header">
         <div class="tc-badge" onclick="setTime(${f.sec})">${f.tc}</div>
         <div class="card-actions">
@@ -845,7 +876,7 @@ document.addEventListener('paste', e => {
   }
 });
 
-// PHÍM TẮT ĐÃ ĐƯỢC CHUẨN HÓA (Ép kiểu Number chống lỗi string)
+// PHÍM TẮT ĐÃ ĐƯỢC CHUẨN HÓA CỰC MƯỢT
 document.addEventListener('keydown', e => {
   const activeTag = document.activeElement ? document.activeElement.tagName : '';
   const typing = ['TEXTAREA','INPUT'].includes(activeTag);
@@ -886,7 +917,7 @@ document.addEventListener('keydown', e => {
   
   if (typing) return;
   
-  // Sửa lại chuẩn Scrub: Trái/Phải ±1s (Fine Scrub), Lên/Xuống ±5s (Fast Seek)
+  // Trái/Phải ±1s, Lên/Xuống ±5s
   if (e.key==='ArrowLeft')  { e.preventDefault(); setTime(Number(getTime()) - 1); }
   if (e.key==='ArrowRight') { e.preventDefault(); setTime(Number(getTime()) + 1); }
   if (e.key==='ArrowUp')    { e.preventDefault(); setTime(Number(getTime()) + 5); }
