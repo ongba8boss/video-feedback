@@ -433,7 +433,6 @@ footer { height: 34px; background: var(--surface); border-top: 1px solid var(--l
       </div>
       <input type="file" id="fileIn" hidden accept="image/*" onchange="handleFile(event)">
       
-      <!-- Preview Wrapper -->
       <div class="preview-wrap" id="imgPreviewWrap">
         <img id="pImg"/>
         <div class="btn-rm-img" onclick="removeImgPreview()" title="Bỏ ảnh này">✕</div>
@@ -466,7 +465,7 @@ footer { height: 34px; background: var(--surface); border-top: 1px solid var(--l
 <script>
 document.getElementById('footerYear').innerText = new Date().getFullYear();
 
-let feedbacks = [], videoType = '', videoUrl = '', syncTarget = 'A', currentImg = null, ytPlayer = null, vimeoPlayer = null, currentVimeoTime = 0;
+let feedbacks = [], videoType = '', videoUrl = '', syncTarget = 'A', currentImg = null, ytPlayer = null, vimeoPlayer = null, currentVimeoTime = 0, ytSyncInterval = null;
 
 function toast(m) {
   const t = document.getElementById('toast');
@@ -496,33 +495,44 @@ function setSync(t) {
   syncTarget = t;
   document.getElementById('boxA').classList.toggle('active', t === 'A');
   document.getElementById('boxB').classList.toggle('active', t === 'B');
+  
+  // Nếu bật lại Sync thì ép cập nhật ngay lập tức 1 lần
+  if (t) updateTimeUI(getTime());
 }
 
-setInterval(() => {
+// ── CƠ CHẾ ĐỒNG BỘ THỜI GIAN (ĐÃ VÁ LỖI) ──
+function updateTimeUI(now) {
   if (!syncTarget) return;
-  const now = getTime();
   if (syncTarget === 'A') document.getElementById('valA').innerText = fmt(now);
   if (syncTarget === 'B') {
     document.getElementById('valB').innerText = fmt(now);
     document.getElementById('boxB').classList.add('has-b');
   }
-}, 200);
+}
+
+// HTML5 Native Video Event
+document.getElementById('dv').addEventListener('timeupdate', function() {
+    if (videoType === 'native') updateTimeUI(this.currentTime);
+});
 
 function fixDriveUrl(url) {
   const m = url.match(/\/file\/d\/([^\/]+)\//) || url.match(/[?&]id=([^&]+)/);
   return m ? `https://drive.google.com/file/d/${m[1]}/preview` : url;
 }
+
 function getTime() {
   if (videoType === 'native') return document.getElementById('dv').currentTime || 0;
-  if (videoType === 'yt' && ytPlayer?.getCurrentTime) return ytPlayer.getCurrentTime();
+  if (videoType === 'yt' && ytPlayer && typeof ytPlayer.getCurrentTime === 'function') return ytPlayer.getCurrentTime();
   if (videoType === 'vimeo') return currentVimeoTime;
   return 0;
 }
+
 function setTime(sec) {
   if (videoType === 'native') document.getElementById('dv').currentTime = sec;
-  if (videoType === 'yt' && ytPlayer) ytPlayer.seekTo(sec, true);
+  if (videoType === 'yt' && ytPlayer && typeof ytPlayer.seekTo === 'function') ytPlayer.seekTo(sec, true);
   if (videoType === 'vimeo' && vimeoPlayer) vimeoPlayer.setCurrentTime(sec);
 }
+
 function setTitle(title) {
   document.getElementById('projTitle').innerText = title;
   const rn = document.getElementById('reportName');
@@ -542,6 +552,8 @@ function loadVideo() {
   
   videoUrl = url;
   
+  // Dọn dẹp Video cũ
+  if (ytSyncInterval) { clearInterval(ytSyncInterval); ytSyncInterval = null; }
   if (videoType === 'yt' && ytPlayer && typeof ytPlayer.destroy === 'function') {
       ytPlayer.destroy();
       ytPlayer = null;
@@ -566,9 +578,19 @@ function loadVideo() {
     const id = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop().split('?')[0];
     document.getElementById('yt-frame').style.display = 'block';
     document.getElementById('yt-frame').innerHTML = '<div id="player" style="width:100%;height:100%;position:absolute"></div>';
+    
     ytPlayer = new YT.Player('player', {
       height: '100%', width: '100%', videoId: id, playerVars: { rel: 0, autoplay: 1 },
-      events: { onReady: e => { setTitle(e.target.getVideoData().title || 'YouTube Video'); autoLoad(); } }
+      events: { 
+          onReady: e => { 
+              setTitle(e.target.getVideoData().title || 'YouTube Video'); 
+              autoLoad(); 
+              // YouTube API không có sự kiện timeupdate, phải dùng Interval nhẹ
+              ytSyncInterval = setInterval(() => {
+                  if (videoType === 'yt') updateTimeUI(getTime());
+              }, 200);
+          } 
+      }
     });
   } else if (url.includes('vimeo.com')) {
     videoType = 'vimeo';
@@ -578,7 +600,13 @@ function loadVideo() {
     document.getElementById('vimeo-frame').innerHTML = '<div id="vimeoPlayer" style="width:100%;height:100%;position:absolute;"></div>';
     
     vimeoPlayer = new Vimeo.Player('vimeoPlayer', { id: vimeoId, responsive: true });
-    vimeoPlayer.on('timeupdate', (data) => { currentVimeoTime = data.seconds; });
+    
+    // Vimeo API Event (Mượt mà, không lag)
+    vimeoPlayer.on('timeupdate', (data) => { 
+        currentVimeoTime = data.seconds; 
+        updateTimeUI(currentVimeoTime);
+    });
+    
     vimeoPlayer.on('loaded', () => {
         vimeoPlayer.getVideoTitle().then(t => setTitle(t || 'Vimeo Video'));
         autoLoad();
@@ -912,7 +940,6 @@ function exportPDF() {
   `).join('');
 
   element.innerHTML = `
-    <!-- PDF Header -->
     <div style="border-bottom: 2px solid #111827; padding-bottom: 15px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
         <div>
             <h1 style="font-size: 26px; font-weight: 800; margin: 0 0 8px 0; color: #111827; text-transform: uppercase; letter-spacing: 1px;">VIDEO REVIEW REPORT</h1>
@@ -925,7 +952,6 @@ function exportPDF() {
         </div>
     </div>
     
-    <!-- Feedbacks List -->
     <div>
         ${bodyContent}
     </div>
