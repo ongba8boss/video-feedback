@@ -321,13 +321,14 @@ footer { height: 34px; background: var(--surface); border-top: 1px solid var(--l
       <svg class="report-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
       </svg>
+      <!-- Tự động lưu Title khi người dùng chỉnh sửa -->
       <input id="reportName" type="text" placeholder="Tên báo cáo..." spellcheck="false" oninput="autoSizeInput(this); document.getElementById('projTitle').innerText = this.value || '—'; save();">
     </div>
     <div class="url-row">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
       </svg>
-      <input type="text" id="urlInput" placeholder="Dán link YouTube / Vimeo / Dropbox / MP4…">
+      <input type="text" id="urlInput" placeholder="Dán link YouTube / Vimeo / Dropbox / MP4…" onkeydown="if(event.key === 'Enter') loadVideo()">
       <button class="btn-load" onclick="loadVideo()">LOAD</button>
     </div>
   </div>
@@ -1095,6 +1096,7 @@ function copyShareLink() {
   document.body.removeChild(tempInput);
 }
 
+// ── CƠ CHẾ AUTO-LOAD THÔNG MINH (Chống lỗi không load video khi share link) ──
 window.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
   const v = params.get('v');
@@ -1108,7 +1110,19 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   if (v) {
       document.getElementById('urlInput').value = v;
-      setTimeout(() => loadVideo(), 300);
+
+      // Antigravity Auto-Load: Liên tục thăm dò (Polling) cho đến khi API thực sự sẵn sàng
+      const tryLoad = setInterval(() => {
+          const isYt = v.includes('youtube.com') || v.includes('youtu.be');
+          if (isYt && (typeof YT === 'undefined' || !YT.Player)) return; // Chờ YT API
+          if (v.includes('vimeo') && typeof Vimeo === 'undefined') return; // Chờ Vimeo API
+          
+          clearInterval(tryLoad);
+          loadVideo();
+      }, 100);
+
+      // Fallback an toàn: Ngắt vòng lặp sau 10s nếu mạng lỗi quá nặng
+      setTimeout(() => clearInterval(tryLoad), 10000);
   }
 });
 
