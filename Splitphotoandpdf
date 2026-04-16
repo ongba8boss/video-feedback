@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công cụ Cắt Ảnh & Ghép PDF Tự Động</title>
+    <!-- Sử dụng Tailwind CSS để làm giao diện nhanh, gọn, hiện đại -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Thư viện jsPDF để tạo file PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* Hiệu ứng loading đơn giản */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-800 font-sans p-6">
+
+    <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="bg-blue-600 p-6 text-white text-center">
+            <h1 class="text-2xl font-bold mb-2">Tự Động Cắt & Ghép Ảnh Thành PDF</h1>
+            <p class="text-sm opacity-80">Tối ưu hóa quy trình (Antigravity Workflow) - Xử lý 100% tại trình duyệt</p>
+        </div>
+
+        <div class="p-8">
+            <!-- Khu vực tải ảnh -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">1. Chọn hình ảnh (Có thể chọn nhiều file cùng lúc)</label>
+                <input type="file" id="imageInput" multiple accept="image/*" 
+                    class="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-3 file:px-4
+                    file:rounded-lg file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100 transition-all cursor-pointer border border-gray-200 rounded-lg p-2" />
+                <div class="mt-3 flex items-center">
+                    <input type="checkbox" id="sortFiles" class="form-checkbox text-blue-600 focus:ring-blue-500 h-4 w-4">
+                    <label for="sortFiles" class="ml-2 text-sm text-gray-700">Tự động sắp xếp file theo tên (A-Z, 1-9)</label>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">* Để trống ô trên nếu bạn muốn giữ đúng thứ tự như lúc bạn click chọn file.</p>
+                
+                <!-- Khu vực hiển thị danh sách file để Preview -->
+                <div id="fileListContainer" class="mt-4 hidden border border-gray-200 rounded-lg bg-gray-50 p-4 max-h-[600px] overflow-y-auto shadow-inner">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Thứ tự ảnh sẽ được xử lý (Kéo thả thẻ để sắp xếp):</h3>
+                    <ul id="fileList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></ul>
+                </div>
+            </div>
+
+            <!-- Tùy chọn thứ tự cắt -->
+            <div class="mb-8">
+                <label class="block text-sm font-medium text-gray-700 mb-2">2. Thứ tự nửa ảnh sau khi cắt dọc</label>
+                <div class="flex items-center space-x-6">
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="radio" name="splitOrder" value="ltr" checked class="form-radio text-blue-600 focus:ring-blue-500 h-4 w-4">
+                        <span class="ml-2 text-sm text-gray-700">Trái sang Phải (Mặc định)</span>
+                    </label>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="radio" name="splitOrder" value="rtl" class="form-radio text-blue-600 focus:ring-blue-500 h-4 w-4">
+                        <span class="ml-2 text-sm text-gray-700">Phải sang Trái (Manga Nhật)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Nút xử lý -->
+            <button id="processBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-colors flex justify-center items-center">
+                <span id="btnText">Bắt đầu Cắt & Xuất PDF</span>
+                <div id="loadingSpinner" class="loader ml-3 hidden"></div>
+            </button>
+
+            <!-- Trạng thái xử lý -->
+            <div id="statusContainer" class="mt-6 hidden">
+                <div class="flex justify-between text-sm text-gray-600 mb-1">
+                    <span id="statusText">Đang xử lý...</span>
+                    <span id="statusPercent">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quản lý trạng thái file nội bộ để cho phép Kéo-Thả và Tùy chọn Cắt
+        let selectedFiles = []; // Mảng chứa object { file: File, shouldCut: boolean }
+        let dragStartIndex = null;
+
+        // Cập nhật UI hiển thị danh sách file ngay khi chọn
+        const inputElement = document.getElementById('imageInput');
+        const sortElement = document.getElementById('sortFiles');
+        const listContainer = document.getElementById('fileListContainer');
+        const listElement = document.getElementById('fileList');
+
+        // Hàm xóa file trực tiếp khỏi danh sách
+        window.removeFile = function(index) {
+            selectedFiles.splice(index, 1);
+            renderFileList();
+        };
+
+        // Hàm bật/tắt trạng thái cắt của riêng từng file
+        window.toggleCut = function(index) {
+            selectedFiles[index].shouldCut = !selectedFiles[index].shouldCut;
+        };
+
+        function sortCurrentFiles() {
+            if (sortElement.checked) {
+                selectedFiles.sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, {numeric: true, sensitivity: 'base'}));
+            }
+        }
+
+        function renderFileList() {
+            if (selectedFiles.length === 0) {
+                listContainer.classList.add('hidden');
+                inputElement.value = ''; // Reset input để có thể chọn lại file cũ nếu vừa xóa hết
+                return;
+            }
+
+            listElement.innerHTML = '';
+            selectedFiles.forEach((item, index) => {
+                const file = item.file;
+                const li = document.createElement('li');
+                li.draggable = true;
+                li.className = "relative flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm cursor-move hover:shadow-md hover:border-blue-400 transition-all group overflow-hidden";
+                
+                // Tạo URL tạm thời cho thumbnail (Tối ưu RAM trình duyệt)
+                const imgUrl = URL.createObjectURL(file);
+                
+                li.innerHTML = `
+                    <!-- Top bar: Number & Delete -->
+                    <div class="absolute top-0 left-0 right-0 flex justify-between items-start p-2 z-10 pointer-events-none">
+                        <span class="bg-blue-600/90 backdrop-blur text-white font-bold px-2 py-0.5 rounded shadow text-xs">${index + 1}</span>
+                        <button type="button" class="pointer-events-auto bg-white/90 backdrop-blur text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg shadow-sm transition-colors opacity-0 group-hover:opacity-100" onclick="removeFile(${index})" title="Xóa ảnh này">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Thumbnail -->
+                    <div class="w-full h-32 bg-gray-100 flex items-center justify-center p-2 border-b border-gray-100 pointer-events-none">
+                        <img src="${imgUrl}" class="max-w-full max-h-full object-contain drop-shadow-sm" alt="thumb">
+                    </div>
+
+                    <!-- Info & Controls -->
+                    <div class="p-3 flex flex-col gap-2 bg-white flex-1 justify-between">
+                        <span class="truncate text-xs font-medium text-gray-700" title="${file.name}">${file.name}</span>
+                        
+                        <!-- Toggle -->
+                        <div class="flex items-center justify-between mt-1 pt-2 border-t border-gray-50">
+                            <span class="text-xs font-semibold ${item.shouldCut ? 'text-blue-600' : 'text-gray-400'}">Cắt đôi</span>
+                            <label class="relative inline-flex items-center cursor-pointer" title="Bật để cắt dọc ảnh này làm đôi">
+                                <input type="checkbox" class="sr-only peer" ${item.shouldCut ? 'checked' : ''} onchange="toggleCut(${index})">
+                                <div class="w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                `;
+
+                // --- Xử lý logic Kéo & Thả (Drag & Drop) ---
+                li.addEventListener('dragstart', (e) => {
+                    dragStartIndex = index;
+                    li.classList.add('opacity-40', 'ring-2', 'ring-blue-500', 'scale-95');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                
+                li.addEventListener('dragover', (e) => {
+                    e.preventDefault(); // Cần thiết để cho phép drop
+                    li.classList.add('ring-2', 'ring-blue-500', 'scale-105', 'z-10', 'shadow-lg');
+                });
+                
+                li.addEventListener('dragleave', (e) => {
+                    li.classList.remove('ring-2', 'ring-blue-500', 'scale-105', 'z-10', 'shadow-lg');
+                });
+                
+                li.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    li.classList.remove('ring-2', 'ring-blue-500', 'scale-105', 'z-10', 'shadow-lg');
+                    if (dragStartIndex !== null && dragStartIndex !== index) {
+                        // Di chuyển phần tử trong mảng
+                        const draggedItem = selectedFiles.splice(dragStartIndex, 1)[0];
+                        selectedFiles.splice(index, 0, draggedItem);
+                        
+                        // Tắt chế độ tự động sắp xếp A-Z vì người dùng đã tự chỉnh tay
+                        sortElement.checked = false;
+                        renderFileList();
+                    }
+                });
+                
+                li.addEventListener('dragend', () => {
+                    li.classList.remove('opacity-40', 'ring-2', 'ring-blue-500', 'scale-95');
+                    dragStartIndex = null;
+                });
+
+                listElement.appendChild(li);
+            });
+            listContainer.classList.remove('hidden');
+        }
+
+        inputElement.addEventListener('change', (e) => {
+            if (e.target.files.length === 0) return;
+            
+            // Lấy danh sách file mới tải lên
+            const newFiles = Array.from(e.target.files).map(f => ({ file: f, shouldCut: true }));
+            
+            // CỘNG DỒN file mới vào danh sách hiện tại thay vì ghi đè (Antigravity Batching)
+            selectedFiles = [...selectedFiles, ...newFiles];
+            
+            sortCurrentFiles();
+            renderFileList();
+            
+            // Reset input để trình duyệt cho phép chọn lại chính những file này trong lần click sau
+            e.target.value = '';
+        });
+
+        sortElement.addEventListener('change', () => {
+            sortCurrentFiles();
+            renderFileList();
+        });
+
+        document.getElementById('processBtn').addEventListener('click', async () => {
+            if (selectedFiles.length === 0) {
+                alert("Vui lòng chọn ít nhất 1 hình ảnh!");
+                return;
+            }
+
+            const splitOrder = document.querySelector('input[name="splitOrder"]:checked').value;
+            
+            // UI Update
+            const processBtn = document.getElementById('processBtn');
+            const btnText = document.getElementById('btnText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const statusContainer = document.getElementById('statusContainer');
+            const statusText = document.getElementById('statusText');
+            const progressBar = document.getElementById('progressBar');
+            const statusPercent = document.getElementById('statusPercent');
+
+            processBtn.disabled = true;
+            processBtn.classList.add('opacity-70', 'cursor-not-allowed');
+            btnText.innerText = "Đang xử lý...";
+            loadingSpinner.classList.remove('hidden');
+            statusContainer.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            statusPercent.innerText = '0%';
+
+            try {
+                const { jsPDF } = window.jspdf;
+                let pdfDoc = null;
+
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const item = selectedFiles[i];
+                    const currentFile = item.file;
+                    const shouldCut = item.shouldCut;
+
+                    // Cập nhật trạng thái
+                    statusText.innerText = `Đang xử lý ảnh: ${currentFile.name} (${i + 1}/${selectedFiles.length})`;
+                    const percent = Math.round((i / selectedFiles.length) * 100);
+                    progressBar.style.width = `${percent}%`;
+                    statusPercent.innerText = `${percent}%`;
+
+                    // Nhường luồng cho UI cập nhật
+                    await new Promise(r => setTimeout(r, 10)); 
+
+                    const imgBase64 = await readFileAsDataURL(currentFile);
+                    const imgObj = await loadImage(imgBase64);
+
+                    const width = imgObj.width;
+                    const height = imgObj.height;
+
+                    if (shouldCut) {
+                        const halfWidth = width / 2;
+
+                        // Tạo canvas để vẽ và cắt ảnh
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = halfWidth;
+                        canvas.height = height;
+
+                        // Hàm phụ trợ trích xuất 1 nửa ảnh
+                        const extractHalf = (startX) => {
+                            ctx.fillStyle = "#ffffff"; // Nền trắng
+                            ctx.fillRect(0, 0, halfWidth, height);
+                            ctx.drawImage(imgObj, startX, 0, halfWidth, height, 0, 0, halfWidth, height);
+                            // Set 1.0 (max quality) để giữ nguyên độ sắc nét khi cắt
+                            return canvas.toDataURL('image/jpeg', 1.0);
+                        };
+
+                        const leftHalfData = extractHalf(0);
+                        const rightHalfData = extractHalf(halfWidth);
+
+                        // Xác định thứ tự ghép
+                        const firstHalf = splitOrder === 'ltr' ? leftHalfData : rightHalfData;
+                        const secondHalf = splitOrder === 'ltr' ? rightHalfData : leftHalfData;
+
+                        const orientation = halfWidth > height ? 'l' : 'p';
+                        const pageFormat = [halfWidth, height];
+
+                        if (!pdfDoc) {
+                            pdfDoc = new jsPDF({ orientation: orientation, unit: 'px', format: pageFormat });
+                            // Tham số 'NONE' ép thư viện không bóp chất lượng hình ảnh
+                            pdfDoc.addImage(firstHalf, 'JPEG', 0, 0, halfWidth, height, undefined, 'NONE');
+                        } else {
+                            pdfDoc.addPage(pageFormat, orientation);
+                            pdfDoc.addImage(firstHalf, 'JPEG', 0, 0, halfWidth, height, undefined, 'NONE');
+                        }
+
+                        pdfDoc.addPage(pageFormat, orientation);
+                        pdfDoc.addImage(secondHalf, 'JPEG', 0, 0, halfWidth, height, undefined, 'NONE');
+
+                    } else {
+                        // TRƯỜNG HỢP KHÔNG CẮT: Dùng nguyên Base64 gốc, không đẩy qua Canvas
+                        const orientation = width > height ? 'l' : 'p';
+                        const pageFormat = [width, height];
+                        const imgFormat = currentFile.type === 'image/png' ? 'PNG' : 'JPEG';
+
+                        if (!pdfDoc) {
+                            pdfDoc = new jsPDF({ orientation: orientation, unit: 'px', format: pageFormat });
+                            pdfDoc.addImage(imgBase64, imgFormat, 0, 0, width, height, undefined, 'NONE');
+                        } else {
+                            pdfDoc.addPage(pageFormat, orientation);
+                            pdfDoc.addImage(imgBase64, imgFormat, 0, 0, width, height, undefined, 'NONE');
+                        }
+                    }
+                }
+
+                statusText.innerText = "Đang đóng gói và tải xuống PDF...";
+                progressBar.style.width = '100%';
+                statusPercent.innerText = '100%';
+                await new Promise(r => setTimeout(r, 100)); // Nghỉ 1 chút để thanh tiến trình chạy hết
+
+                // Lưu file PDF
+                pdfDoc.save('Truyen_Mix_Antigravity.pdf');
+
+                statusText.innerText = "Hoàn tất! File đã được tải xuống.";
+                statusText.classList.add('text-green-600', 'font-bold');
+
+            } catch (error) {
+                console.error(error);
+                alert("Có lỗi xảy ra trong quá trình xử lý: " + error.message);
+                statusText.innerText = "Xử lý thất bại.";
+                statusText.classList.add('text-red-600');
+            } finally {
+                // Phục hồi UI
+                processBtn.disabled = false;
+                processBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+                btnText.innerText = "Bắt đầu Cắt & Xuất PDF";
+                loadingSpinner.classList.add('hidden');
+            }
+        });
+
+        // Hàm đọc file thành Base64
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(e);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Hàm load Base64 thành đối tượng Image
+        function loadImage(src) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = (e) => reject(e);
+                img.src = src;
+            });
+        }
+    </script>
+</body>
+</html>
